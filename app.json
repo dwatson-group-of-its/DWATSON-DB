@@ -8,6 +8,18 @@
     }
   ],
   "env": {
+    "MONGODB_URI": {
+      "description": "MongoDB connection string (mongodb:// or mongodb+srv://)",
+      "value": ""
+    },
+    "JWT_SECRET": {
+      "description": "Secret key for JWT token encryption (use strong random string)",
+      "value": ""
+    },
+    "ADMIN_PASSWORD": {
+      "description": "Admin password for user promotions",
+      "value": "admin123"
+    },
     "NODE_ENV": {
       "description": "Environment (production or development)",
       "value": "production"
