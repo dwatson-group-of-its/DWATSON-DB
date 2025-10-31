@@ -147,19 +147,55 @@ app.use(sanitizeInput);
 
 // Validate MongoDB URI before attempting connection
 if (!mongoUri) {
-  console.error('MONGODB_URI environment variable is required');
+  console.error('❌ MONGODB_URI environment variable is required');
+  console.error('Please set MONGODB_URI in your .env file');
   process.exit(1);
 }
 
+// Validate MongoDB URI format
+const mongodbUriPattern = /^mongodb(\+srv)?:\/\//;
+if (!mongodbUriPattern.test(mongoUri)) {
+  console.error('❌ Invalid MongoDB URI format');
+  console.error('MongoDB URI must start with mongodb:// or mongodb+srv://');
+  console.error('Current URI starts with:', mongoUri.substring(0, 20) + '...');
+  process.exit(1);
+}
+
+// Log connection attempt with masked credentials
+const maskedUri = mongoUri.replace(/(mongodb(\+srv)?:\/\/)([^:]+):([^@]+)@/, (match, protocol, srv, username, password) => {
+  return `${protocol}${username}:****@`;
+});
+console.log('🔄 Attempting to connect to MongoDB...');
+console.log('📍 Connection String:', maskedUri);
+
+// Connect to MongoDB with better error handling
 mongoose
-  .connect(mongoUri, { autoIndex: true })
+  .connect(mongoUri, { 
+    autoIndex: true,
+    serverSelectionTimeoutMS: 10000, // 10 seconds timeout
+    socketTimeoutMS: 45000, // 45 seconds socket timeout
+  })
+  .then(() => {
+    console.log('✅ MongoDB connection established successfully');
+  })
   .catch((err) => {
-    console.error('MongoDB connection failed:', err.message);
+    console.error('❌ MongoDB connection failed:', err.message);
+    if (err.name === 'MongoNetworkError') {
+      console.error('💡 Network error: Check if MongoDB server is reachable');
+    } else if (err.name === 'MongoParseError') {
+      console.error('💡 Parse error: Check your MongoDB URI format');
+    } else if (err.name === 'MongoServerSelectionError') {
+      console.error('💡 Server selection error: Check your network connectivity or server status');
+    } else if (err.message.includes('Authentication failed')) {
+      console.error('💡 Authentication failed: Check your username and password');
+    }
   });
 
 // MongoDB connection event handlers
 mongoose.connection.on('connected', () => {
   console.log('✅ MongoDB connected successfully');
+  console.log('📍 Host:', mongoose.connection.host);
+  console.log('📍 Database:', mongoose.connection.name);
 });
 
 mongoose.connection.on('error', (err) => {
@@ -171,7 +207,14 @@ mongoose.connection.on('disconnected', () => {
 });
 
 mongoose.connection.on('reconnected', () => {
-  console.log('🔄 MongoDB reconnected');
+  console.log('🔄 MongoDB reconnected successfully');
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  await mongoose.connection.close();
+  console.log('MongoDB connection closed due to app termination');
+  process.exit(0);
 });
 
 // ========================================
