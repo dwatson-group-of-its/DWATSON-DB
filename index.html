@@ -8526,6 +8526,9 @@ sortedBranches.forEach(data => {
             const tableBody = document.getElementById('salesListTableBody');
             tableBody.innerHTML = '';
             
+            const canEditSale = (appData.currentUser?.permissions || []).includes('sales-edit');
+            const canDeleteSale = (appData.currentUser?.permissions || []).includes('sales-delete');
+            
             sales.forEach(sale => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
