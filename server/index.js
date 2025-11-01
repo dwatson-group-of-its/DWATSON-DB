@@ -1431,9 +1431,15 @@ app.post('/api/sales', authenticate, checkDatabaseConnection, async (req, res) =
       }
     }
 
-    // Check if user has access to this branch
-    if (!req.user.groupId.permissions.includes('admin') && !req.user.branches.includes(data.branchId)) {
-      return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+    // Check if user has access to this branch (only if not admin)
+    if (!req.user.groupId.permissions.includes('admin') && data.branchId) {
+      // Convert branchId to string for comparison (handle both ObjectId and populated object)
+      const saleBranchId = data.branchId._id ? data.branchId._id.toString() : data.branchId.toString();
+      const userBranchIds = req.user.branches.map(b => b._id ? b._id.toString() : b.toString());
+      
+      if (!userBranchIds.includes(saleBranchId)) {
+        return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+      }
     }
 
     // Create sale using fixed data
@@ -1454,9 +1460,15 @@ app.post('/api/sales', authenticate, checkDatabaseConnection, async (req, res) =
 // Update Sale
 app.put('/api/sales/:id', authenticate, hasPermission('sales-edit'), checkDatabaseConnection, async (req, res) => {
   try {
-    // Check if user has access to this branch
-    if (!req.user.groupId.permissions.includes('admin') && !req.user.branches.includes(req.body.branchId)) {
-      return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+    // Check if user has access to this branch (only if not admin)
+    if (!req.user.groupId.permissions.includes('admin') && req.body.branchId) {
+      // Convert branchId to string for comparison (handle both ObjectId and populated object)
+      const updateBranchId = req.body.branchId._id ? req.body.branchId._id.toString() : req.body.branchId.toString();
+      const userBranchIds = req.user.branches.map(b => b._id ? b._id.toString() : b.toString());
+      
+      if (!userBranchIds.includes(updateBranchId)) {
+        return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+      }
     }
 
     const updated = await Sale.findByIdAndUpdate(req.params.id, req.body, { new: true })
@@ -1499,8 +1511,8 @@ app.delete('/api/sales/:id', authenticate, hasPermission('sales-delete'), checkD
 // PAYMENTS API ROUTES
 // ========================================
 
-// Get All Payments
-app.get('/api/payments', authenticate, async (req, res) => {
+// Get All Payments (Supplier Vouchers) - Requires payment-voucher-list permission
+app.get('/api/payments', authenticate, hasPermission('payment-voucher-list'), async (req, res) => {
   try {
     const filter = {};
     
@@ -1615,9 +1627,15 @@ app.post('/api/payments', authenticate, checkDatabaseConnection, async (req, res
       data.status = 'Pending';
     }
 
-    // Check if user has access to this branch
-    if (!req.user.groupId.permissions.includes('admin') && !req.user.branches.includes(data.branchId)) {
-      return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+    // Check if user has access to this branch (only if not admin)
+    if (!req.user.groupId.permissions.includes('admin') && data.branchId) {
+      // Convert branchId to string for comparison (handle both ObjectId and populated object)
+      const paymentBranchId = data.branchId._id ? data.branchId._id.toString() : data.branchId.toString();
+      const userBranchIds = req.user.branches.map(b => b._id ? b._id.toString() : b.toString());
+      
+      if (!userBranchIds.includes(paymentBranchId)) {
+        return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+      }
     }
 
     // Create payment using fixed data
@@ -1682,9 +1700,24 @@ app.get('/api/payments/:id', authenticate, checkDatabaseConnection, async (req, 
       return res.status(404).json({ error: 'Payment not found' });
     }
     
-    // Check if user has access to this payment's branch
-    if (!req.user.groupId.permissions.includes('admin') && !req.user.branches.includes(payment.branchId)) {
-      return res.status(403).json({ error: 'Access denied. You do not have permission to access this payment.' });
+    // Check permissions: user needs payment-edit OR payment-voucher-list permission to view/edit
+    const hasPaymentPermission = req.user.groupId.permissions.includes('payment-edit') || 
+                                  req.user.groupId.permissions.includes('payment-voucher-list') ||
+                                  req.user.groupId.permissions.includes('admin');
+    
+    if (!hasPaymentPermission) {
+      return res.status(403).json({ error: 'Access denied. You do not have permission to access supplier vouchers.' });
+    }
+    
+    // Check if user has access to this payment's branch (only if not admin)
+    if (!req.user.groupId.permissions.includes('admin')) {
+      // Convert branchId to string for comparison (handle both ObjectId and populated object)
+      const paymentBranchId = payment.branchId?._id ? payment.branchId._id.toString() : payment.branchId?.toString() || payment.branchId;
+      const userBranchIds = req.user.branches.map(b => b._id ? b._id.toString() : b.toString());
+      
+      if (!userBranchIds.includes(paymentBranchId)) {
+        return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+      }
     }
     
     res.json(payment);
@@ -1717,9 +1750,15 @@ app.put('/api/payments/:id', authenticate, hasPermission('payment-edit'), checkD
       return res.status(400).json({ error: 'Invalid Payment ID format' });
     }
     
-    // Check if user has access to this branch
-    if (!req.user.groupId.permissions.includes('admin') && !req.user.branches.includes(req.body.branchId)) {
-      return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+    // Check if user has access to this branch (only if not admin)
+    if (!req.user.groupId.permissions.includes('admin') && req.body.branchId) {
+      // Convert branchId to string for comparison (handle both ObjectId and populated object)
+      const updateBranchId = req.body.branchId._id ? req.body.branchId._id.toString() : req.body.branchId.toString();
+      const userBranchIds = req.user.branches.map(b => b._id ? b._id.toString() : b.toString());
+      
+      if (!userBranchIds.includes(updateBranchId)) {
+        return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+      }
     }
 
     // If supplier string missing, fetch from Supplier model
@@ -1774,8 +1813,15 @@ app.delete('/api/payments/:id', authenticate, hasPermission('payment-delete'), c
       return res.status(404).json({ error: 'Payment not found' });
     }
     
-    if (!req.user.groupId.permissions.includes('admin') && !req.user.branches.includes(payment.branchId)) {
-      return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+    // Check branch access (only if not admin)
+    if (!req.user.groupId.permissions.includes('admin')) {
+      // Convert branchId to string for comparison (handle both ObjectId and populated object)
+      const paymentBranchId = payment.branchId?._id ? payment.branchId._id.toString() : payment.branchId?.toString() || payment.branchId;
+      const userBranchIds = req.user.branches.map(b => b._id ? b._id.toString() : b.toString());
+      
+      if (!userBranchIds.includes(paymentBranchId)) {
+        return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+      }
     }
 
     const deleted = await Payment.findByIdAndDelete(req.params.id);
@@ -1963,9 +2009,15 @@ app.post('/api/category-payments', authenticate, hasPermission('category-voucher
       data.status = 'Pending';
     }
 
-    // Check if user has access to this branch
-    if (!req.user.groupId.permissions.includes('admin') && !req.user.branches.includes(data.branchId)) {
-      return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+    // Check if user has access to this branch (only if not admin)
+    if (!req.user.groupId.permissions.includes('admin') && data.branchId) {
+      // Convert branchId to string for comparison (handle both ObjectId and populated object)
+      const paymentBranchId = data.branchId._id ? data.branchId._id.toString() : data.branchId.toString();
+      const userBranchIds = req.user.branches.map(b => b._id ? b._id.toString() : b.toString());
+      
+      if (!userBranchIds.includes(paymentBranchId)) {
+        return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+      }
     }
 
     // Create category payment
@@ -1992,7 +2044,7 @@ app.post('/api/category-payments', authenticate, hasPermission('category-voucher
 });
 
 // Get Single Category Payment by ID
-app.get('/api/category-payments/:id', authenticate, hasPermission('category-voucher-list'), checkDatabaseConnection, async (req, res) => {
+app.get('/api/category-payments/:id', authenticate, checkDatabaseConnection, async (req, res) => {
   // ALWAYS set Content-Type to JSON FIRST
   res.setHeader('Content-Type', 'application/json');
   
@@ -2009,9 +2061,24 @@ app.get('/api/category-payments/:id', authenticate, hasPermission('category-vouc
       return res.status(404).json({ error: 'Category payment not found' });
     }
     
-    // Check if user has access to this payment's branch
-    if (!req.user.groupId.permissions.includes('admin') && !req.user.branches.includes(categoryPayment.branchId)) {
-      return res.status(403).json({ error: 'Access denied. You do not have permission to access this payment.' });
+    // Check permissions: user needs category-voucher-edit OR category-voucher-list permission to view/edit
+    const hasCategoryPermission = req.user.groupId.permissions.includes('category-voucher-edit') || 
+                                   req.user.groupId.permissions.includes('category-voucher-list') ||
+                                   req.user.groupId.permissions.includes('admin');
+    
+    if (!hasCategoryPermission) {
+      return res.status(403).json({ error: 'Access denied. You do not have permission to access category vouchers.' });
+    }
+    
+    // Check if user has access to this payment's branch (only if not admin)
+    if (!req.user.groupId.permissions.includes('admin')) {
+      // Convert branchId to string for comparison (handle both ObjectId and populated object)
+      const paymentBranchId = categoryPayment.branchId?._id ? categoryPayment.branchId._id.toString() : categoryPayment.branchId?.toString() || categoryPayment.branchId;
+      const userBranchIds = req.user.branches.map(b => b._id ? b._id.toString() : b.toString());
+      
+      if (!userBranchIds.includes(paymentBranchId)) {
+        return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+      }
     }
     
     res.status(200).json(categoryPayment);
@@ -2040,9 +2107,15 @@ app.put('/api/category-payments/:id', authenticate, hasPermission('category-vouc
       return res.status(400).json({ error: 'Invalid Category Payment ID format' });
     }
     
-    // Check if user has access to this branch
-    if (!req.user.groupId.permissions.includes('admin') && !req.user.branches.includes(req.body.branchId)) {
-      return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+    // Check if user has access to this branch (only if not admin)
+    if (!req.user.groupId.permissions.includes('admin') && req.body.branchId) {
+      // Convert branchId to string for comparison (handle both ObjectId and populated object)
+      const updateBranchId = req.body.branchId._id ? req.body.branchId._id.toString() : req.body.branchId.toString();
+      const userBranchIds = req.user.branches.map(b => b._id ? b._id.toString() : b.toString());
+      
+      if (!userBranchIds.includes(updateBranchId)) {
+        return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+      }
     }
 
     // If category string missing, fetch from Category model
@@ -2095,8 +2168,15 @@ app.delete('/api/category-payments/:id', authenticate, hasPermission('category-v
       return res.status(404).json({ error: 'Category payment not found' });
     }
     
-    if (!req.user.groupId.permissions.includes('admin') && !req.user.branches.includes(categoryPayment.branchId)) {
-      return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+    // Check branch access (only if not admin)
+    if (!req.user.groupId.permissions.includes('admin')) {
+      // Convert branchId to string for comparison (handle both ObjectId and populated object)
+      const paymentBranchId = categoryPayment.branchId?._id ? categoryPayment.branchId._id.toString() : categoryPayment.branchId?.toString() || categoryPayment.branchId;
+      const userBranchIds = req.user.branches.map(b => b._id ? b._id.toString() : b.toString());
+      
+      if (!userBranchIds.includes(paymentBranchId)) {
+        return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+      }
     }
 
     await CategoryPayment.findByIdAndDelete(req.params.id);

@@ -6830,9 +6830,17 @@
             // View sales list button
             document.getElementById('viewSalesListBtn').addEventListener('click', function() {
                 document.getElementById('salesListSection').style.display = 'block';
-                // Initialize sales list if not already loaded
-                if (document.getElementById('salesInvoicesContainer').children.length === 0) {
-                    loadSalesList();
+                // Don't auto-load - user must select dates first
+                // Clear existing data if no dates selected
+                const dateFrom = document.getElementById('salesListDateFrom')?.value || '';
+                const dateTo = document.getElementById('salesListDateTo')?.value || '';
+                if (!dateFrom && !dateTo) {
+                    const invoicesContainer = document.getElementById('salesInvoicesContainer');
+                    const salesTableBody = document.getElementById('salesListTableBody');
+                    const summarySection = document.getElementById('categorySummarySection');
+                    if (invoicesContainer) invoicesContainer.innerHTML = '<div class="text-center text-muted p-4">Please select at least one date (From or To) to view sales list</div>';
+                    if (salesTableBody) salesTableBody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Please select at least one date (From or To) to view sales list</td></tr>';
+                    if (summarySection) summarySection.style.display = 'none';
                 }
             });
             
@@ -6917,18 +6925,44 @@
                 categoryVoucherListSearch.addEventListener('input', loadCategoryVoucherListTab);
             }
             
-            // Category voucher list tab event listeners (Bootstrap tabs)
+            // Category voucher list tab event listeners (Bootstrap tabs) - check dates before loading
             const categoryVoucherListTabBtn = document.getElementById('category-voucher-list-tab');
             if (categoryVoucherListTabBtn) {
                 categoryVoucherListTabBtn.addEventListener('shown.bs.tab', function() {
+                    // Only load data when category tab is actually clicked
+                    // First populate filters (no permission check), then load data (permission check)
                     initializeCategoryVoucherListTab();
+                    
+                    // Don't auto-load - check if dates are selected first
+                    const fromDate = document.getElementById('categoryVoucherListFromDate')?.value || '';
+                    const toDate = document.getElementById('categoryVoucherListToDate')?.value || '';
+                    if (fromDate || toDate) {
+                        loadCategoryVoucherListTab();
+                    } else {
+                        // Show message if no dates selected
+                        const tbody = document.getElementById('categoryVoucherListTableBody');
+                        if (tbody) {
+                            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Please select at least one date (From or To) to view voucher list</td></tr>';
+                        }
+                    }
                 });
             }
             
             const supplierVoucherListTabBtn = document.getElementById('supplier-voucher-list-tab');
             if (supplierVoucherListTabBtn) {
                 supplierVoucherListTabBtn.addEventListener('shown.bs.tab', function() {
-                    loadPaymentVoucherList();
+                    // Don't auto-load - check if dates are selected first
+                    const fromDate = document.getElementById('paymentVoucherListFromDate')?.value || '';
+                    const toDate = document.getElementById('paymentVoucherListToDate')?.value || '';
+                    if (fromDate || toDate) {
+                        loadPaymentVoucherList();
+                    } else {
+                        // Show message if no dates selected
+                        const tbody = document.querySelector('#payment-voucher-list-section table tbody');
+                        if (tbody) {
+                            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">Please select at least one date (From or To) to view voucher list</td></tr>';
+                        }
+                    }
                 });
             }
             
@@ -7760,9 +7794,20 @@
                     // Scroll to top before loading
                     setTimeout(() => {
                         window.scrollTo(0, 0);
-                        loadPaymentVoucherList();
+                        // Don't auto-load vouchers - user must select dates first
+                        // Only populate filters, don't load data automatically
                         populatePaymentModuleFilters();
-                        initializeCategoryVoucherListTab();
+                        populateCategoryVoucherListTabFilters();
+                        
+                        // Clear/hide existing data if no dates selected
+                        const fromDate = document.getElementById('paymentVoucherListFromDate')?.value || '';
+                        const toDate = document.getElementById('paymentVoucherListToDate')?.value || '';
+                        if (!fromDate && !toDate) {
+                            const tbody = document.querySelector('#payment-voucher-list-section table tbody');
+                            if (tbody) {
+                                tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">Please select at least one date (From or To) to view voucher list</td></tr>';
+                            }
+                        }
                     }, 0);
                     break;
                 case 'category-voucher-simple-list':
@@ -7783,18 +7828,8 @@
                         window.scrollTo(0, 0);
                         initPaymentReportChart();
                         populatePaymentModuleFilters();
-                        // Set default dates
-                        const today = new Date().toISOString().split('T')[0];
-                        const reportFromDate = document.getElementById('paymentReportFromDate');
-                        const reportToDate = document.getElementById('paymentReportToDate');
-                        if (reportFromDate && !reportFromDate.value) {
-                            reportFromDate.value = today;
-                        }
-                        if (reportToDate && !reportToDate.value) {
-                            reportToDate.value = today;
-                        }
-                        // Auto-generate report so screen is not empty
-                        generatePaymentVoucherReport();
+                        // Don't set default dates or auto-generate report
+                        // User must select dates and click generate button
                     }, 0);
                     break;
                 case 'reports':
@@ -9087,6 +9122,27 @@ sortedBranches.forEach(data => {
             const branchId = document.getElementById('salesListBranch').value;
             const categoryId = document.getElementById('salesListCategory').value;
             
+            // Require at least one date to be selected before loading data
+            if (!dateFrom && !dateTo) {
+                // Clear/hide existing data
+                const invoicesContainer = document.getElementById('salesInvoicesContainer');
+                const salesTableBody = document.getElementById('salesListTableBody');
+                const summarySection = document.getElementById('categorySummarySection');
+                
+                if (invoicesContainer) invoicesContainer.innerHTML = '<div class="text-center text-muted p-4">Please select at least one date (From or To) to view sales list</div>';
+                if (salesTableBody) salesTableBody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Please select at least one date (From or To) to view sales list</td></tr>';
+                if (summarySection) summarySection.style.display = 'none';
+                
+                // Reset pagination
+                const invoicesPagination = document.getElementById('salesInvoicesPagination');
+                const listPagination = document.getElementById('salesListPagination');
+                if (invoicesPagination) invoicesPagination.innerHTML = '';
+                if (listPagination) listPagination.innerHTML = '';
+                
+                showNotification('Please select at least one date (From or To) to view sales list', 'info');
+                return;
+            }
+            
             // Build filters object
             const filters = {};
             if (dateFrom) filters.from = dateFrom;
@@ -9094,7 +9150,7 @@ sortedBranches.forEach(data => {
             if (branchId) filters.branchId = branchId;
             if (categoryId) filters.categoryId = categoryId;
             
-            // Fetch filtered sales data
+            // Fetch filtered sales data (only includes sales matching the date range and other filters)
             api.getSales(filters).then(salesData => {
                 // Sort sales by date (newest first)
                 const sortedSales = [...salesData].sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -9110,7 +9166,7 @@ sortedBranches.forEach(data => {
                 // Load sales table (table view)
                 loadSalesTable(paginatedSales);
                 
-                // Load category-wise summary
+                // Load category-wise summary with filtered sales data (respects date range and filters)
                 loadCategorySummary(salesData);
                 
                 // Update pagination
@@ -9174,6 +9230,8 @@ sortedBranches.forEach(data => {
         }
         
         // Load category-wise summary with transaction details
+        // IMPORTANT: This function uses the filtered sales data passed to it
+        // The sales data is already filtered by date range (from/to), branch, and category
         function loadCategorySummary(sales) {
             const summarySection = document.getElementById('categorySummarySection');
             const summaryCards = document.getElementById('categorySummaryCards');
@@ -9185,6 +9243,7 @@ sortedBranches.forEach(data => {
             }
             
             // Group sales by category with transaction details
+            // Using ONLY the filtered sales data (already filtered by date range and other filters)
             const categoryData = {};
             
             appData.categories.forEach(category => {
@@ -9197,10 +9256,11 @@ sortedBranches.forEach(data => {
                 };
             });
             
-            // Sort sales by date (newest first)
+            // Sort sales by date (newest first) - using filtered data only
             const sortedSales = [...sales].sort((a, b) => new Date(b.date) - new Date(a.date));
             
             // Calculate totals and collect transaction details for each category
+            // Only processes sales within the selected date range and filters
             sortedSales.forEach(sale => {
                 const categoryId = sale.categoryId?._id || sale.categoryId;
                 if (categoryData[categoryId]) {
@@ -10505,11 +10565,34 @@ sortedBranches.forEach(data => {
                 return; // Don't load if section is not visible
             }
             
+            // Check permissions before making API call
+            const permissions = appData.currentUser?.permissions || [];
+            if (!permissions.includes('admin') && !permissions.includes('payment-voucher-list')) {
+                showNotification('Access denied. You do not have permission to view supplier voucher list.', 'error');
+                // Clear the table to show empty state
+                const tbody = document.querySelector('#payment-voucher-list-section table tbody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="10" class="text-center text-danger">Access denied. You do not have permission to view supplier voucher list.</td></tr>';
+                }
+                return;
+            }
+            
             const branchFilter = document.getElementById('paymentVoucherListBranchFilter')?.value || '';
             const supplierFilter = document.getElementById('paymentVoucherListSupplierFilter')?.value || '';
             const fromDate = document.getElementById('paymentVoucherListFromDate')?.value || '';
             const toDate = document.getElementById('paymentVoucherListToDate')?.value || '';
             const search = document.getElementById('paymentVoucherSearch')?.value || '';
+            
+            // Require at least one date to be selected before loading data
+            if (!fromDate && !toDate) {
+                // Clear/hide existing data
+                const tbody = document.querySelector('#payment-voucher-list-section table tbody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">Please select at least one date (From or To) to view voucher list</td></tr>';
+                }
+                showNotification('Please select at least one date (From or To) to view voucher list', 'info');
+                return;
+            }
             
             let url = '/payments?';
             const params = [];
@@ -10565,8 +10648,17 @@ sortedBranches.forEach(data => {
                     }
                 }, 50);
             }).catch(error => {
-                console.error('Error loading voucher list:', error);
-                showNotification('Failed to load voucher list', 'error');
+                console.error('Error loading supplier voucher list:', error);
+                // Check if it's a permission error
+                if (error.response && error.response.status === 403) {
+                    showNotification('Access denied. You do not have permission to view supplier voucher list.', 'error');
+                    const tbody = document.querySelector('#payment-voucher-list-section table tbody');
+                    if (tbody) {
+                        tbody.innerHTML = '<tr><td colspan="10" class="text-center text-danger">Access denied. You do not have permission to view supplier voucher list.</td></tr>';
+                    }
+                } else {
+                    showNotification('Failed to load supplier voucher list: ' + (error.message || 'Unknown error'), 'error');
+                }
             });
         }
         
@@ -10582,28 +10674,31 @@ sortedBranches.forEach(data => {
                 return;
             }
             
-            const canEditVoucher = (appData.currentUser?.permissions || []).includes('payment-edit');
-            const canDeleteVoucher = (appData.currentUser?.permissions || []).includes('payment-delete');
+            // Separate permissions for supplier and category vouchers
+            const canEditSupplierVoucher = (appData.currentUser?.permissions || []).includes('payment-edit') || (appData.currentUser?.permissions || []).includes('admin');
+            const canDeleteSupplierVoucher = (appData.currentUser?.permissions || []).includes('payment-delete') || (appData.currentUser?.permissions || []).includes('admin');
+            const canEditCategoryVoucher = (appData.currentUser?.permissions || []).includes('category-voucher-edit') || (appData.currentUser?.permissions || []).includes('admin');
+            const canDeleteCategoryVoucher = (appData.currentUser?.permissions || []).includes('category-voucher-delete') || (appData.currentUser?.permissions || []).includes('admin');
+            
+            // This list is for SUPPLIER vouchers only (from /api/payments endpoint)
             vouchers.forEach(voucher => {
                 const row = document.createElement('tr');
                 const branchName = voucher.branchId?.name || 'Unknown';
-                const voucherType = voucher.voucherType || 'supplier';
-                let entityName = 'Unknown';
-                
-                if (voucherType === 'category') {
-                    entityName = voucher.categoryId?.name || voucher.category || 'Unknown';
-                } else {
-                    entityName = voucher.supplierId?.name || voucher.supplier || 'Unknown';
-                }
-                
+                // Supplier vouchers only - no need to check type
+                const entityName = voucher.supplierId?.name || voucher.supplier || 'Unknown';
                 const voucherNum = voucher.voucherNumber || 'N/A';
-                const typeLabel = voucherType === 'category' ? 'Category' : 'Supplier';
+                
+                // Use supplier voucher permissions only (this is supplier voucher list)
+                const canEdit = canEditSupplierVoucher;
+                const canDelete = canDeleteSupplierVoucher;
+                const editFunction = 'editPaymentVoucher';
+                const deleteFunction = 'deletePaymentVoucher';
                 
                 row.innerHTML = `
                     <td class="no-print"><input type="checkbox" class="payment-select" value="${voucher._id}"></td>
                     <td>${voucherNum}</td>
                     <td>${formatDate(voucher.date)}</td>
-                    <td><span class="badge bg-${voucherType === 'category' ? 'info' : 'primary'} me-1">${typeLabel}</span>${entityName}</td>
+                    <td><span class="badge bg-primary me-1">Supplier</span>${entityName}</td>
                     <td>${branchName}</td>
                     <td>PKR ${voucher.amount.toLocaleString()}</td>
                     <td>${voucher.paymentMethod || 'Cash'}</td>
@@ -10612,8 +10707,8 @@ sortedBranches.forEach(data => {
                         <button class="btn btn-sm btn-info me-1" onclick="viewPaymentVoucher('${voucher._id}')">
                             <i class="fas fa-eye"></i>
                         </button>
-                        ${canEditVoucher ? `<button class="btn btn-sm btn-warning me-1" onclick="editPaymentVoucher('${voucher._id}')"><i class=\"fas fa-edit\"></i></button>` : ''}
-                        ${canDeleteVoucher ? `<button class="btn btn-sm btn-danger" onclick="deletePaymentVoucher('${voucher._id}')"><i class=\"fas fa-trash\"></i></button>` : ''}
+                        ${canEdit ? `<button class="btn btn-sm btn-warning me-1" onclick="${editFunction}('${voucher._id}')"><i class=\"fas fa-edit\"></i></button>` : ''}
+                        ${canDelete ? `<button class="btn btn-sm btn-danger" onclick="${deleteFunction}('${voucher._id}')"><i class=\"fas fa-trash\"></i></button>` : ''}
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -10752,6 +10847,195 @@ sortedBranches.forEach(data => {
         };
         
         // View Payment Voucher - Opens in new window like sale report
+        // View Category Payment Voucher
+        function viewCategoryPaymentVoucher(id) {
+            api.getCategoryPayment(id).then(voucher => {
+                // Use the same view logic but for category vouchers
+                const branchName = voucher.branchId?.name || 'Unknown';
+                const entityName = voucher.categoryId?.name || voucher.category || 'Unknown';
+                const entityLabel = 'Category';
+                const voucherNum = voucher.voucherNumber || 'N/A';
+                
+                const companyName = appData.settings?.companyName || 'D.Watson Group Of Pharmacies';
+                const statusColor = '#155724';
+                const statusBg = '#f0f9f4';
+                const displayStatus = 'PAID';
+                
+                // Create complete HTML document for print
+                const printContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Category Payment Voucher - ${voucherNum}</title>
+    <style>
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        
+        @page {
+            size: A4 portrait;
+            margin: 0.5in;
+        }
+        
+        @media screen {
+            body {
+                background: #f5f5f5;
+                padding: 20px;
+            }
+            .print-container {
+                background: white;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 30px;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            }
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .print-container {
+                box-shadow: none;
+                padding: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 24pt;
+            color: #333;
+        }
+        
+        .header .company-info {
+            font-size: 10pt;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .voucher-info {
+            margin-bottom: 20px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .info-value {
+            color: #333;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 11pt;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            text-align: center;
+            font-size: 9pt;
+            color: #666;
+        }
+        
+        .amount-highlight {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #155724;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="print-container">
+        <div class="header">
+            <h1>PAYMENT VOUCHER</h1>
+            <div class="company-info">${companyName}</div>
+        </div>
+        
+        <div class="voucher-info">
+            <div class="info-row">
+                <span class="info-label">Voucher Number:</span>
+                <span class="info-value">${voucherNum}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Date:</span>
+                <span class="info-value">${formatDate(voucher.date)}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">${entityLabel}:</span>
+                <span class="info-value">${entityName}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Branch:</span>
+                <span class="info-value">${branchName}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Payment Method:</span>
+                <span class="info-value">${voucher.paymentMethod || 'Cash'}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Status:</span>
+                <span class="status-badge" style="color: ${statusColor}; background: ${statusBg};">${displayStatus}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Amount:</span>
+                <span class="amount-highlight">PKR ${(voucher.amount || 0).toLocaleString()}</span>
+            </div>
+            ${voucher.description ? `
+            <div class="info-row">
+                <span class="info-label">Description:</span>
+                <span class="info-value">${voucher.description}</span>
+            </div>
+            ` : ''}
+        </div>
+        
+        <div class="footer">
+            <p>Generated on ${new Date().toLocaleString()}</p>
+        </div>
+    </div>
+</body>
+</html>`;
+                
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+                printWindow.focus();
+                
+                setTimeout(() => {
+                    printWindow.print();
+                }, 250);
+            }).catch(error => {
+                console.error('Error fetching category voucher:', error);
+                showNotification('Failed to load voucher', 'error');
+            });
+        }
+        
         function viewPaymentVoucher(id) {
             // Try to determine if it's a category or supplier voucher by checking active tab
             const categoryTab = document.getElementById('category-voucher-list-tab');
@@ -10996,58 +11280,143 @@ sortedBranches.forEach(data => {
         }
         
         // Edit Payment Voucher
-        function editPaymentVoucher(id) {
-            if (!(appData.currentUser?.permissions || []).includes('payment-edit')) {
-                showNotification("You don't have permission to edit vouchers", 'error');
+        // Edit Category Payment Voucher
+        function editCategoryPaymentVoucher(id) {
+            if (!(appData.currentUser?.permissions || []).includes('category-voucher-edit') && !(appData.currentUser?.permissions || []).includes('admin')) {
+                showNotification("You don't have permission to edit category vouchers", 'error');
                 return;
             }
             
-            // Check which tab is active to determine voucher type
-            const categoryTab = document.getElementById('category-voucher-list-tab');
-            const isCategoryTab = categoryTab && categoryTab.classList.contains('active');
-            
-            if (isCategoryTab) {
-                // Load from category payments API
-                api.getCategoryPayment(id).then(voucher => {
+            // Load from category payments API
+            api.getCategoryPayment(id).then(voucher => {
+                // First, ensure dropdowns are populated
+                populateCategoryVoucherDropdowns();
+                
+                // Wait a moment for dropdowns to be populated, then set values
+                setTimeout(() => {
                     // Edit category voucher
-                    document.getElementById('categoryVoucherNumber').value = voucher.voucherNumber || '';
-                    document.getElementById('categoryVoucherDate').value = new Date(voucher.date).toISOString().split('T')[0];
-                    document.getElementById('categoryVoucherCategory').value = voucher.categoryId?._id || voucher.categoryId || '';
-                    document.getElementById('categoryVoucherBranch').value = voucher.branchId?._id || voucher.branchId || '';
-                    document.getElementById('categoryVoucherMethod').value = voucher.paymentMethod || 'Cash';
-                    document.getElementById('categoryVoucherAmount').value = voucher.amount || 0;
-                    document.getElementById('categoryVoucherDescription').value = voucher.description || '';
+                    const numberField = document.getElementById('categoryVoucherNumber');
+                    const dateField = document.getElementById('categoryVoucherDate');
+                    const categoryField = document.getElementById('categoryVoucherCategory');
+                    const branchField = document.getElementById('categoryVoucherBranch');
+                    const methodField = document.getElementById('categoryVoucherMethod');
+                    const amountField = document.getElementById('categoryVoucherAmount');
+                    const descriptionField = document.getElementById('categoryVoucherDescription');
+                    
+                    if (numberField) numberField.value = voucher.voucherNumber || '';
+                    if (dateField) dateField.value = new Date(voucher.date).toISOString().split('T')[0];
+                    
+                    // Set category value (handle both populated and ID formats)
+                    if (categoryField) {
+                        const categoryId = voucher.categoryId?._id || voucher.categoryId;
+                        categoryField.value = categoryId || '';
+                    }
+                    
+                    // Set branch value (handle both populated and ID formats)
+                    if (branchField) {
+                        const branchId = voucher.branchId?._id || voucher.branchId;
+                        branchField.value = branchId || '';
+                    }
+                    
+                    if (methodField) methodField.value = voucher.paymentMethod || 'Cash';
+                    if (amountField) amountField.value = voucher.amount || 0;
+                    if (descriptionField) descriptionField.value = voucher.description || '';
                     
                     // Store voucher ID for update
-                    document.getElementById('categoryVoucherForm').setAttribute('data-voucher-id', id);
+                    const form = document.getElementById('categoryVoucherForm');
+                    if (form) form.setAttribute('data-voucher-id', id);
                     
-                    // Switch to payment vouchers section and activate category tab
-                    showPaymentTab('payment-vouchers');
-                    setTimeout(() => {
-                        const categoryTab = document.getElementById('category-voucher-tab');
-                        if (categoryTab) {
-                            const bsTab = new bootstrap.Tab(categoryTab);
-                            bsTab.show();
-                        }
-                    }, 300);
                     showNotification('Category voucher loaded for editing', 'info');
+                }, 500);
+                
+                // Switch to payment vouchers section and activate category tab
+                showPaymentTab('payment-vouchers');
+                setTimeout(() => {
+                    const categoryTab = document.getElementById('category-voucher-tab');
+                    if (categoryTab) {
+                        const bsTab = new bootstrap.Tab(categoryTab);
+                        bsTab.show();
+                    }
+                }, 300);
+            }).catch(error => {
+                console.error('Error fetching category voucher:', error);
+                showNotification('Failed to load voucher', 'error');
+            });
+        }
+        
+        // Delete Category Payment Voucher
+        function deleteCategoryPaymentVoucher(id) {
+            if (!(appData.currentUser?.permissions || []).includes('category-voucher-delete') && !(appData.currentUser?.permissions || []).includes('admin')) {
+                showNotification("You don't have permission to delete category vouchers", 'error');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to delete this category voucher?')) {
+                // Delete from category payments API
+                api.deleteCategoryPayment(id).then(() => {
+                    showNotification('Category voucher deleted successfully!', 'success');
+                    loadCategoryVoucherListTab();
+                    updatePaymentDashboard();
                 }).catch(error => {
-                    console.error('Error fetching category voucher:', error);
-                    showNotification('Failed to load voucher', 'error');
+                    console.error('Error deleting category voucher:', error);
+                    if (error.response && error.response.status === 403) {
+                        showNotification('Access denied. You do not have permission to delete category vouchers.', 'error');
+                    } else {
+                        showNotification('Failed to delete voucher: ' + (error.message || 'Unknown error'), 'error');
+                    }
                 });
-            } else {
+            }
+        }
+        
+        function editPaymentVoucher(id) {
+            // Check permission for supplier vouchers ONLY
+            if (!(appData.currentUser?.permissions || []).includes('payment-edit') && !(appData.currentUser?.permissions || []).includes('admin')) {
+                showNotification("You don't have permission to edit supplier vouchers", 'error');
+                return;
+            }
+            
+            // This function is ONLY for supplier vouchers - category vouchers should use editCategoryPaymentVoucher
+            // No need to check tab, just edit as supplier voucher
                 // Edit supplier voucher - load from supplier payments API
                 api.getPayment(id).then(voucher => {
-                    document.getElementById('paymentVoucherNumber').value = voucher.voucherNumber || '';
-                    document.getElementById('paymentVoucherDate').value = new Date(voucher.date).toISOString().split('T')[0];
-                    document.getElementById('paymentVoucherSupplier').value = voucher.supplierId?._id || voucher.supplierId || '';
-                    document.getElementById('paymentVoucherBranch').value = voucher.branchId?._id || voucher.branchId || '';
-                    document.getElementById('paymentVoucherMethod').value = voucher.paymentMethod || 'Cash';
-                    document.getElementById('paymentVoucherAmount').value = voucher.amount || 0;
-                    document.getElementById('paymentVoucherDescription').value = voucher.description || '';
+                    // First, ensure dropdowns are populated
+                    populatePaymentVoucherDropdowns();
                     
-                    // Store voucher ID for update
-                    document.getElementById('paymentVoucherForm').setAttribute('data-voucher-id', id);
+                    // Wait a moment for dropdowns to be populated, then set values
+                    setTimeout(() => {
+                        const numberField = document.getElementById('paymentVoucherNumber');
+                        const dateField = document.getElementById('paymentVoucherDate');
+                        const supplierField = document.getElementById('paymentVoucherSupplier');
+                        const branchField = document.getElementById('paymentVoucherBranch');
+                        const methodField = document.getElementById('paymentVoucherMethod');
+                        const amountField = document.getElementById('paymentVoucherAmount');
+                        const descriptionField = document.getElementById('paymentVoucherDescription');
+                        
+                        if (numberField) numberField.value = voucher.voucherNumber || '';
+                        if (dateField) dateField.value = new Date(voucher.date).toISOString().split('T')[0];
+                        
+                        // Set supplier value (handle both populated and ID formats)
+                        if (supplierField) {
+                            const supplierId = voucher.supplierId?._id || voucher.supplierId;
+                            supplierField.value = supplierId || '';
+                        }
+                        
+                        // Set branch value (handle both populated and ID formats)
+                        if (branchField) {
+                            const branchId = voucher.branchId?._id || voucher.branchId;
+                            branchField.value = branchId || '';
+                        }
+                        
+                        if (methodField) methodField.value = voucher.paymentMethod || 'Cash';
+                        if (amountField) amountField.value = voucher.amount || 0;
+                        if (descriptionField) descriptionField.value = voucher.description || '';
+                        
+                        // Store voucher ID for update
+                        const form = document.getElementById('paymentVoucherForm');
+                        if (form) form.setAttribute('data-voucher-id', id);
+                        
+                        showNotification('Voucher loaded for editing', 'info');
+                    }, 500);
                     
                     // Switch to voucher tab
                     showPaymentTab('payment-vouchers');
@@ -11058,47 +11427,33 @@ sortedBranches.forEach(data => {
                             bsTab.show();
                         }
                     }, 300);
-                    showNotification('Voucher loaded for editing', 'info');
                 }).catch(error => {
                     console.error('Error fetching voucher:', error);
                     showNotification('Failed to load voucher', 'error');
                 });
-            }
         }
         
-        // Delete Payment Voucher
+        // Delete Payment Voucher (Supplier Vouchers Only)
         function deletePaymentVoucher(id) {
-            if (!(appData.currentUser?.permissions || []).includes('payment-delete')) {
-                showNotification("You don't have permission to delete vouchers", 'error');
+            if (!(appData.currentUser?.permissions || []).includes('payment-delete') && !(appData.currentUser?.permissions || []).includes('admin')) {
+                showNotification("You don't have permission to delete supplier vouchers", 'error');
                 return;
             }
-            if (confirm('Are you sure you want to delete this voucher?')) {
-                // Try to determine if it's a category or supplier voucher
-                // Check which tab is active
-                const categoryTab = document.getElementById('category-voucher-list-tab');
-                const isCategoryTab = categoryTab && categoryTab.classList.contains('active');
-                
-                if (isCategoryTab) {
-                    // Delete from category payments API
-                    api.deleteCategoryPayment(id).then(() => {
-                        showNotification('Category voucher deleted successfully!', 'success');
-                        loadCategoryVoucherListTab();
-                        updatePaymentDashboard();
-                    }).catch(error => {
-                        console.error('Error deleting category voucher:', error);
-                        showNotification('Failed to delete voucher', 'error');
-                    });
-                } else {
-                    // Delete from supplier payments API
-                    api.deletePayment(id).then(() => {
-                        showNotification('Voucher deleted successfully!', 'success');
-                        loadPaymentVoucherList();
-                        updatePaymentDashboard();
-                    }).catch(error => {
-                        console.error('Error deleting voucher:', error);
-                        showNotification('Failed to delete voucher', 'error');
-                    });
-                }
+            
+            if (confirm('Are you sure you want to delete this supplier voucher?')) {
+                // Delete from supplier payments API
+                api.deletePayment(id).then(() => {
+                    showNotification('Voucher deleted successfully!', 'success');
+                    loadPaymentVoucherList();
+                    updatePaymentDashboard();
+                }).catch(error => {
+                    console.error('Error deleting voucher:', error);
+                    if (error.response && error.response.status === 403) {
+                        showNotification('Access denied. You do not have permission to delete supplier vouchers.', 'error');
+                    } else {
+                        showNotification('Failed to delete voucher: ' + (error.message || 'Unknown error'), 'error');
+                    }
+                });
             }
         }
         
@@ -11108,8 +11463,11 @@ sortedBranches.forEach(data => {
         
         // Initialize Category Voucher List Tab
         function initializeCategoryVoucherListTab() {
+            // Only populate filters, don't load data automatically
+            // Data will be loaded only when the category tab is clicked
             populateCategoryVoucherListTabFilters();
-            loadCategoryVoucherListTab();
+            // Removed automatic loadCategoryVoucherListTab() call to prevent permission check
+            // The category voucher list will load only when user clicks the category tab
         }
         
         // Populate Category Voucher List Tab Filters
@@ -11145,11 +11503,34 @@ sortedBranches.forEach(data => {
         
         // Load Category Voucher List Tab
         function loadCategoryVoucherListTab() {
+            // Check permissions before making API call
+            const permissions = appData.currentUser?.permissions || [];
+            if (!permissions.includes('admin') && !permissions.includes('category-voucher-list')) {
+                showNotification('Access denied. You do not have permission to view category voucher list.', 'error');
+                // Clear the table to show empty state
+                const tbody = document.getElementById('categoryVoucherListTableBody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Access denied. You do not have permission to view category voucher list.</td></tr>';
+                }
+                return;
+            }
+            
             const branchFilter = document.getElementById('categoryVoucherListBranchFilter')?.value || '';
             const categoryFilter = document.getElementById('categoryVoucherListCategoryFilter')?.value || '';
             const fromDate = document.getElementById('categoryVoucherListFromDate')?.value || '';
             const toDate = document.getElementById('categoryVoucherListToDate')?.value || '';
             const search = document.getElementById('categoryVoucherListSearch')?.value || '';
+            
+            // Require at least one date to be selected before loading data
+            if (!fromDate && !toDate) {
+                // Clear/hide existing data
+                const tbody = document.getElementById('categoryVoucherListTableBody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Please select at least one date (From or To) to view voucher list</td></tr>';
+                }
+                showNotification('Please select at least one date (From or To) to view voucher list', 'info');
+                return;
+            }
             
             let url = '/category-payments';
             const params = [];
@@ -11183,7 +11564,16 @@ sortedBranches.forEach(data => {
                 renderCategoryVoucherListTab(filteredPayments);
             }).catch(error => {
                 console.error('Error loading category voucher list:', error);
-                showNotification('Failed to load voucher list', 'error');
+                // Check if it's a permission error
+                if (error.response && error.response.status === 403) {
+                    showNotification('Access denied. You do not have permission to view category voucher list.', 'error');
+                    const tbody = document.getElementById('categoryVoucherListTableBody');
+                    if (tbody) {
+                        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Access denied. You do not have permission to view category voucher list.</td></tr>';
+                    }
+                } else {
+                    showNotification('Failed to load category voucher list: ' + (error.message || 'Unknown error'), 'error');
+                }
             });
         }
         
@@ -11199,8 +11589,9 @@ sortedBranches.forEach(data => {
                 return;
             }
             
-            const canEditVoucher = (appData.currentUser?.permissions || []).includes('payment-edit');
-            const canDeleteVoucher = (appData.currentUser?.permissions || []).includes('payment-delete');
+            // Use category-voucher-edit and category-voucher-delete permissions for category vouchers
+            const canEditVoucher = (appData.currentUser?.permissions || []).includes('category-voucher-edit') || (appData.currentUser?.permissions || []).includes('admin');
+            const canDeleteVoucher = (appData.currentUser?.permissions || []).includes('category-voucher-delete') || (appData.currentUser?.permissions || []).includes('admin');
             
             vouchers.forEach(voucher => {
                 const branchName = voucher.branchId?.name || 'Unknown';
@@ -11217,11 +11608,11 @@ sortedBranches.forEach(data => {
                     <td>${voucher.paymentMethod || 'Cash'}</td>
                     <td>${voucher.description || '-'}</td>
                     <td class="no-print">
-                        <button class="btn btn-sm btn-info me-1" onclick="viewPaymentVoucher('${voucher._id}')">
+                        <button class="btn btn-sm btn-info me-1" onclick="viewCategoryPaymentVoucher('${voucher._id}')">
                             <i class="fas fa-eye"></i>
                         </button>
-                        ${canEditVoucher ? `<button class="btn btn-sm btn-warning me-1" onclick="editPaymentVoucher('${voucher._id}')"><i class="fas fa-edit"></i></button>` : ''}
-                        ${canDeleteVoucher ? `<button class="btn btn-sm btn-danger" onclick="deletePaymentVoucher('${voucher._id}')"><i class="fas fa-trash"></i></button>` : ''}
+                        ${canEditVoucher ? `<button class="btn btn-sm btn-warning me-1" onclick="editCategoryPaymentVoucher('${voucher._id}')"><i class="fas fa-edit"></i></button>` : ''}
+                        ${canDeleteVoucher ? `<button class="btn btn-sm btn-danger" onclick="deleteCategoryPaymentVoucher('${voucher._id}')"><i class="fas fa-trash"></i></button>` : ''}
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -11482,6 +11873,18 @@ sortedBranches.forEach(data => {
                 return;
             }
             
+            // Check permissions before making API call
+            const permissions = appData.currentUser?.permissions || [];
+            if (!permissions.includes('admin') && !permissions.includes('category-voucher-list')) {
+                showNotification('Access denied. You do not have permission to view category voucher list.', 'error');
+                // Clear the table to show empty state
+                const tbody = document.getElementById('categoryVoucherSimpleListTable');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Access denied. You do not have permission to view category voucher list.</td></tr>';
+                }
+                return;
+            }
+            
             const branchFilter = document.getElementById('categoryVoucherSimpleListBranchFilter')?.value || '';
             const categoryFilter = document.getElementById('categoryVoucherSimpleListCategoryFilter')?.value || '';
             const fromDate = document.getElementById('categoryVoucherSimpleListFromDate')?.value || '';
@@ -11519,8 +11922,17 @@ sortedBranches.forEach(data => {
                 
                 renderCategoryVoucherSimpleList(filteredPayments);
             }).catch(error => {
-                console.error('Error loading category voucher list:', error);
-                showNotification('Failed to load voucher list', 'error');
+                console.error('Error loading category voucher simple list:', error);
+                // Check if it's a permission error
+                if (error.response && error.response.status === 403) {
+                    showNotification('Access denied. You do not have permission to view category voucher list.', 'error');
+                    const tbody = document.getElementById('categoryVoucherSimpleListTable');
+                    if (tbody) {
+                        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Access denied. You do not have permission to view category voucher list.</td></tr>';
+                    }
+                } else {
+                    showNotification('Failed to load category voucher list: ' + (error.message || 'Unknown error'), 'error');
+                }
             });
         }
         
@@ -11536,8 +11948,9 @@ sortedBranches.forEach(data => {
                 return;
             }
             
-            const canEditVoucher = (appData.currentUser?.permissions || []).includes('payment-edit');
-            const canDeleteVoucher = (appData.currentUser?.permissions || []).includes('payment-delete');
+            // Use category-voucher-edit and category-voucher-delete permissions for category vouchers
+            const canEditVoucher = (appData.currentUser?.permissions || []).includes('category-voucher-edit') || (appData.currentUser?.permissions || []).includes('admin');
+            const canDeleteVoucher = (appData.currentUser?.permissions || []).includes('category-voucher-delete') || (appData.currentUser?.permissions || []).includes('admin');
             
             vouchers.forEach(voucher => {
                 const branchName = voucher.branchId?.name || 'Unknown';
@@ -11554,11 +11967,11 @@ sortedBranches.forEach(data => {
                     <td>${voucher.paymentMethod || 'Cash'}</td>
                     <td>${voucher.description || '-'}</td>
                     <td class="no-print">
-                        <button class="btn btn-sm btn-info me-1" onclick="viewPaymentVoucher('${voucher._id}')">
+                        <button class="btn btn-sm btn-info me-1" onclick="viewCategoryPaymentVoucher('${voucher._id}')">
                             <i class="fas fa-eye"></i>
                         </button>
-                        ${canEditVoucher ? `<button class="btn btn-sm btn-warning me-1" onclick="editPaymentVoucher('${voucher._id}')"><i class="fas fa-edit"></i></button>` : ''}
-                        ${canDeleteVoucher ? `<button class="btn btn-sm btn-danger" onclick="deletePaymentVoucher('${voucher._id}')"><i class="fas fa-trash"></i></button>` : ''}
+                        ${canEditVoucher ? `<button class="btn btn-sm btn-warning me-1" onclick="editCategoryPaymentVoucher('${voucher._id}')"><i class="fas fa-edit"></i></button>` : ''}
+                        ${canDeleteVoucher ? `<button class="btn btn-sm btn-danger" onclick="deleteCategoryPaymentVoucher('${voucher._id}')"><i class="fas fa-trash"></i></button>` : ''}
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -11826,6 +12239,18 @@ sortedBranches.forEach(data => {
         
         // Load Category Voucher List
         function loadCategoryVoucherList() {
+            // Check permissions before making API call
+            const permissions = appData.currentUser?.permissions || [];
+            if (!permissions.includes('admin') && !permissions.includes('category-voucher-list')) {
+                showNotification('Access denied. You do not have permission to view category voucher list.', 'error');
+                // Clear the table to show empty state
+                const tbody = document.getElementById('categoryVoucherListTable');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Access denied. You do not have permission to view category voucher list.</td></tr>';
+                }
+                return;
+            }
+            
             const categoryId = document.getElementById('categoryVoucherListCategoryFilter')?.value || '';
             const branchId = document.getElementById('categoryVoucherListBranchFilter')?.value || '';
             const fromDate = document.getElementById('categoryVoucherListFromDate')?.value || '';
@@ -11863,7 +12288,16 @@ sortedBranches.forEach(data => {
                 renderCategoryVoucherList(sales, payments);
             }).catch(error => {
                 console.error('Error loading category voucher list:', error);
-                showNotification('Failed to load data', 'error');
+                // Check if it's a permission error
+                if (error.response && error.response.status === 403) {
+                    showNotification('Access denied. You do not have permission to view category voucher list.', 'error');
+                    const tbody = document.getElementById('categoryVoucherListTable');
+                    if (tbody) {
+                        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Access denied. You do not have permission to view category voucher list.</td></tr>';
+                    }
+                } else {
+                    showNotification('Failed to load category voucher list: ' + (error.message || 'Unknown error'), 'error');
+                }
             });
         }
         
@@ -12349,6 +12783,19 @@ sortedBranches.forEach(data => {
                 const uniqueBranches = [...new Set(vouchers.map(v => v.branchId?.name || 'Unknown'))];
                 const uniqueSuppliers = [...new Set(vouchers.map(v => v.supplierId?.name || v.supplier || 'Unknown'))];
                 const includeSupplierCol = (uniqueSuppliers.length > 1);
+                
+                // Group vouchers by payment method
+                const vouchersByMethod = {};
+                vouchers.forEach(voucher => {
+                    const method = voucher.paymentMethod || 'Cash';
+                    if (!vouchersByMethod[method]) {
+                        vouchersByMethod[method] = [];
+                    }
+                    vouchersByMethod[method].push(voucher);
+                });
+                
+                // Sort payment methods alphabetically
+                const sortedMethods = Object.keys(vouchersByMethod).sort();
 
                 // Build combined voucher list preview - complete HTML document (same as sale report)
                 let printContent = `
@@ -12486,34 +12933,52 @@ sortedBranches.forEach(data => {
         <tbody>
                 `;
                 
-                // Add each voucher as one line with professional colors - All show PAID status
-                vouchers.forEach((voucher, index) => {
-                    const voucherNum = voucher.voucherNumber || 'N/A';
-                    const voucherDate = formatDate(voucher.date);
-                    const amount = voucher.amount || 0;
-                    const paymentMethod = voucher.paymentMethod || 'Cash';
-                    const description = voucher.description || '-';
-                    const supplierName = voucher.supplierId?.name || voucher.supplier || 'Unknown';
-                    // All vouchers show PAID status
-                    const displayStatus = 'PAID';
-                    const statusColor = '#000';
-                    const statusBg = '#f8f9fa';
+                // Track overall row index for numbering
+                let globalRowIndex = 0;
+                
+                // Loop through payment methods and group vouchers
+                sortedMethods.forEach((method, methodIndex) => {
+                    const methodVouchers = vouchersByMethod[method];
+                    const methodTotal = methodVouchers.reduce((sum, v) => sum + (v.amount || 0), 0);
                     
-                    // Professional alternate row colors - matching sale report
-                    const rowBg = index % 2 === 0 ? '#ffffff' : '#f8f9fa';
-                    
+                    // Add payment method header row
                     printContent += `
+                                <tr style="background-color: #2c6e8a; color: #ffffff;">
+                                    <td colspan="${includeSupplierCol ? '8' : '7'}" style="padding: 12px 8px; border: 2px solid #1a4d63; font-weight: bold; font-size: 13pt; text-align: center; text-transform: uppercase;">
+                                        ${method} - ${methodVouchers.length} Voucher(s) - Total: ${methodTotal.toLocaleString()}
+                                    </td>
+                                </tr>
+                    `;
+                    
+                    // Add each voucher in this payment method group
+                    methodVouchers.forEach((voucher, voucherIndex) => {
+                        globalRowIndex++;
+                        const voucherNum = voucher.voucherNumber || 'N/A';
+                        const voucherDate = formatDate(voucher.date);
+                        const amount = voucher.amount || 0;
+                        const description = voucher.description || '-';
+                        const supplierName = voucher.supplierId?.name || voucher.supplier || 'Unknown';
+                        // All vouchers show PAID status
+                        const displayStatus = 'PAID';
+                        const statusColor = '#000';
+                        const statusBg = '#f8f9fa';
+                        
+                        // Professional alternate row colors - matching sale report
+                        const rowBg = voucherIndex % 2 === 0 ? '#ffffff' : '#f8f9fa';
+                        
+                        printContent += `
                                 <tr style="background-color: ${rowBg}; vertical-align: top;">
-                                    <td style="padding: 10px 6px; border: 1px solid #333; font-weight: bold; color: #000; text-align: center; font-size: 11pt; width: 4%; vertical-align: top;">${index + 1}</td>
+                                    <td style="padding: 10px 6px; border: 1px solid #333; font-weight: bold; color: #000; text-align: center; font-size: 11pt; width: 4%; vertical-align: top;">${globalRowIndex}</td>
                                     <td style="padding: 10px 6px; border: 1px solid #333; font-weight: bold; color: #000; font-size: 11pt; width: 12%; vertical-align: top;">${voucherNum}</td>
                                     <td style="padding: 10px 6px; border: 1px solid #333; color: #000; font-size: 11pt; width: 10%; vertical-align: top;">${voucherDate}</td>
                                     ${includeSupplierCol ? `<td style=\"padding: 10px 6px; border: 1px solid #333; color: #000; font-size: 11pt; width: 18%; vertical-align: top;\">${supplierName}</td>` : ''}
-                                    <td style="padding: 10px 6px; border: 1px solid #333; text-align: center; color: #000; font-size: 11pt; width: 10%; vertical-align: top;">${paymentMethod}</td>
+                                    <td style="padding: 10px 6px; border: 1px solid #333; text-align: center; color: #000; font-size: 11pt; width: 10%; vertical-align: top;">${method}</td>
                                     <td style="padding: 10px 6px; border: 1px solid #333; text-align: center; background: ${statusBg}; color: ${statusColor}; font-weight: bold; font-size: 11pt; text-transform: uppercase; width: 10%; vertical-align: top;">${displayStatus}</td>
                                     <td style="padding: 10px 6px; border: 1px solid #333; color: #000; font-size: 11pt; width: ${includeSupplierCol ? '28%' : '38%'}; white-space: normal; word-wrap: break-word; overflow-wrap: break-word; vertical-align: top; line-height: 1.4;">${description || '-'}</td>
                                     <td style="padding: 10px 6px; border: 1px solid #333; text-align: right; font-weight: bold; color: #000; font-size: 11pt; width: 16%; white-space: nowrap; vertical-align: top;">${amount.toLocaleString()}</td>
                                 </tr>
-                    `;
+                        `;
+                    });
                 });
                 
                 printContent += `
@@ -12947,6 +13412,12 @@ sortedBranches.forEach(data => {
             const branch = document.getElementById('paymentReportBranch')?.value || '';
             const supplier = document.getElementById('paymentReportSupplier')?.value || '';
             
+            // Require at least one date to be selected
+            if (!fromDate && !toDate) {
+                showNotification('Please select at least one date (From or To) to generate the report', 'error');
+                return;
+            }
+            
             let url = '/payments?';
             const params = [];
             if (branch) params.push(`branchId=${branch}`);
@@ -13179,6 +13650,14 @@ sortedBranches.forEach(data => {
             const categoryFilter = document.getElementById('reportCategoryFilter').value;
             const fromDate = document.getElementById('reportFromDate').value;
             const toDate = document.getElementById('reportToDate').value;
+            
+            // Require at least one date to be selected
+            if (!fromDate && !toDate) {
+                showNotification('Please select at least one date (From or To) to generate the report', 'error');
+                const tbody = document.getElementById('paymentReportTableBody');
+                if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Please select at least one date (From or To) to generate the report</td></tr>';
+                return;
+            }
             
             let url = '/payments?';
             const params = [];
@@ -13839,6 +14318,12 @@ sortedBranches.forEach(data => {
             const dateTo = document.getElementById('reportDateTo').value;
             const branchId = document.getElementById('reportBranch').value;
             
+            // Require at least one date to be selected
+            if (!dateFrom && !dateTo) {
+                showNotification('Please select at least one date (From or To) to generate the report', 'error');
+                return;
+            }
+            
             // Build filters object
             const filters = {};
             if (dateFrom) filters.from = dateFrom;
@@ -13970,6 +14455,12 @@ sortedBranches.forEach(data => {
             const dateTo = document.getElementById('salesReportDateTo').value;
             const branchId = document.getElementById('salesReportBranch').value;
             const categoryId = document.getElementById('salesReportCategory').value;
+            
+            // Require at least one date to be selected
+            if (!dateFrom && !dateTo) {
+                showNotification('Please select at least one date (From or To) to generate the report', 'error');
+                return;
+            }
             
             // Update subtitle based on filters
             const subtitle = document.getElementById('salesReportSubtitle');
@@ -14138,6 +14629,12 @@ sortedBranches.forEach(data => {
             const dateTo = document.getElementById('paymentReportToDateFilter').value;
             const branchId = document.getElementById('paymentReportBranchFilter').value;
             const categoryId = document.getElementById('paymentReportCategoryFilter').value;
+            
+            // Require at least one date to be selected
+            if (!dateFrom && !dateTo) {
+                showNotification('Please select at least one date (From or To) to generate the report', 'error');
+                return;
+            }
             
             // Update subtitle based on filters
             const subtitle = document.getElementById('paymentReportSubtitle');
@@ -14461,6 +14958,12 @@ sortedBranches.forEach(data => {
             const branchId = document.getElementById('comparisonReportBranch').value;
             const categoryId = document.getElementById('comparisonReportCategory').value;
             
+            // Require at least one date to be selected
+            if (!dateFrom && !dateTo) {
+                showNotification('Please select at least one date (From or To) to generate the report', 'error');
+                return;
+            }
+            
             // Update subtitle based on filters
             const subtitle = document.getElementById('comparisonReportSubtitle');
             let subtitleText = '';
@@ -14636,6 +15139,12 @@ sortedBranches.forEach(data => {
             const branchId = document.getElementById('datewiseReportBranch').value;
             const categoryId = document.getElementById('datewiseReportCategory').value;
             const searchText = document.getElementById('datewiseSearch').value.toLowerCase();
+            
+            // Require at least one date to be selected
+            if (!dateFrom && !dateTo) {
+                showNotification('Please select at least one date (From or To) to generate the report', 'error');
+                return;
+            }
             
             const filters = {};
             if (dateFrom) filters.from = dateFrom;
