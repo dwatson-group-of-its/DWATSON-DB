@@ -58,6 +58,14 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('dev'));
 
+// DEBUG: Log ALL incoming requests to see what's happening
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    console.log('🔍 REQUEST RECEIVED:', req.method, req.path, '| Query:', JSON.stringify(req.query), '| Original:', req.originalUrl);
+  }
+  next();
+});
+
 // ========================================
 // RATE LIMITING MIDDLEWARE
 // ========================================
@@ -317,7 +325,7 @@ const SupplierSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Payment Schema - Payment entries (Voucher-based)
+// Payment Schema - Payment entries (Voucher-based) - Supplier Vouchers ONLY
 const PaymentSchema = new mongoose.Schema(
   {
     branchId: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch', required: true },
@@ -334,6 +342,23 @@ const PaymentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Category Payment Schema - Category Vouchers (SEPARATE MODEL)
+const CategoryPaymentSchema = new mongoose.Schema(
+  {
+    branchId: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch', required: true },
+    categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
+    voucherNumber: { type: String, unique: true, required: true },
+    date: { type: Date, required: true },
+    amount: { type: Number, required: true },
+    description: { type: String, default: '' },
+    paymentMethod: { type: String, default: 'Cash' },
+    category: { type: String, required: true },
+    notes: { type: String, default: '' },
+    status: { type: String, default: 'Pending', enum: ['Pending', 'Approved', 'Rejected'] }
+  },
+  { timestamps: true }
+);
+
 // Model Creation
 const Branch = mongoose.model('Branch', BranchSchema);
 const Category = mongoose.model('Category', CategorySchema);
@@ -343,6 +368,7 @@ const Sale = mongoose.model('Sale', SaleSchema);
 const Settings = mongoose.model('Settings', SettingsSchema);
 const Supplier = mongoose.model('Supplier', SupplierSchema);
 const Payment = mongoose.model('Payment', PaymentSchema);
+const CategoryPayment = mongoose.model('CategoryPayment', CategoryPaymentSchema);
 
 // ========================================
 // AUTHENTICATION CONFIGURATION
@@ -359,6 +385,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'pharmacy_sales_secret_key';
 
 // Check if database is connected
 const checkDatabaseConnection = (req, res, next) => {
+  // ALWAYS set Content-Type to JSON FIRST - even for DB errors
+  res.setHeader('Content-Type', 'application/json');
+  
   if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({ 
       error: 'Database connection not available. Please try again later.',
@@ -374,6 +403,9 @@ const checkDatabaseConnection = (req, res, next) => {
 
 // Main Authentication Middleware
 const authenticate = async (req, res, next) => {
+  // ALWAYS set Content-Type to JSON FIRST - even for auth errors
+  res.setHeader('Content-Type', 'application/json');
+  
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
@@ -403,11 +435,12 @@ const authenticate = async (req, res, next) => {
       return res.status(401).json({ error: 'Group has no permissions defined.' });
     }
     
-    
+
     req.user = user;
     next();
   } catch (error) {
     console.error('Authentication error:', error);
+    // ALWAYS return JSON even on auth error
     res.status(401).json({ error: 'Invalid token.' });
   }
 };
@@ -499,7 +532,7 @@ app.post('/api/admin/promote-user', async (req, res) => {
       adminGroup = await Group.create({
         name: 'Admin',
         description: 'System administrators with full access',
-        permissions: ['admin', 'dashboard', 'categories', 'sales', 'payments', 'reports', 'branches', 'groups', 'users', 'settings', 'suppliers'],
+        permissions: ['admin', 'dashboard', 'categories', 'sales', 'payments', 'payment-dashboard', 'payment-vouchers', 'payment-voucher-list', 'payment-reports', 'category-voucher', 'category-voucher-list', 'category-voucher-edit', 'category-voucher-delete', 'reports', 'branches', 'groups', 'users', 'settings', 'suppliers'],
         isDefault: true
       });
     }
@@ -1513,10 +1546,11 @@ app.get('/api/payments', authenticate, async (req, res) => {
 
 // Get Next Voucher Number - MUST be defined BEFORE /api/payments/:id route
 app.get('/api/payments/next-voucher-number', authenticate, async (req, res) => {
+  // ALWAYS set Content-Type to JSON FIRST
+  res.setHeader('Content-Type', 'application/json');
+  
   try {
-    console.log('✅ Next voucher number route hit - path:', req.path);
-    // Ensure Content-Type is JSON
-    res.setHeader('Content-Type', 'application/json');
+    console.log('✅ GET /api/payments/next-voucher-number called');
     
     // Logic to generate next voucher number
     const prefix = 'PV';
@@ -1537,11 +1571,21 @@ app.get('/api/payments/next-voucher-number', authenticate, async (req, res) => {
   }
 });
 
-// Create New Payment
+// Create New Payment (Supplier Vouchers ONLY)
 app.post('/api/payments', authenticate, checkDatabaseConnection, async (req, res) => {
+  // ALWAYS set Content-Type to JSON FIRST
+  res.setHeader('Content-Type', 'application/json');
+  
   try {
+    console.log('✅ POST /api/payments called (Supplier voucher)');
+    
     // Copy request data
     const data = { ...req.body };
+
+    // Reject if it has categoryId - category vouchers should use /api/category-payments
+    if (data.categoryId || data.voucherType === 'category') {
+      return res.status(400).json({ error: 'Category vouchers must use /api/category-payments endpoint' });
+    }
 
     // Generate voucher number if not provided
     if (!data.voucherNumber) {
@@ -1584,10 +1628,15 @@ app.post('/api/payments', authenticate, checkDatabaseConnection, async (req, res
       .populate('branchId', 'name')
       .populate('supplierId', 'name');
 
+    console.log('✅ Supplier payment created:', populatedPayment.voucherNumber);
     res.status(201).json(populatedPayment);
   } catch (error) {
-    console.error('Error creating payment:', error.message);
-    res.status(400).json({ error: error.message });
+    console.error('❌ Error creating supplier payment:', error.message);
+    // ALWAYS return JSON even on error
+    res.status(400).json({ 
+      error: 'Bad Request',
+      details: error.message 
+    });
   }
 });
 
@@ -1598,6 +1647,9 @@ app.post('/api/payments', authenticate, checkDatabaseConnection, async (req, res
 // Get Single Payment by ID - This route comes AFTER specific routes like /next-voucher-number
 // NOTE: Express matches routes in order, so /next-voucher-number must come before this
 app.get('/api/payments/:id', authenticate, checkDatabaseConnection, async (req, res) => {
+  // ALWAYS set Content-Type to JSON FIRST
+  res.setHeader('Content-Type', 'application/json');
+  
   try {
     // CRITICAL: Validate ObjectId BEFORE database query to prevent CastError
     // This prevents routes like /next-voucher-number from being treated as IDs
@@ -1655,9 +1707,10 @@ app.get('/api/payments/:id', authenticate, checkDatabaseConnection, async (req, 
 
 // Update Payment
 app.put('/api/payments/:id', authenticate, hasPermission('payment-edit'), checkDatabaseConnection, async (req, res) => {
+  // ALWAYS set Content-Type to JSON FIRST (checkDatabaseConnection already sets it, but being explicit)
+  res.setHeader('Content-Type', 'application/json');
+  
   try {
-    // Ensure Content-Type is JSON
-    res.setHeader('Content-Type', 'application/json');
     
     // Validate ObjectId format
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -1706,9 +1759,10 @@ app.put('/api/payments/:id', authenticate, hasPermission('payment-edit'), checkD
 
 // Delete Payment
 app.delete('/api/payments/:id', authenticate, hasPermission('payment-delete'), checkDatabaseConnection, async (req, res) => {
+  // ALWAYS set Content-Type to JSON FIRST (checkDatabaseConnection already sets it, but being explicit)
+  res.setHeader('Content-Type', 'application/json');
+  
   try {
-    // Ensure Content-Type is JSON
-    res.setHeader('Content-Type', 'application/json');
     
     // Validate ObjectId format
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -1739,6 +1793,326 @@ app.delete('/api/payments/:id', authenticate, hasPermission('payment-delete'), c
     }
     
     res.status(400).json({ error: error.message });
+  }
+});
+
+// ========================================
+// CATEGORY PAYMENTS API ROUTES (SEPARATE FROM SUPPLIER PAYMENTS)
+// MUST BE BEFORE THE CATCH-ALL ROUTE
+// ========================================
+
+// TEST ENDPOINT - NO AUTH - TO VERIFY ROUTING WORKS
+app.get('/api/test-category-payments', (req, res) => {
+  console.log('✅ TEST ENDPOINT HIT: /api/test-category-payments');
+  res.setHeader('Content-Type', 'application/json');
+  res.status(200).json({ 
+    success: true, 
+    message: 'Category payments API is accessible',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Get Next Category Voucher Number - MUST be before /api/category-payments/:id
+app.get('/api/category-payments/next-voucher-number', authenticate, hasPermission('category-voucher'), async (req, res) => {
+  // CRITICAL: Set headers FIRST before anything else
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  
+  try {
+    console.log('✅ GET /api/category-payments/next-voucher-number called');
+    
+    // Verify CategoryPayment model exists
+    if (!CategoryPayment) {
+      throw new Error('CategoryPayment model not defined');
+    }
+    
+    const prefix = 'PV';
+    const lastPayment = await CategoryPayment.findOne().sort({ voucherNumber: -1 });
+    
+    let nextNumber = 1001;
+    if (lastPayment && lastPayment.voucherNumber) {
+      const lastNum = parseInt(lastPayment.voucherNumber.replace(prefix, '')) || 1000;
+      nextNumber = lastNum + 1;
+    }
+    
+    const nextVoucherNumber = `${prefix}${nextNumber}`;
+    console.log('✅ Generated next category voucher number:', nextVoucherNumber);
+    res.status(200).json({ voucherNumber: nextVoucherNumber });
+  } catch (error) {
+    console.error('❌ Error generating next category voucher number:', error);
+    console.error('❌ Error stack:', error.stack);
+    // ALWAYS return JSON even on error - don't let Express default to HTML
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        error: 'Failed to generate next voucher number',
+        details: error.message
+      });
+    }
+  }
+});
+
+// Get All Category Payments
+app.get('/api/category-payments', authenticate, hasPermission('category-voucher-list'), async (req, res) => {
+  // CRITICAL: Set headers FIRST before anything else - MUST BE FIRST LINE
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  
+  try {
+    console.log('🎯 ========== CATEGORY PAYMENTS ROUTE HIT ==========');
+    console.log('✅ GET /api/category-payments called');
+    console.log('✅ Method:', req.method);
+    console.log('✅ Path:', req.path);
+    console.log('✅ Query:', JSON.stringify(req.query));
+    console.log('✅ User authenticated:', req.user ? req.user.username : 'NO USER');
+    
+    // Verify CategoryPayment model exists
+    if (!CategoryPayment) {
+      throw new Error('CategoryPayment model not defined');
+    }
+    
+    const filter = {};
+    
+    // Build filter from query parameters
+    if (req.query.branchId && req.query.branchId !== 'undefined' && req.query.branchId.trim() !== '') {
+      filter.branchId = req.query.branchId;
+    }
+    
+    if (req.query.categoryId && req.query.categoryId !== 'undefined' && req.query.categoryId.trim() !== '') {
+      filter.categoryId = req.query.categoryId;
+    }
+    
+    if (req.query.from || req.query.to) {
+      filter.date = {};
+      if (req.query.from) {
+        filter.date.$gte = new Date(req.query.from);
+      }
+      if (req.query.to) {
+        filter.date.$lte = new Date(req.query.to);
+      }
+    }
+    
+    // If user is not admin, filter by user's assigned branches
+    if (!req.user.groupId.permissions.includes('admin')) {
+      filter.branchId = { $in: req.user.branches };
+    }
+    
+    console.log('✅ Filter:', JSON.stringify(filter));
+    
+    const categoryPayments = await CategoryPayment.find(filter)
+      .sort({ date: -1 })
+      .populate('branchId', 'name')
+      .populate('categoryId', 'name');
+    
+    console.log(`✅ Found ${categoryPayments.length} category payments`);
+    res.status(200).json(categoryPayments);
+  } catch (error) {
+    console.error('❌ Error fetching category payments:', error);
+    console.error('❌ Error stack:', error.stack);
+    // ALWAYS return JSON even on error - don't let Express default to HTML
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        error: 'Internal Server Error',
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
+    }
+  }
+});
+
+// Create New Category Payment
+app.post('/api/category-payments', authenticate, hasPermission('category-voucher'), checkDatabaseConnection, async (req, res) => {
+  // CRITICAL: Set headers FIRST before anything else
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  
+  try {
+    console.log('✅ POST /api/category-payments called (Category voucher)');
+    console.log('✅ Request data:', JSON.stringify(req.body));
+    
+    // Verify CategoryPayment model exists
+    if (!CategoryPayment) {
+      throw new Error('CategoryPayment model not defined');
+    }
+    
+    const data = { ...req.body };
+
+    // Generate voucher number if not provided
+    if (!data.voucherNumber) {
+      const prefix = 'PV';
+      const lastPayment = await CategoryPayment.findOne().sort({ voucherNumber: -1 });
+      let nextNumber = 1001;
+      if (lastPayment && lastPayment.voucherNumber) {
+        const lastNum = parseInt(lastPayment.voucherNumber.replace(prefix, '')) || 1000;
+        nextNumber = lastNum + 1;
+      }
+      data.voucherNumber = `${prefix}${nextNumber}`;
+    }
+
+    // If category string missing, fetch from Category model
+    if (!data.category && data.categoryId) {
+      try {
+        const category = await Category.findById(data.categoryId);
+        data.category = category ? category.name : 'Unknown';
+      } catch (err) {
+        data.category = 'Unknown';
+      }
+    }
+
+    // Set default status if not provided
+    if (!data.status) {
+      data.status = 'Pending';
+    }
+
+    // Check if user has access to this branch
+    if (!req.user.groupId.permissions.includes('admin') && !req.user.branches.includes(data.branchId)) {
+      return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+    }
+
+    // Create category payment
+    const categoryPayment = await CategoryPayment.create(data);
+
+    // Populate branch & category references before sending response
+    const populatedPayment = await CategoryPayment.findById(categoryPayment._id)
+      .populate('branchId', 'name')
+      .populate('categoryId', 'name');
+
+    console.log('✅ Category payment created:', populatedPayment.voucherNumber);
+    res.status(201).json(populatedPayment);
+  } catch (error) {
+    console.error('❌ Error creating category payment:', error);
+    console.error('❌ Error stack:', error.stack);
+    // ALWAYS return JSON even on error - don't let Express default to HTML
+    if (!res.headersSent) {
+      res.status(400).json({ 
+        error: 'Bad Request',
+        details: error.message 
+      });
+    }
+  }
+});
+
+// Get Single Category Payment by ID
+app.get('/api/category-payments/:id', authenticate, hasPermission('category-voucher-list'), checkDatabaseConnection, async (req, res) => {
+  // ALWAYS set Content-Type to JSON FIRST
+  res.setHeader('Content-Type', 'application/json');
+  
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid Category Payment ID format' });
+    }
+    
+    const categoryPayment = await CategoryPayment.findById(req.params.id)
+      .populate('branchId', 'name')
+      .populate('categoryId', 'name');
+    
+    if (!categoryPayment) {
+      return res.status(404).json({ error: 'Category payment not found' });
+    }
+    
+    // Check if user has access to this payment's branch
+    if (!req.user.groupId.permissions.includes('admin') && !req.user.branches.includes(categoryPayment.branchId)) {
+      return res.status(403).json({ error: 'Access denied. You do not have permission to access this payment.' });
+    }
+    
+    res.status(200).json(categoryPayment);
+  } catch (error) {
+    console.error('Error fetching category payment by ID:', error);
+    // ALWAYS return JSON even on error
+    
+    if (error.name === 'CastError' && error.kind === 'ObjectId') {
+      return res.status(400).json({ error: 'Invalid Category Payment ID format' });
+    }
+    
+    res.status(500).json({ 
+      error: 'Internal Server Error',
+      details: error.message 
+    });
+  }
+});
+
+// Update Category Payment
+app.put('/api/category-payments/:id', authenticate, hasPermission('category-voucher-edit'), checkDatabaseConnection, async (req, res) => {
+  // ALWAYS set Content-Type to JSON FIRST
+  res.setHeader('Content-Type', 'application/json');
+  
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid Category Payment ID format' });
+    }
+    
+    // Check if user has access to this branch
+    if (!req.user.groupId.permissions.includes('admin') && !req.user.branches.includes(req.body.branchId)) {
+      return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+    }
+
+    // If category string missing, fetch from Category model
+    if (!req.body.category && req.body.categoryId) {
+      try {
+        const category = await Category.findById(req.body.categoryId);
+        req.body.category = category ? category.name : 'Unknown';
+      } catch (err) {
+        req.body.category = 'Unknown';
+      }
+    }
+
+    const updated = await CategoryPayment.findByIdAndUpdate(req.params.id, req.body, { new: true })
+      .populate('branchId', 'name')
+      .populate('categoryId', 'name');
+    
+    if (!updated) {
+      return res.status(404).json({ error: 'Category payment not found' });
+    }
+    
+    res.status(200).json(updated);
+  } catch (error) {
+    console.error('Error updating category payment:', error);
+    // ALWAYS return JSON even on error
+    
+    if (error.name === 'CastError' && error.kind === 'ObjectId') {
+      return res.status(400).json({ error: 'Invalid Category Payment ID format' });
+    }
+    
+    res.status(400).json({ 
+      error: 'Bad Request',
+      details: error.message 
+    });
+  }
+});
+
+// Delete Category Payment
+app.delete('/api/category-payments/:id', authenticate, hasPermission('category-voucher-delete'), checkDatabaseConnection, async (req, res) => {
+  // ALWAYS set Content-Type to JSON FIRST
+  res.setHeader('Content-Type', 'application/json');
+  
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid Category Payment ID format' });
+    }
+    
+    // Check if user has access to this payment's branch
+    const categoryPayment = await CategoryPayment.findById(req.params.id);
+    if (!categoryPayment) {
+      return res.status(404).json({ error: 'Category payment not found' });
+    }
+    
+    if (!req.user.groupId.permissions.includes('admin') && !req.user.branches.includes(categoryPayment.branchId)) {
+      return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+    }
+
+    await CategoryPayment.findByIdAndDelete(req.params.id);
+    res.status(200).json({ ok: true });
+  } catch (error) {
+    console.error('Error deleting category payment:', error);
+    // ALWAYS return JSON even on error
+    
+    if (error.name === 'CastError' && error.kind === 'ObjectId') {
+      return res.status(400).json({ error: 'Invalid Category Payment ID format' });
+    }
+    
+    res.status(400).json({ 
+      error: 'Bad Request',
+      details: error.message 
+    });
   }
 });
 
@@ -1905,7 +2279,7 @@ async function seedDefaultData() {
         {
           name: 'Admin',
           description: 'System administrators with full access',
-          permissions: ['admin', 'dashboard', 'categories', 'sales', 'payments', 'payment-dashboard', 'payment-vouchers', 'payment-voucher-list', 'payment-reports', 'reports', 'branches', 'groups', 'users', 'settings', 'suppliers'],
+          permissions: ['admin', 'dashboard', 'categories', 'sales', 'payments', 'payment-dashboard', 'payment-vouchers', 'payment-voucher-list', 'payment-reports', 'category-voucher', 'category-voucher-list', 'category-voucher-edit', 'category-voucher-delete', 'reports', 'branches', 'groups', 'users', 'settings', 'suppliers'],
           isDefault: true
         },
         {
@@ -1928,7 +2302,7 @@ async function seedDefaultData() {
       const adminGroup = await Group.findOne({ name: 'Admin' });
       if (adminGroup) {
         let needsUpdate = false;
-        const requiredPermissions = ['admin', 'dashboard', 'categories', 'sales', 'payments', 'payment-dashboard', 'payment-vouchers', 'payment-voucher-list', 'payment-reports', 'sales-edit', 'sales-delete', 'payment-edit', 'payment-delete', 'reports', 'branches', 'groups', 'users', 'settings', 'suppliers'];
+        const requiredPermissions = ['admin', 'dashboard', 'categories', 'sales', 'payments', 'payment-dashboard', 'payment-vouchers', 'payment-voucher-list', 'payment-reports', 'sales-edit', 'sales-delete', 'payment-edit', 'payment-delete', 'category-voucher', 'category-voucher-list', 'category-voucher-edit', 'category-voucher-delete', 'reports', 'branches', 'groups', 'users', 'settings', 'suppliers'];
         
         requiredPermissions.forEach(perm => {
           if (!adminGroup.permissions.includes(perm)) {
@@ -2005,20 +2379,55 @@ async function seedDefaultData() {
 }
 
 // ========================================
+// CRITICAL: VERIFY ALL API ROUTES ARE REGISTERED
+// ========================================
+
+// Log all registered routes on startup (for debugging)
+const logRegisteredRoutes = () => {
+  const routes = [];
+  app._router.stack.forEach((middleware) => {
+    if (middleware.route) {
+      const methods = Object.keys(middleware.route.methods).join(', ').toUpperCase();
+      routes.push(`${methods} ${middleware.route.path}`);
+    }
+  });
+  console.log('\n📋 Registered Routes:');
+  routes.filter(r => r.includes('/api/')).forEach(r => console.log(`   ${r}`));
+  console.log('');
+};
+
+// ========================================
+// API ROUTE INTERCEPTOR - MUST BE BEFORE STATIC FILES
+// ========================================
+
+// This middleware ensures ALL /api/ routes bypass static file serving
+app.use((req, res, next) => {
+  // If it's an API route, skip static serving and continue to API routes
+  if (req.path.startsWith('/api/')) {
+    console.log('🔵 API Route Detected - Bypassing static files:', req.method, req.path);
+    return next(); // Continue to API route handlers
+  }
+  // For non-API routes, continue to static file middleware
+  next();
+});
+
+// ========================================
 // STATIC FILE SERVING
 // ========================================
 
 // Serve static frontend files (but NOT for API routes)
 // IMPORTANT: This MUST come AFTER all API routes are defined
 const clientDir = path.resolve(__dirname, '..');
+const staticMiddleware = express.static(clientDir);
 app.use((req, res, next) => {
-  // Skip static file serving for API routes - this is critical
+  // This should never catch API routes now due to the interceptor above
+  // But keep this check as a safety net
   if (req.path.startsWith('/api/')) {
-    console.log('⚠️ Static middleware: Skipping API route:', req.path);
-    return next(); // Continue to API routes or 404 handler
+    console.log('⚠️ Static middleware: API route slipped through!', req.method, req.path);
+    return next(); // Continue to API routes
   }
   // Only serve static files for non-API routes
-  express.static(clientDir)(req, res, next);
+  staticMiddleware(req, res, next);
 });
 
 // ========================================
@@ -2027,7 +2436,18 @@ app.use((req, res, next) => {
 
 // Start server immediately - not dependent on database
 app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+  console.log(`\n✅ ========================================`);
+  console.log(`✅ Server listening on port ${port}`);
+  console.log(`✅ ========================================\n`);
+  
+  // Log all registered API routes
+  logRegisteredRoutes();
+  
+  console.log(`✅ Expected Category Payment Routes:`);
+  console.log(`   - GET  /api/category-payments`);
+  console.log(`   - POST /api/category-payments`);
+  console.log(`   - GET  /api/category-payments/next-voucher-number`);
+  console.log(`   - GET  /api/test-category-payments (no auth - TEST IT FIRST!)\n`);
 });
 
 // Start seeding when database is ready (if connected)
@@ -2039,17 +2459,41 @@ mongoose.connection.once('open', () => {
 // ERROR HANDLING MIDDLEWARE
 // ========================================
 
-// Global error handler
+// Global error handler - MUST be before catch-all
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+  console.error('🔴 Unhandled error:', err);
+  // ALWAYS return JSON
+  if (!res.headersSent) {
+    res.setHeader('Content-Type', 'application/json');
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // 404 handler for API routes and frontend
+// THIS MUST BE THE ABSOLUTE LAST ROUTE - AFTER EVERYTHING
 app.use('*', (req, res) => {
-  if (req.path.startsWith('/api/')) {
-    res.status(404).json({ error: 'API endpoint not found', path: req.path });
+  console.log('🔴🔴🔴 404 Handler reached:', req.method, req.path);
+  console.log('🔴 Query string:', req.query);
+  console.log('🔴 Original URL:', req.originalUrl);
+  
+  // ALWAYS set Content-Type to JSON for API routes - DO THIS FIRST
+  if (req.path.startsWith('/api/') || req.originalUrl.startsWith('/api/')) {
+    console.log('🔴 API 404 - returning JSON:', req.path);
+    res.setHeader('Content-Type', 'application/json');
+    res.status(404).json({ 
+      error: 'API endpoint not found', 
+      path: req.path,
+      originalUrl: req.originalUrl,
+      method: req.method,
+      availableEndpoints: [
+        'GET /api/category-payments',
+        'POST /api/category-payments',
+        'GET /api/category-payments/next-voucher-number',
+        'GET /api/test-category-payments'
+      ]
+    });
   } else {
+    console.log('🔴 Frontend 404 - serving index.html for:', req.path);
     // For non-API routes, serve the frontend
     res.sendFile(path.join(clientDir, 'index.html'));
   }
