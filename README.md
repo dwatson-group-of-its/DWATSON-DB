@@ -53,6 +53,12 @@ NODE_ENV=development
 PORT=5000
 ```
 
+**MongoDB Connection String Formats:**
+- **Local MongoDB**: `mongodb://localhost:27017/dwatson-pharmacy`
+- **MongoDB Atlas**: `mongodb+srv://username:password@cluster.mongodb.net/dwatson-pharmacy?retryWrites=true&w=majority`
+
+The server will automatically validate your MongoDB connection string and provide helpful error messages if the connection fails.
+
 4. Start the server
 ```bash
 npm start

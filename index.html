@@ -3573,12 +3573,30 @@
             <div id="payment-vouchers-section" class="content-section">
                 <div class="dashboard-header">
                     <h1 class="dashboard-title">Payment Vouchers</h1>
-                    <p class="dashboard-subtitle">Create and manage supplier payment vouchers</p>
+                    <p class="dashboard-subtitle">Create and manage payment vouchers</p>
                 </div>
                 
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs mb-3" id="paymentVoucherTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="supplier-voucher-tab" data-bs-toggle="tab" data-bs-target="#supplier-voucher-content" type="button" role="tab">
+                            <i class="fas fa-truck me-2"></i>Supplier Voucher
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="category-voucher-tab" data-bs-toggle="tab" data-bs-target="#category-voucher-content" type="button" role="tab">
+                            <i class="fas fa-tags me-2"></i>Category Voucher
+                        </button>
+                    </li>
+                </ul>
+                
+                <!-- Tab Content -->
+                <div class="tab-content" id="paymentVoucherTabContent">
+                    <!-- Supplier Voucher Tab -->
+                    <div class="tab-pane fade show active" id="supplier-voucher-content" role="tabpanel">
                     <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">Create Payment Voucher</h5>
+                                <h5 class="mb-0">Create Supplier Payment Voucher</h5>
                     </div>
                         <div class="card-body">
                             <form id="paymentVoucherForm">
@@ -3650,6 +3668,83 @@
                         </div>
                     </div>
                 </div>
+                    
+                    <!-- Category Voucher Tab -->
+                    <div class="tab-pane fade" id="category-voucher-content" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Create Category Payment Voucher</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="categoryVoucherForm">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Voucher Number</label>
+                                                <input type="text" class="form-control" id="categoryVoucherNumber" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Date</label>
+                                                <input type="date" class="form-control" id="categoryVoucherDate" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Category</label>
+                                                <select class="form-select" id="categoryVoucherCategory" required>
+                                                    <option value="">Select Category</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Branch</label>
+                                                <select class="form-select" id="categoryVoucherBranch" required>
+                                                    <option value="">Select Branch</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Payment Method</label>
+                                                <select class="form-select" id="categoryVoucherMethod" required>
+                                                    <option value="">Select Method</option>
+                                                    <option value="Cash">Cash</option>
+                                                    <option value="Bank Transfer">Bank Transfer</option>
+                                                    <option value="Cheque">Cheque</option>
+                                                    <option value="Online Payment">Online Payment</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Amount (PKR)</label>
+                                                <input type="number" class="form-control" id="categoryVoucherAmount" step="0.01" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Description</label>
+                                        <textarea class="form-control" id="categoryVoucherDescription" rows="3" required></textarea>
+                                    </div>
+                                    <div class="d-flex justify-content-end">
+                                        <button type="button" class="btn btn-secondary me-2" onclick="resetCategoryVoucherForm()">
+                                            <i class="fas fa-redo me-2"></i>Reset
+                                        </button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-2"></i>Save Voucher
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -3659,9 +3754,27 @@
             <div id="payment-voucher-list-section" class="content-section">
                 <div class="dashboard-header">
                     <h1 class="dashboard-title">Voucher List</h1>
-                    <p class="dashboard-subtitle">View and manage all payment vouchers</p>
+                    <p class="dashboard-subtitle">View and manage payment vouchers</p>
                 </div>
                 
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs mb-3" id="voucherListTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="supplier-voucher-list-tab" data-bs-toggle="tab" data-bs-target="#supplier-voucher-list-content" type="button" role="tab">
+                            <i class="fas fa-truck me-2"></i>Supplier Vouchers
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="category-voucher-list-tab" data-bs-toggle="tab" data-bs-target="#category-voucher-list-content" type="button" role="tab">
+                            <i class="fas fa-tags me-2"></i>Category Vouchers
+                        </button>
+                    </li>
+                </ul>
+                
+                <!-- Tab Content -->
+                <div class="tab-content" id="voucherListTabContent">
+                    <!-- Supplier Voucher List Tab -->
+                    <div class="tab-pane fade show active" id="supplier-voucher-list-content" role="tabpanel">
                 <div class="filter-section mb-4">
                     <div class="row g-3">
                                 <div class="col-md-3">
@@ -3733,6 +3846,278 @@
                                 <tbody id="paymentVoucherListTable">
                                         <tr>
                                         <td colspan="9" class="text-center text-muted">Loading vouchers...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Category Voucher List Tab -->
+                    <div class="tab-pane fade" id="category-voucher-list-content" role="tabpanel">
+                        <div class="filter-section mb-4">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Search</label>
+                                    <input type="text" class="form-control" id="categoryVoucherListSearch" placeholder="Search...">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Branch Filter</label>
+                                    <select class="form-select" id="categoryVoucherListBranchFilter">
+                                        <option value="">All Branches</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Category Filter</label>
+                                    <select class="form-select" id="categoryVoucherListCategoryFilter">
+                                        <option value="">All Categories</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Date Range</label>
+                                    <div class="d-flex gap-2">
+                                        <input type="date" class="form-control" id="categoryVoucherListFromDate">
+                                        <input type="date" class="form-control" id="categoryVoucherListToDate">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-12 d-flex justify-content-between">
+                                    <div>
+                                        <button class="btn btn-primary" onclick="loadCategoryVoucherListTab()">
+                                            <i class="fas fa-filter me-2"></i>Apply Filters
+                                        </button>
+                                        <button class="btn btn-secondary ms-2" onclick="clearCategoryVoucherListFilters()">
+                                            <i class="fas fa-times me-2"></i>Clear Filters
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-info ms-2" onclick="printCategoryVoucherListTab()">
+                                            <i class="fas fa-print me-2"></i>Print List
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Voucher #</th>
+                                                <th>Date</th>
+                                                <th>Category</th>
+                                                <th>Branch</th>
+                                                <th class="text-end">Amount</th>
+                                                <th>Method</th>
+                                                <th>Description</th>
+                                                <th class="no-print">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="categoryVoucherListTableBody">
+                                            <tr>
+                                                <td colspan="8" class="text-center text-muted">Loading vouchers...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ========================================
+                 CATEGORY VOUCHER LIST SECTION (Simple List)
+                 ======================================== -->
+            <div id="category-voucher-simple-list-section" class="content-section">
+                <div class="dashboard-header">
+                    <h1 class="dashboard-title">Category Voucher List</h1>
+                    <p class="dashboard-subtitle">View and manage category payment vouchers</p>
+                </div>
+                
+                <div class="filter-section mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Search</label>
+                            <input type="text" class="form-control" id="categoryVoucherSimpleSearch" placeholder="Search...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Branch Filter</label>
+                            <select class="form-select" id="categoryVoucherSimpleListBranchFilter">
+                                <option value="">All Branches</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Category Filter</label>
+                            <select class="form-select" id="categoryVoucherSimpleListCategoryFilter">
+                                <option value="">All Categories</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Date Range</label>
+                            <div class="d-flex gap-2">
+                                <input type="date" class="form-control" id="categoryVoucherSimpleListFromDate">
+                                <input type="date" class="form-control" id="categoryVoucherSimpleListToDate">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-12 d-flex justify-content-between">
+                            <div>
+                                <button class="btn btn-primary" onclick="loadCategoryVoucherSimpleList()">
+                                    <i class="fas fa-filter me-2"></i>Apply Filters
+                                </button>
+                                <button class="btn btn-secondary ms-2" onclick="clearCategoryVoucherSimpleFilters()">
+                                    <i class="fas fa-times me-2"></i>Clear Filters
+                                </button>
+                            </div>
+                            <div>
+                                <button class="btn btn-info ms-2" onclick="printCategoryVoucherSimpleList()">
+                                    <i class="fas fa-print me-2"></i>Print List
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Voucher #</th>
+                                        <th>Date</th>
+                                        <th>Category</th>
+                                        <th>Branch</th>
+                                        <th class="text-end">Amount</th>
+                                        <th>Method</th>
+                                        <th>Description</th>
+                                        <th class="no-print">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="categoryVoucherSimpleListTable">
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted">Loading vouchers...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ========================================
+                 CATEGORY VOUCHER LIST SECTION (Summary Report)
+                 ======================================== -->
+            <div id="category-voucher-list-section" class="content-section">
+                <div class="dashboard-header">
+                    <h1 class="dashboard-title">Category Voucher List</h1>
+                    <p class="dashboard-subtitle">View category-wise sales, costs, payments, and balance</p>
+                </div>
+                
+                <div class="filter-section mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" id="categoryVoucherListCategoryFilter">
+                                <option value="">All Categories</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Branch</label>
+                            <select class="form-select" id="categoryVoucherListBranchFilter">
+                                <option value="">All Branches</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">From Date</label>
+                            <input type="date" class="form-control" id="categoryVoucherListFromDate">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">To Date</label>
+                            <input type="date" class="form-control" id="categoryVoucherListToDate">
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-12 d-flex justify-content-between">
+                            <div>
+                                <button class="btn btn-primary" onclick="loadCategoryVoucherList()">
+                                    <i class="fas fa-filter me-2"></i>Apply Filters
+                                </button>
+                                <button class="btn btn-secondary ms-2" onclick="clearCategoryVoucherFilters()">
+                                    <i class="fas fa-times me-2"></i>Clear Filters
+                                </button>
+                            </div>
+                            <div>
+                                <button class="btn btn-info" onclick="printCategoryVoucherList()">
+                                    <i class="fas fa-print me-2"></i>Print Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Summary Cards -->
+                <div class="row mb-4" id="categoryVoucherSummaryCards">
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <h6 class="text-muted mb-2">Total Sales</h6>
+                                <h3 class="mb-0 text-success" id="categoryVoucherTotalSales">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <h6 class="text-muted mb-2">Total Cost</h6>
+                                <h3 class="mb-0 text-danger" id="categoryVoucherTotalCost">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <h6 class="text-muted mb-2">Total Payment</h6>
+                                <h3 class="mb-0 text-info" id="categoryVoucherTotalPayment">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <h6 class="text-muted mb-2">Balance Payment</h6>
+                                <h3 class="mb-0" id="categoryVoucherBalance">
+                                    <span class="text-warning">0</span>
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th>Branch</th>
+                                        <th>Date</th>
+                                        <th class="text-end">Sales</th>
+                                        <th class="text-end">Cost</th>
+                                        <th class="text-end">Payment</th>
+                                        <th class="text-end">Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="categoryVoucherListTable">
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted">Click "Apply Filters" to load data</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -4156,6 +4541,129 @@
                     </div>
                 </div>
                 <!-- End Tab 3: Date-Wise Sales Data -->
+                
+                <!-- Tab 4: Payment Reports -->
+                <div id="tab-payment-reports" class="report-tab-content">
+                    <!-- Filters Section -->
+                    <div class="card mb-4 no-print">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-filter me-2"></i>Payment Report Filters
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Branch</label>
+                                    <select class="form-select" id="paymentReportBranchFilter">
+                                        <option value="">All Branches</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Category</label>
+                                    <select class="form-select" id="paymentReportCategoryFilter">
+                                        <option value="">All Categories</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">From Date</label>
+                                    <input type="date" class="form-control" id="paymentReportFromDateFilter">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">To Date</label>
+                                    <input type="date" class="form-control" id="paymentReportToDateFilter">
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button class="btn btn-primary w-100" id="generatePaymentReportBtn">
+                                        <i class="fas fa-file-alt me-2"></i>Generate Report
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Summary Cards -->
+                    <div class="row mb-4" id="paymentSummaryCards">
+                        <div class="col-md-3">
+                            <div class="card text-center border-0 shadow-sm" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                                <div class="card-body">
+                                    <h6 class="text-white mb-2">Total Sales</h6>
+                                    <h3 class="text-white mb-0" id="paymentSummaryTotalSales">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center border-0 shadow-sm" style="background: linear-gradient(135deg, #136F63 0%, #17a2b8 100%);">
+                                <div class="card-body">
+                                    <h6 class="text-white mb-2">Total Cost</h6>
+                                    <h3 class="text-white mb-0" id="paymentSummaryTotalCost">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center border-0 shadow-sm" style="background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);">
+                                <div class="card-body">
+                                    <h6 class="text-white mb-2">Category Payments</h6>
+                                    <h3 class="text-white mb-0" id="paymentSummaryCategoryPayments">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center border-0 shadow-sm" style="background: linear-gradient(135deg, #CF2A2A 0%, #ff6b6b 100%);">
+                                <div class="card-body">
+                                    <h6 class="text-white mb-2">Balance Payment</h6>
+                                    <h3 class="text-white mb-0" id="paymentSummaryBalancePayment">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Report Table -->
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h5 class="card-title mb-0">Payment Detail Report</h5>
+                                    <div id="paymentReportSubtitle" class="text-muted small mt-1" style="display: none;"></div>
+                                </div>
+                                <button class="btn btn-success no-print" id="printPaymentReportBtn">
+                                    <i class="fas fa-print me-2"></i>Print Report
+                                </button>
+                            </div>
+                            
+                            <!-- Branch Name Header -->
+                            <div id="paymentReportBranchNameHeader" style="display: none; margin-bottom: 20px;">
+                                <h4 style="font-size: 1.8rem; color: #495057; font-weight: 700; text-align: center; margin: 0;">
+                                    <span id="paymentReportBranchName"></span>
+                                </h4>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead style="display: none;">
+                                        <tr>
+                                            <th>Category</th>
+                                            <th>Branch</th>
+                                            <th>Sale</th>
+                                            <th>Cost</th>
+                                            <th>Category Payments</th>
+                                            <th>Balance Payment</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="paymentReportTableBody">
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted py-4">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                Click "Generate Report" to view payment data
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Tab 4: Payment Reports -->
                 
             </div>
             <!-- ========================================
@@ -4626,6 +5134,22 @@
                     <input type="checkbox" id="perm-payment-delete" value="payment-delete">
                     <label for="perm-payment-delete">Delete Voucher</label>
                 </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="perm-category-voucher" value="category-voucher">
+                                    <label for="perm-category-voucher">Category Voucher</label>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="perm-category-voucher-list" value="category-voucher-list">
+                                    <label for="perm-category-voucher-list">Category Voucher List</label>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="perm-category-voucher-edit" value="category-voucher-edit">
+                                    <label for="perm-category-voucher-edit">Edit Category Voucher</label>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="perm-category-voucher-delete" value="category-voucher-delete">
+                                    <label for="perm-category-voucher-delete">Delete Category Voucher</label>
+                                </div>
                                 <div class="permission-item">
                                     <input type="checkbox" id="perm-reports" value="reports">
                                     <label for="perm-reports">Reports</label>
@@ -5258,15 +5782,73 @@
                 return this.request(endpoint);
             }
             
+            // Category Payments API (SEPARATE)
+            async getCategoryPayments(filtersOrUrl = {}) {
+                // If it's a string (URL), use it directly (for backward compatibility)
+                if (typeof filtersOrUrl === 'string') {
+                    const url = filtersOrUrl;
+                    // Remove /api prefix if present (request() will add it via baseURL)
+                    let endpoint = url.startsWith('/api/') ? url.replace('/api', '') : url;
+                    endpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+                    console.log('📡 Calling category payments API:', endpoint);
+                    return this.request(endpoint);
+                }
+                
+                // If it's an object (filters), build query string like getSales does
+                const filters = filtersOrUrl || {};
+                // Clean filters: remove undefined, null, empty or string 'undefined' values
+                const cleaned = {};
+                Object.keys(filters).forEach(key => {
+                    const val = filters[key];
+                    if (val === undefined || val === null) return;
+                    if (typeof val === 'string' && (val.trim() === '' || val === 'undefined')) return;
+                    cleaned[key] = val;
+                });
+                
+                const qp = new URLSearchParams(cleaned);
+                const queryString = qp.toString();
+                const endpoint = queryString ? `/category-payments?${queryString}` : '/category-payments';
+                console.log('📡 Calling category payments API with filters:', endpoint);
+                return this.request(endpoint);
+            }
+            
             async getNextVoucherNumber() {
                 // Use full path to avoid route matching issues
                 return this.request('/payments/next-voucher-number', { method: 'GET' });
+            }
+            
+            async getNextCategoryVoucherNumber() {
+                return this.request('/category-payments/next-voucher-number', { method: 'GET' });
             }
             
             async createPayment(payment) {
                 return this.request('/payments', {
                     method: 'POST',
                     body: JSON.stringify(payment)
+                });
+            }
+            
+            async createCategoryPayment(payment) {
+                return this.request('/category-payments', {
+                    method: 'POST',
+                    body: JSON.stringify(payment)
+                });
+            }
+            
+            async getCategoryPayment(id) {
+                return this.request(`/category-payments/${id}`);
+            }
+            
+            async updateCategoryPayment(id, payment) {
+                return this.request(`/category-payments/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(payment)
+                });
+            }
+            
+            async deleteCategoryPayment(id) {
+                return this.request(`/category-payments/${id}`, {
+                    method: 'DELETE'
                 });
             }
             
@@ -6084,6 +6666,52 @@
                     btn.style.display = permissions.includes(tab) ? '' : 'none';
                 }
             });
+            
+            // Hide/show Payment Voucher section tabs based on permissions
+            // Supplier Voucher Tab - requires 'payment-vouchers' permission
+            const supplierVoucherTab = document.getElementById('supplier-voucher-tab');
+            if (supplierVoucherTab) {
+                const hasSupplierVoucherPermission = permissions.includes('payment-vouchers');
+                supplierVoucherTab.parentElement.style.display = hasSupplierVoucherPermission ? '' : 'none';
+            }
+            
+            // Category Voucher Tab - requires 'category-voucher' permission
+            const categoryVoucherTab = document.getElementById('category-voucher-tab');
+            if (categoryVoucherTab) {
+                const hasCategoryVoucherPermission = permissions.includes('category-voucher');
+                categoryVoucherTab.parentElement.style.display = hasCategoryVoucherPermission ? '' : 'none';
+                
+                // If category voucher tab is hidden but supplier voucher is visible, make supplier tab active
+                if (!hasCategoryVoucherPermission && supplierVoucherTab && permissions.includes('payment-vouchers')) {
+                    supplierVoucherTab.classList.add('active');
+                    document.getElementById('supplier-voucher-content')?.classList.add('show', 'active');
+                    categoryVoucherTab.classList.remove('active');
+                    document.getElementById('category-voucher-content')?.classList.remove('show', 'active');
+                }
+            }
+            
+            // Payment voucher list tabs inside payment-voucher-list section (voucherListTabs)
+            // Check for supplier voucher list tab
+            const supplierVoucherListTab = document.querySelector('#voucherListTabs [data-bs-target="#supplier-voucher-list-content"]');
+            if (supplierVoucherListTab) {
+                const hasPaymentVoucherListPermission = permissions.includes('payment-voucher-list');
+                supplierVoucherListTab.parentElement.style.display = hasPaymentVoucherListPermission ? '' : 'none';
+            }
+            
+            // Check for category voucher list tab (inside voucher list section)
+            const categoryVoucherListTabBtn = document.querySelector('#voucherListTabs [data-bs-target="#category-voucher-list-content"]');
+            if (categoryVoucherListTabBtn) {
+                const hasCategoryVoucherListPermission = permissions.includes('category-voucher-list');
+                categoryVoucherListTabBtn.parentElement.style.display = hasCategoryVoucherListPermission ? '' : 'none';
+                
+                // If category voucher list tab is hidden but supplier voucher list is visible, make supplier tab active
+                if (!hasCategoryVoucherListPermission && supplierVoucherListTab && permissions.includes('payment-voucher-list')) {
+                    supplierVoucherListTab.classList.add('active');
+                    document.getElementById('supplier-voucher-list-content')?.classList.add('show', 'active');
+                    categoryVoucherListTabBtn.classList.remove('active');
+                    document.getElementById('category-voucher-list-content')?.classList.remove('show', 'active');
+                }
+            }
         }
         
         // ========================================
@@ -6231,6 +6859,37 @@
                 });
             }
             
+            // Category voucher form
+            const categoryVoucherForm = document.getElementById('categoryVoucherForm');
+            if (categoryVoucherForm) {
+                categoryVoucherForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const voucherId = this.getAttribute('data-voucher-id');
+                    if (voucherId) {
+                        updateCategoryVoucher(voucherId);
+                    } else {
+                        saveNewCategoryVoucher();
+                    }
+                });
+            }
+            
+            // Payment voucher tabs event listeners (Bootstrap tabs)
+            const categoryVoucherTab = document.getElementById('category-voucher-tab');
+            if (categoryVoucherTab) {
+                categoryVoucherTab.addEventListener('shown.bs.tab', function() {
+                    // Initialize category voucher form when tab is shown
+                    initializeCategoryVoucherForm();
+                });
+            }
+            
+            const supplierVoucherTab = document.getElementById('supplier-voucher-tab');
+            if (supplierVoucherTab) {
+                supplierVoucherTab.addEventListener('shown.bs.tab', function() {
+                    // Initialize supplier voucher form when tab is shown
+                    initializePaymentVoucherForm();
+                });
+            }
+            
             // Payment dashboard filter changes
             const paymentDashboardBranchFilter = document.getElementById('paymentDashboardBranchFilter');
             const paymentDashboardSupplierFilter = document.getElementById('paymentDashboardSupplierFilter');
@@ -6250,6 +6909,33 @@
             const paymentVoucherSearch = document.getElementById('paymentVoucherSearch');
             if (paymentVoucherSearch) {
                 paymentVoucherSearch.addEventListener('input', loadPaymentVoucherList);
+            }
+            
+            // Category voucher list tab search
+            const categoryVoucherListSearch = document.getElementById('categoryVoucherListSearch');
+            if (categoryVoucherListSearch) {
+                categoryVoucherListSearch.addEventListener('input', loadCategoryVoucherListTab);
+            }
+            
+            // Category voucher list tab event listeners (Bootstrap tabs)
+            const categoryVoucherListTabBtn = document.getElementById('category-voucher-list-tab');
+            if (categoryVoucherListTabBtn) {
+                categoryVoucherListTabBtn.addEventListener('shown.bs.tab', function() {
+                    initializeCategoryVoucherListTab();
+                });
+            }
+            
+            const supplierVoucherListTabBtn = document.getElementById('supplier-voucher-list-tab');
+            if (supplierVoucherListTabBtn) {
+                supplierVoucherListTabBtn.addEventListener('shown.bs.tab', function() {
+                    loadPaymentVoucherList();
+                });
+            }
+            
+            // Category voucher simple list search (for separate section if exists)
+            const categoryVoucherSimpleSearch = document.getElementById('categoryVoucherSimpleSearch');
+            if (categoryVoucherSimpleSearch) {
+                categoryVoucherSimpleSearch.addEventListener('input', loadCategoryVoucherSimpleList);
             }
             
             // Initialize payment module tabs when DOM is ready
@@ -6283,6 +6969,12 @@
                 const clickedTab = document.querySelector(`[data-tab="${tabName}"]`);
                 if (clickedTab) {
                     clickedTab.classList.add('active');
+                }
+                
+                // Populate filters for payment reports tab
+                if (tabName === 'payment-reports') {
+                    populateBranchSelectors();
+                    populateCategorySelectors();
                 }
             }
             
@@ -6352,6 +7044,22 @@
             if (printDatewiseReportBtn) {
                 printDatewiseReportBtn.addEventListener('click', function() {
                     printDateWiseData();
+                });
+            }
+            
+            // Payment Report Generate Button
+            const generatePaymentReportBtn = document.getElementById('generatePaymentReportBtn');
+            if (generatePaymentReportBtn) {
+                generatePaymentReportBtn.addEventListener('click', function() {
+                    generatePaymentReport();
+                });
+            }
+            
+            // Payment Report Print Button
+            const printPaymentReportBtn = document.getElementById('printPaymentReportBtn');
+            if (printPaymentReportBtn) {
+                printPaymentReportBtn.addEventListener('click', function() {
+                    printPaymentReportPreview();
                 });
             }
             
@@ -6826,6 +7534,55 @@
         function showSection(sectionId) {
             console.log('🔄 showSection called with:', sectionId);
             
+            // Check permissions BEFORE showing section
+            if (appData.currentUser) {
+                const permissions = appData.currentUser.permissions || [];
+                
+                // Permission mapping: sectionId -> required permission(s)
+                const permissionMap = {
+                    'dashboard': ['dashboard'],
+                    'categories': ['categories'],
+                    'sales': ['sales'],
+                    'suppliers': ['suppliers'],
+                    'payment-dashboard': ['payment-dashboard'],
+                    'payment-vouchers': ['payment-vouchers'],
+                    'payment-voucher-list': ['payment-voucher-list', 'category-voucher-list'], // Can access with either permission
+                    'payment-reports': ['payment-reports'],
+                    'reports': ['reports'],
+                    'branches': ['branches'],
+                    'groups': ['admin'],
+                    'users': ['admin'],
+                    'settings': ['admin']
+                };
+                
+                const requiredPermissions = permissionMap[sectionId];
+                
+                // Admin has access to everything except specific payment tabs
+                const isAdmin = permissions.includes('admin');
+                
+                // Check permission (admin bypass only for non-payment sections)
+                if (requiredPermissions) {
+                    if (sectionId.startsWith('payment-')) {
+                        // For payment sections, NO admin bypass - check specific permission(s)
+                        // If multiple permissions in array, user needs at least one
+                        const hasPermission = requiredPermissions.some(perm => permissions.includes(perm));
+                        if (!hasPermission) {
+                            showNotification(`You don't have permission to access ${sectionId}`, 'error');
+                            console.warn('❌ Permission denied for section:', sectionId, 'Required:', requiredPermissions);
+                            return;
+                        }
+                    } else {
+                        // For other sections, admin bypass is allowed
+                        const hasPermission = requiredPermissions.some(perm => permissions.includes(perm));
+                        if (!isAdmin && !hasPermission) {
+                            showNotification(`You don't have permission to access ${sectionId}`, 'error');
+                            console.warn('❌ Permission denied for section:', sectionId, 'Required:', requiredPermissions);
+                            return;
+                        }
+                    }
+                }
+            }
+            
             // Hide all sections
             document.querySelectorAll('.content-section').forEach(section => {
                 section.classList.remove('active');
@@ -7005,6 +7762,19 @@
                         window.scrollTo(0, 0);
                         loadPaymentVoucherList();
                         populatePaymentModuleFilters();
+                        initializeCategoryVoucherListTab();
+                    }, 0);
+                    break;
+                case 'category-voucher-simple-list':
+                    setTimeout(() => {
+                        window.scrollTo(0, 0);
+                        initializeCategoryVoucherSimpleList();
+                    }, 0);
+                    break;
+                case 'category-voucher-list':
+                    setTimeout(() => {
+                        window.scrollTo(0, 0);
+                        initializeCategoryVoucherList();
                     }, 0);
                     break;
                 case 'payment-reports':
@@ -7083,7 +7853,8 @@
                 // Edit payment modal selector
                 'editPaymentBranch',
                 // Payment report selectors
-                'reportBranchFilter'
+                'reportBranchFilter',
+                'paymentReportBranchFilter'
             ];
             
             // Get current user's assigned branches
@@ -7130,7 +7901,8 @@
                 // Edit payment modal selector
                 'editPaymentCategory',
                 // Payment report selectors
-                'reportCategoryFilter'
+                'reportCategoryFilter',
+                'paymentReportCategoryFilter'
             ];
             
             selectors.forEach(selectorId => {
@@ -9151,6 +9923,10 @@ sortedBranches.forEach(data => {
                     loadPaymentVoucherList();
                 } else if (tabName === 'payment-vouchers') {
                     initializePaymentVoucherForm();
+                    // Also initialize category voucher form when payment vouchers section is shown
+                    setTimeout(() => {
+                        initializeCategoryVoucherForm();
+                    }, 100);
                 } else if (tabName === 'payment-reports') {
                     initPaymentReportChart();
                 }
@@ -9328,6 +10104,7 @@ sortedBranches.forEach(data => {
             
             const voucherData = {
                 voucherNumber: voucherNumber,
+                voucherType: 'supplier',
                 date: date,
                 supplierId: supplierId,
                 branchId: branchId,
@@ -9367,6 +10144,7 @@ sortedBranches.forEach(data => {
             }
             
             const voucherData = {
+                voucherType: 'supplier',
                 date: date,
                 supplierId: supplierId,
                 branchId: branchId,
@@ -9498,6 +10276,228 @@ sortedBranches.forEach(data => {
             }
         }
         
+        // ========================================
+        // CATEGORY VOUCHER FUNCTIONS
+        // ========================================
+        
+        // Initialize Category Voucher Form
+        function initializeCategoryVoucherForm() {
+            // Wait for DOM to be ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initializeCategoryVoucherForm);
+                return;
+            }
+            
+            // Set today's date
+            const today = new Date().toISOString().split('T')[0];
+            const voucherDateEl = document.getElementById('categoryVoucherDate');
+            if (voucherDateEl) {
+                voucherDateEl.value = today;
+            }
+            
+            // Generate voucher number
+            generateCategoryVoucherNumber();
+            
+            // Populate dropdowns
+            populateCategoryVoucherDropdowns();
+        }
+        
+        // Generate Category Voucher Number
+        function generateCategoryVoucherNumber() {
+            const voucherNumberEl = document.getElementById('categoryVoucherNumber');
+            if (!voucherNumberEl) return;
+            
+            // Try to fetch from server using category payments API, with fallback
+            api.getNextCategoryVoucherNumber()
+                .then(response => {
+                    if (voucherNumberEl && response && response.voucherNumber) {
+                        voucherNumberEl.value = response.voucherNumber;
+                    } else {
+                        // Fallback if response format is unexpected
+                        if (!voucherNumberEl.value) {
+                            voucherNumberEl.value = 'PV1001';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.warn('Error fetching voucher number from server, using fallback:', error.message);
+                    // Fallback: generate client-side or use default
+                    if (voucherNumberEl && !voucherNumberEl.value) {
+                        voucherNumberEl.value = 'PV1001';
+                    }
+                });
+        }
+        
+        // Save New Category Voucher
+        function saveNewCategoryVoucher() {
+            const voucherNumber = document.getElementById('categoryVoucherNumber').value;
+            const date = document.getElementById('categoryVoucherDate').value;
+            const categoryId = document.getElementById('categoryVoucherCategory').value;
+            const branchId = document.getElementById('categoryVoucherBranch').value;
+            const paymentMethod = document.getElementById('categoryVoucherMethod').value;
+            const amount = parseFloat(document.getElementById('categoryVoucherAmount').value);
+            const description = document.getElementById('categoryVoucherDescription').value;
+            
+            if (!date || !categoryId || !branchId || !paymentMethod || !amount) {
+                showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            // Get category name
+            const categoryName = appData.categories.find(c => c._id === categoryId)?.name || 'Category Payment';
+            
+            // Use SEPARATE category payments API
+            const voucherData = {
+                voucherNumber: voucherNumber,
+                date: date,
+                categoryId: categoryId,
+                category: categoryName,
+                branchId: branchId,
+                paymentMethod: paymentMethod,
+                amount: amount,
+                description: description,
+                status: 'Pending'
+            };
+            
+            api.createCategoryPayment(voucherData)
+                .then(() => {
+                    showNotification('Category voucher saved successfully!', 'success');
+                    resetCategoryVoucherForm();
+                    loadCategoryVoucherListTab();
+                    updatePaymentDashboard();
+                    // Switch to voucher list and show category tab
+                    showSection('payment-voucher-list');
+                    setTimeout(() => {
+                        const categoryTab = document.getElementById('category-voucher-list-tab');
+                        if (categoryTab) {
+                            const bsTab = new bootstrap.Tab(categoryTab);
+                            bsTab.show();
+                        }
+                    }, 300);
+                })
+                .catch(error => {
+                    console.error('Error saving category voucher:', error);
+                    showNotification('Failed to save voucher: ' + (error.message || 'Unknown error'), 'error');
+                });
+        }
+        
+        // Update Category Voucher
+        function updateCategoryVoucher(id) {
+            const date = document.getElementById('categoryVoucherDate').value;
+            const categoryId = document.getElementById('categoryVoucherCategory').value;
+            const branchId = document.getElementById('categoryVoucherBranch').value;
+            const paymentMethod = document.getElementById('categoryVoucherMethod').value;
+            const amount = parseFloat(document.getElementById('categoryVoucherAmount').value);
+            const description = document.getElementById('categoryVoucherDescription').value;
+            
+            if (!date || !categoryId || !branchId || !paymentMethod || !amount) {
+                showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            // Get category name
+            const categoryName = appData.categories.find(c => c._id === categoryId)?.name || 'Category Payment';
+            
+            // Use SEPARATE category payments API
+            const voucherData = {
+                date: date,
+                categoryId: categoryId,
+                category: categoryName,
+                branchId: branchId,
+                paymentMethod: paymentMethod,
+                amount: amount,
+                description: description
+            };
+            
+            api.updateCategoryPayment(id, voucherData)
+                .then(() => {
+                    showNotification('Category voucher updated successfully!', 'success');
+                    document.getElementById('categoryVoucherForm').removeAttribute('data-voucher-id');
+                    resetCategoryVoucherForm();
+                    loadCategoryVoucherListTab();
+                    updatePaymentDashboard();
+                    // Switch to voucher list and show category tab
+                    showSection('payment-voucher-list');
+                    setTimeout(() => {
+                        const categoryTab = document.getElementById('category-voucher-list-tab');
+                        if (categoryTab) {
+                            const bsTab = new bootstrap.Tab(categoryTab);
+                            bsTab.show();
+                        }
+                    }, 300);
+                })
+                .catch(error => {
+                    console.error('Error updating category voucher:', error);
+                    showNotification('Failed to update voucher', 'error');
+                });
+        }
+        
+        // Populate Category Voucher Dropdowns
+        function populateCategoryVoucherDropdowns() {
+            // Check if categories data exists
+            if (!appData.categories || !Array.isArray(appData.categories)) {
+                console.warn('Categories data not available');
+                // Try to load categories if not available
+                if (api && api.getCategories) {
+                    api.getCategories().then(categories => {
+                        if (categories && Array.isArray(categories)) {
+                            appData.categories = categories;
+                            populateCategoryVoucherDropdowns();
+                        }
+                    }).catch(err => {
+                        console.error('Error loading categories:', err);
+                    });
+                }
+                return;
+            }
+            
+            // Populate category dropdown in voucher form
+            const categorySelect = document.getElementById('categoryVoucherCategory');
+            if (categorySelect) {
+                const firstOption = categorySelect.options[0];
+                categorySelect.innerHTML = '';
+                if (firstOption) categorySelect.appendChild(firstOption);
+                appData.categories.forEach(c => {
+                    const option = document.createElement('option');
+                    option.value = c._id;
+                    option.textContent = c.name;
+                    categorySelect.appendChild(option);
+                });
+            }
+            
+            // Check if branches data exists
+            if (!appData.branches || !Array.isArray(appData.branches)) {
+                console.warn('Branches data not available');
+                return;
+            }
+            
+            // Populate branch dropdown in voucher form
+            const branchSelect = document.getElementById('categoryVoucherBranch');
+            if (branchSelect) {
+                const firstOption = branchSelect.options[0];
+                branchSelect.innerHTML = '';
+                if (firstOption) branchSelect.appendChild(firstOption);
+                appData.branches.forEach(b => {
+                    const option = document.createElement('option');
+                    option.value = b._id;
+                    option.textContent = b.name;
+                    branchSelect.appendChild(option);
+                });
+            }
+        }
+        
+        // Reset Category Voucher Form
+        function resetCategoryVoucherForm() {
+            const form = document.getElementById('categoryVoucherForm');
+            if (form) {
+                form.reset();
+                generateCategoryVoucherNumber();
+                const today = new Date().toISOString().split('T')[0];
+                const voucherDateEl = document.getElementById('categoryVoucherDate');
+                if (voucherDateEl) voucherDateEl.value = today;
+            }
+        }
+        
         // Load Payment Voucher List
         function loadPaymentVoucherList(methodFilter) {
             const listSection = document.getElementById('payment-voucher-list-section');
@@ -9521,9 +10521,12 @@ sortedBranches.forEach(data => {
             
             url += params.join('&');
             
+            // Supplier payments API - NO FILTERING NEEDED, backend only returns supplier payments
             api.getPayments(url).then(paymentsData => {
-                // Apply method filter if provided
+                // Backend /api/payments only returns supplier payments now
                 let filteredPayments = paymentsData;
+                
+                // Apply method filter if provided
                 if (methodFilter) {
                     const norm = (m) => (m || 'Cash').toLowerCase();
                     const target = norm(methodFilter);
@@ -9584,14 +10587,23 @@ sortedBranches.forEach(data => {
             vouchers.forEach(voucher => {
                 const row = document.createElement('tr');
                 const branchName = voucher.branchId?.name || 'Unknown';
-                const supplierName = voucher.supplierId?.name || voucher.supplier || 'Unknown';
+                const voucherType = voucher.voucherType || 'supplier';
+                let entityName = 'Unknown';
+                
+                if (voucherType === 'category') {
+                    entityName = voucher.categoryId?.name || voucher.category || 'Unknown';
+                } else {
+                    entityName = voucher.supplierId?.name || voucher.supplier || 'Unknown';
+                }
+                
                 const voucherNum = voucher.voucherNumber || 'N/A';
+                const typeLabel = voucherType === 'category' ? 'Category' : 'Supplier';
                 
                 row.innerHTML = `
                     <td class="no-print"><input type="checkbox" class="payment-select" value="${voucher._id}"></td>
                     <td>${voucherNum}</td>
                     <td>${formatDate(voucher.date)}</td>
-                    <td>${supplierName}</td>
+                    <td><span class="badge bg-${voucherType === 'category' ? 'info' : 'primary'} me-1">${typeLabel}</span>${entityName}</td>
                     <td>${branchName}</td>
                     <td>PKR ${voucher.amount.toLocaleString()}</td>
                     <td>${voucher.paymentMethod || 'Cash'}</td>
@@ -9741,18 +10753,36 @@ sortedBranches.forEach(data => {
         
         // View Payment Voucher - Opens in new window like sale report
         function viewPaymentVoucher(id) {
-            api.getPayment(id).then(voucher => {
+            // Try to determine if it's a category or supplier voucher by checking active tab
+            const categoryTab = document.getElementById('category-voucher-list-tab');
+            const isCategoryTab = categoryTab && categoryTab.classList.contains('active');
+            
+            const voucherPromise = isCategoryTab ? api.getCategoryPayment(id) : api.getPayment(id);
+            
+            voucherPromise.then(voucher => {
                 const branchName = voucher.branchId?.name || 'Unknown';
-                const supplierName = voucher.supplierId?.name || voucher.supplier || 'Unknown';
+                const voucherType = voucher.voucherType || 'supplier';
+                let entityName = 'Unknown';
+                let entityLabel = 'Category';
+                
+                // For category vouchers, always show Category; for supplier vouchers, show Supplier
+                if (voucherType === 'category' || isCategoryTab) {
+                    entityName = voucher.categoryId?.name || voucher.category || 'Unknown';
+                    entityLabel = 'Category';
+                } else {
+                    entityName = voucher.supplierId?.name || voucher.supplier || 'Unknown';
+                    entityLabel = 'Supplier';
+                }
+                
                 const voucherNum = voucher.voucherNumber || 'N/A';
                 
-                const companyName = appData.settings?.companyName || 'D.Watson Group of Pharmacy';
+                const companyName = appData.settings?.companyName || 'D.Watson Group Of Pharmacies';
                 // Always show PAID status for vouchers
                 const statusColor = '#155724';
                 const statusBg = '#f0f9f4';
                 const displayStatus = 'PAID';
                 
-                // Create complete HTML document for print (same as sale report)
+                // Create complete HTML document for print (same design as sale report)
                 const printContent = `
 <!DOCTYPE html>
 <html>
@@ -9767,7 +10797,7 @@ sortedBranches.forEach(data => {
         
         @page {
             size: A4 portrait;
-            margin: 0.15in;
+            margin: 0.5in;
         }
         
         @media screen {
@@ -9781,35 +10811,77 @@ sortedBranches.forEach(data => {
             }
             
             .professional-voucher {
-                max-width: 4.5in;
+                max-width: 850px;
                 width: 100%;
                 margin: 0 auto;
             }
         }
         
         body {
-            font-family: Arial, sans-serif;
-            font-size: 9pt;
-            line-height: 1.3;
+            font-family: 'Arial', sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
             color: #000;
             background: #fff;
             margin: 0;
-            padding: 5px;
+            padding: 20px;
         }
         
         .professional-voucher {
-            border: 2px solid #000;
-            padding: 12px;
+            border: 2px solid #2c6e8a;
+            padding: 40px;
             background: #ffffff;
             width: 100%;
-            max-width: 4.5in;
+            max-width: 850px;
             box-sizing: border-box;
             page-break-inside: avoid;
             margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        .print-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2c6e8a;
+            padding-bottom: 15px;
+        }
+        
+        .print-header h1 {
+            font-size: 28pt;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            color: #2c6e8a;
+        }
+        
+        .print-header .company-info {
+            font-size: 11pt;
+            color: #555;
+            margin: 5px 0;
         }
         
         table {
-            table-layout: fixed;
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 10pt;
+        }
+        
+        table th {
+            background-color: #2c6e8a;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #1a4d63;
+        }
+        
+        table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
         }
         
         @media print {
@@ -9819,74 +10891,69 @@ sortedBranches.forEach(data => {
             
             .professional-voucher {
                 max-width: 100%;
-                padding: 10px;
+                padding: 30px;
             }
         }
     </style>
 </head>
 <body>
     <div class="professional-voucher">
-        <!-- Professional Header -->
-        <div style="text-align: center; margin-bottom: 10px; padding: 10px 12px; background: #00685c; color: #ffffff; border-bottom: 2px solid #000;">
-            <h2 style="margin: 0; font-size: 14px; font-weight: bold; letter-spacing: 0.5px; color: #ffffff;">${companyName}</h2>
-            <p style="margin: 3px 0 0 0; font-size: 9px; color: #ffffff; letter-spacing: 0.3px;">Payment Management System</p>
+        <!-- Professional Header (same as sale report) -->
+        <div class="print-header">
+            <h1>${companyName}</h1>
+            <div class="company-info">Payment Management System</div>
+            <div class="company-info">Payment Voucher</div>
+            <div class="company-info">Generated: ${new Date().toLocaleDateString('en-GB')}</div>
         </div>
         
-        <!-- Voucher Title - Professional Style -->
-        <div style="text-align: center; font-size: 11px; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; color: #000; padding: 6px; background: #f8f9fa; border: 1px solid #000;">
-            PAYMENT VOUCHER
-        </div>
-    
-        <!-- Professional Details Table -->
-        <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse; border: 1px solid #333;">
+        <!-- Voucher Details Table -->
+        <table>
             <tr>
-                <td style="padding: 6px; border: 1px solid #333; width: 25%; background: #00685c; color: #ffffff; font-weight: bold; font-size: 8pt; text-align: center; letter-spacing: 0.3px; vertical-align: middle;">VOUCHER NO</td>
-                <td style="padding: 6px; border: 1px solid #333; width: 25%; background: #ffffff; font-size: 9pt; font-weight: bold; color: #000; vertical-align: middle; word-wrap: break-word;">${voucherNum}</td>
-                <td style="padding: 6px; border: 1px solid #333; width: 25%; background: #2c6e8a; color: #ffffff; font-weight: bold; font-size: 8pt; text-align: center; letter-spacing: 0.3px; vertical-align: middle;">DATE</td>
-                <td style="padding: 6px; border: 1px solid #333; width: 25%; background: #ffffff; font-size: 9pt; color: #000; vertical-align: middle;">${formatDate(voucher.date)}</td>
+                <th style="background-color: #2c6e8a; width: 30%;">Voucher Number</th>
+                <td style="font-weight: bold; font-size: 12pt;">${voucherNum}</td>
             </tr>
             <tr>
-                <td style="padding: 6px; border: 1px solid #333; background: #00685c; color: #ffffff; font-weight: bold; font-size: 8pt; text-align: center; letter-spacing: 0.3px; vertical-align: middle;">SUPPLIER</td>
-                <td style="padding: 6px; border: 1px solid #333; background: #f8f9fa; font-size: 9pt; color: #000; font-weight: 500; vertical-align: middle; word-wrap: break-word;">${supplierName}</td>
-                <td style="padding: 6px; border: 1px solid #333; background: #2c6e8a; color: #ffffff; font-weight: bold; font-size: 8pt; text-align: center; letter-spacing: 0.3px; vertical-align: middle;">BRANCH</td>
-                <td style="padding: 6px; border: 1px solid #333; background: #f8f9fa; font-size: 9pt; color: #000; font-weight: 500; vertical-align: middle; word-wrap: break-word;">${branchName}</td>
+                <th style="background-color: #2c6e8a;">Date</th>
+                <td>${formatDate(voucher.date)}</td>
             </tr>
             <tr>
-                <td style="padding: 6px; border: 1px solid #333; background: #00685c; color: #ffffff; font-weight: bold; font-size: 8pt; text-align: center; letter-spacing: 0.3px; vertical-align: middle;">PAYMENT METHOD</td>
-                <td style="padding: 6px; border: 1px solid #333; background: #ffffff; font-size: 9pt; color: #000; vertical-align: middle; word-wrap: break-word;">${voucher.paymentMethod || 'Cash'}</td>
-                <td style="padding: 6px; border: 1px solid #333; background: #2c6e8a; color: #ffffff; font-weight: bold; font-size: 8pt; text-align: center; letter-spacing: 0.3px; vertical-align: middle;">STATUS</td>
-                <td style="padding: 6px; border: 1px solid #333; background: ${statusBg}; font-size: 9pt; font-weight: bold; color: ${statusColor}; text-align: center; text-transform: uppercase; vertical-align: middle;">${displayStatus}</td>
+                <th style="background-color: #2c6e8a;">${entityLabel}</th>
+                <td style="font-weight: 600;">${entityName}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #2c6e8a;">Branch</th>
+                <td>${branchName}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #2c6e8a;">Payment Method</th>
+                <td>${voucher.paymentMethod || 'Cash'}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #2c6e8a;">Status</th>
+                <td style="font-weight: bold; color: ${statusColor}; background: ${statusBg}; padding: 8px; text-align: center; border-radius: 4px;">${displayStatus}</td>
+            </tr>
+            <tr>
+                <th style="background-color: #2c6e8a;">Description</th>
+                <td>${voucher.description || 'No description provided'}</td>
+            </tr>
+            <tr style="background-color: #f0f9f4; border-top: 3px solid #2c6e8a;">
+                <th style="background-color: #00685c; font-size: 12pt; padding: 15px;">Total Amount</th>
+                <td style="font-size: 18pt; font-weight: bold; color: #2c6e8a; padding: 15px; text-align: right;">${voucher.amount.toLocaleString()}</td>
             </tr>
         </table>
         
-        <!-- Professional Description Box -->
-        <div style="margin-bottom: 10px; border: 1px solid #333; overflow: hidden; background: #ffffff;">
-            <div style="padding: 5px 8px; background: #00685c; color: #ffffff; font-weight: bold; font-size: 8pt; letter-spacing: 0.3px; border-bottom: 1px solid #000;">
-                DESCRIPTION
-            </div>
-            <div style="padding: 8px; background: #ffffff; min-height: 35px; color: #000; font-size: 9pt; line-height: 1.4; word-wrap: break-word; white-space: pre-wrap;">
-                ${voucher.description || 'No description provided'}
-            </div>
-        </div>
-        
-        <!-- Professional Amount Box -->
-        <div style="font-size: 11px; font-weight: bold; text-align: right; padding: 10px; background: #00685c; color: #ffffff; border: 1px solid #000; margin-bottom: 12px; letter-spacing: 0.3px;">
-            <span style="font-size: 9px;">Total Amount: </span>
-            <span style="font-size: 16px; font-weight: bold; color: #ffffff;">${voucher.amount.toLocaleString()}</span>
-        </div>
-        
         <!-- Professional Signature Section -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 15px; padding-top: 12px; border-top: 2px solid #333;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 40px; padding-top: 20px; border-top: 2px solid #2c6e8a;">
             <div style="width: 48%; text-align: center; padding: 0 5px;">
-                <p style="margin: 0 0 6px 0; font-weight: bold; color: #000; font-size: 9pt; letter-spacing: 0.3px; text-transform: uppercase;">PREPARED BY</p>
-                <div style="border-top: 1px solid #000; margin-top: 35px; padding-top: 5px; height: 50px;">
-                    <p style="margin: 0; color: #000; font-size: 7pt; letter-spacing: 0.3px;">Signature & Date</p>
+                <p style="margin: 0 0 6px 0; font-weight: bold; color: #2c6e8a; font-size: 10pt; letter-spacing: 0.3px; text-transform: uppercase;">PREPARED BY</p>
+                <div style="border-top: 1px solid #2c6e8a; margin-top: 50px; padding-top: 5px; height: 60px;">
+                    <p style="margin: 0; color: #666; font-size: 9pt;">Signature & Date</p>
                 </div>
             </div>
             <div style="width: 48%; text-align: center; padding: 0 5px;">
-                <p style="margin: 0 0 6px 0; font-weight: bold; color: #000; font-size: 9pt; letter-spacing: 0.3px; text-transform: uppercase;">CASH RECEIVED BY</p>
-                <div style="border-top: 1px solid #000; margin-top: 35px; padding-top: 5px; height: 50px;">
-                    <p style="margin: 0; color: #000; font-size: 7pt; letter-spacing: 0.3px;">Signature & Date</p>
+                <p style="margin: 0 0 6px 0; font-weight: bold; color: #2c6e8a; font-size: 10pt; letter-spacing: 0.3px; text-transform: uppercase;">CASH RECEIVED BY</p>
+                <div style="border-top: 1px solid #2c6e8a; margin-top: 50px; padding-top: 5px; height: 60px;">
+                    <p style="margin: 0; color: #666; font-size: 9pt;">Signature & Date</p>
                 </div>
             </div>
         </div>
@@ -9897,8 +10964,8 @@ sortedBranches.forEach(data => {
                 
                 // Open preview window and trigger print dialog (same as sale report)
                 try {
-                    // Size window for half A4 portrait (portrait orientation - taller than wide)
-                    const previewWindow = window.open('', '_blank', 'width=500,height=700,scrollbars=yes,resizable=yes');
+                    // Size window for A4 portrait (same as sale report)
+                    const previewWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
                     if (!previewWindow) {
                         throw new Error('Popup blocked. Please allow popups for this site.');
                     }
@@ -9934,25 +11001,69 @@ sortedBranches.forEach(data => {
                 showNotification("You don't have permission to edit vouchers", 'error');
                 return;
             }
-            api.getPayment(id).then(voucher => {
-                document.getElementById('paymentVoucherNumber').value = voucher.voucherNumber || '';
-                document.getElementById('paymentVoucherDate').value = new Date(voucher.date).toISOString().split('T')[0];
-                document.getElementById('paymentVoucherSupplier').value = voucher.supplierId?._id || voucher.supplierId || '';
-                document.getElementById('paymentVoucherBranch').value = voucher.branchId?._id || voucher.branchId || '';
-                document.getElementById('paymentVoucherMethod').value = voucher.paymentMethod || 'Cash';
-                document.getElementById('paymentVoucherAmount').value = voucher.amount || 0;
-                document.getElementById('paymentVoucherDescription').value = voucher.description || '';
-                
-                // Store voucher ID for update
-                document.getElementById('paymentVoucherForm').setAttribute('data-voucher-id', id);
-                
-                // Switch to voucher tab
-                showPaymentTab('payment-vouchers');
-                showNotification('Voucher loaded for editing', 'info');
-            }).catch(error => {
-                console.error('Error fetching voucher:', error);
-                showNotification('Failed to load voucher', 'error');
-            });
+            
+            // Check which tab is active to determine voucher type
+            const categoryTab = document.getElementById('category-voucher-list-tab');
+            const isCategoryTab = categoryTab && categoryTab.classList.contains('active');
+            
+            if (isCategoryTab) {
+                // Load from category payments API
+                api.getCategoryPayment(id).then(voucher => {
+                    // Edit category voucher
+                    document.getElementById('categoryVoucherNumber').value = voucher.voucherNumber || '';
+                    document.getElementById('categoryVoucherDate').value = new Date(voucher.date).toISOString().split('T')[0];
+                    document.getElementById('categoryVoucherCategory').value = voucher.categoryId?._id || voucher.categoryId || '';
+                    document.getElementById('categoryVoucherBranch').value = voucher.branchId?._id || voucher.branchId || '';
+                    document.getElementById('categoryVoucherMethod').value = voucher.paymentMethod || 'Cash';
+                    document.getElementById('categoryVoucherAmount').value = voucher.amount || 0;
+                    document.getElementById('categoryVoucherDescription').value = voucher.description || '';
+                    
+                    // Store voucher ID for update
+                    document.getElementById('categoryVoucherForm').setAttribute('data-voucher-id', id);
+                    
+                    // Switch to payment vouchers section and activate category tab
+                    showPaymentTab('payment-vouchers');
+                    setTimeout(() => {
+                        const categoryTab = document.getElementById('category-voucher-tab');
+                        if (categoryTab) {
+                            const bsTab = new bootstrap.Tab(categoryTab);
+                            bsTab.show();
+                        }
+                    }, 300);
+                    showNotification('Category voucher loaded for editing', 'info');
+                }).catch(error => {
+                    console.error('Error fetching category voucher:', error);
+                    showNotification('Failed to load voucher', 'error');
+                });
+            } else {
+                // Edit supplier voucher - load from supplier payments API
+                api.getPayment(id).then(voucher => {
+                    document.getElementById('paymentVoucherNumber').value = voucher.voucherNumber || '';
+                    document.getElementById('paymentVoucherDate').value = new Date(voucher.date).toISOString().split('T')[0];
+                    document.getElementById('paymentVoucherSupplier').value = voucher.supplierId?._id || voucher.supplierId || '';
+                    document.getElementById('paymentVoucherBranch').value = voucher.branchId?._id || voucher.branchId || '';
+                    document.getElementById('paymentVoucherMethod').value = voucher.paymentMethod || 'Cash';
+                    document.getElementById('paymentVoucherAmount').value = voucher.amount || 0;
+                    document.getElementById('paymentVoucherDescription').value = voucher.description || '';
+                    
+                    // Store voucher ID for update
+                    document.getElementById('paymentVoucherForm').setAttribute('data-voucher-id', id);
+                    
+                    // Switch to voucher tab
+                    showPaymentTab('payment-vouchers');
+                    setTimeout(() => {
+                        const supplierTab = document.getElementById('supplier-voucher-tab');
+                        if (supplierTab) {
+                            const bsTab = new bootstrap.Tab(supplierTab);
+                            bsTab.show();
+                        }
+                    }, 300);
+                    showNotification('Voucher loaded for editing', 'info');
+                }).catch(error => {
+                    console.error('Error fetching voucher:', error);
+                    showNotification('Failed to load voucher', 'error');
+                });
+            }
         }
         
         // Delete Payment Voucher
@@ -9962,15 +11073,1173 @@ sortedBranches.forEach(data => {
                 return;
             }
             if (confirm('Are you sure you want to delete this voucher?')) {
-                api.deletePayment(id).then(() => {
-                    showNotification('Voucher deleted successfully!', 'success');
-                    loadPaymentVoucherList();
-                    updatePaymentDashboard();
-                }).catch(error => {
-                    console.error('Error deleting voucher:', error);
-                    showNotification('Failed to delete voucher', 'error');
+                // Try to determine if it's a category or supplier voucher
+                // Check which tab is active
+                const categoryTab = document.getElementById('category-voucher-list-tab');
+                const isCategoryTab = categoryTab && categoryTab.classList.contains('active');
+                
+                if (isCategoryTab) {
+                    // Delete from category payments API
+                    api.deleteCategoryPayment(id).then(() => {
+                        showNotification('Category voucher deleted successfully!', 'success');
+                        loadCategoryVoucherListTab();
+                        updatePaymentDashboard();
+                    }).catch(error => {
+                        console.error('Error deleting category voucher:', error);
+                        showNotification('Failed to delete voucher', 'error');
+                    });
+                } else {
+                    // Delete from supplier payments API
+                    api.deletePayment(id).then(() => {
+                        showNotification('Voucher deleted successfully!', 'success');
+                        loadPaymentVoucherList();
+                        updatePaymentDashboard();
+                    }).catch(error => {
+                        console.error('Error deleting voucher:', error);
+                        showNotification('Failed to delete voucher', 'error');
+                    });
+                }
+            }
+        }
+        
+        // ========================================
+        // CATEGORY VOUCHER LIST TAB FUNCTIONS (Inside Payment Voucher List)
+        // ========================================
+        
+        // Initialize Category Voucher List Tab
+        function initializeCategoryVoucherListTab() {
+            populateCategoryVoucherListTabFilters();
+            loadCategoryVoucherListTab();
+        }
+        
+        // Populate Category Voucher List Tab Filters
+        function populateCategoryVoucherListTabFilters() {
+            // Populate categories
+            const categoryFilter = document.getElementById('categoryVoucherListCategoryFilter');
+            if (categoryFilter && appData.categories) {
+                const firstOption = categoryFilter.options[0];
+                categoryFilter.innerHTML = '';
+                if (firstOption) categoryFilter.appendChild(firstOption);
+                appData.categories.forEach(c => {
+                    const option = document.createElement('option');
+                    option.value = c._id;
+                    option.textContent = c.name;
+                    categoryFilter.appendChild(option);
                 });
             }
+            
+            // Populate branches
+            const branchFilter = document.getElementById('categoryVoucherListBranchFilter');
+            if (branchFilter && appData.branches) {
+                const firstOption = branchFilter.options[0];
+                branchFilter.innerHTML = '';
+                if (firstOption) branchFilter.appendChild(firstOption);
+                appData.branches.forEach(b => {
+                    const option = document.createElement('option');
+                    option.value = b._id;
+                    option.textContent = b.name;
+                    branchFilter.appendChild(option);
+                });
+            }
+        }
+        
+        // Load Category Voucher List Tab
+        function loadCategoryVoucherListTab() {
+            const branchFilter = document.getElementById('categoryVoucherListBranchFilter')?.value || '';
+            const categoryFilter = document.getElementById('categoryVoucherListCategoryFilter')?.value || '';
+            const fromDate = document.getElementById('categoryVoucherListFromDate')?.value || '';
+            const toDate = document.getElementById('categoryVoucherListToDate')?.value || '';
+            const search = document.getElementById('categoryVoucherListSearch')?.value || '';
+            
+            let url = '/category-payments';
+            const params = [];
+            
+            if (branchFilter) params.push(`branchId=${branchFilter}`);
+            if (categoryFilter) params.push(`categoryId=${categoryFilter}`);
+            if (fromDate) params.push(`from=${fromDate}`);
+            if (toDate) params.push(`to=${toDate}`);
+            
+            if (params.length > 0) {
+                url += '?' + params.join('&');
+            }
+            
+            // Use SEPARATE category payments API
+            api.getCategoryPayments(url).then(paymentsData => {
+                // No filtering needed - backend only returns category payments
+                let filteredPayments = paymentsData;
+                
+                // Apply search filter
+                if (search) {
+                    const searchLower = search.toLowerCase();
+                    filteredPayments = filteredPayments.filter(p => {
+                        return (p.voucherNumber && p.voucherNumber.toLowerCase().includes(searchLower)) ||
+                               (p.category && p.category.toLowerCase().includes(searchLower)) ||
+                               (p.categoryId && p.categoryId.name && p.categoryId.name.toLowerCase().includes(searchLower)) ||
+                               (p.description && p.description.toLowerCase().includes(searchLower)) ||
+                               (p.branchId && p.branchId.name && p.branchId.name.toLowerCase().includes(searchLower));
+                    });
+                }
+                
+                renderCategoryVoucherListTab(filteredPayments);
+            }).catch(error => {
+                console.error('Error loading category voucher list:', error);
+                showNotification('Failed to load voucher list', 'error');
+            });
+        }
+        
+        // Render Category Voucher List Tab
+        function renderCategoryVoucherListTab(vouchers) {
+            const tbody = document.getElementById('categoryVoucherListTableBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            if (vouchers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No category vouchers found</td></tr>';
+                return;
+            }
+            
+            const canEditVoucher = (appData.currentUser?.permissions || []).includes('payment-edit');
+            const canDeleteVoucher = (appData.currentUser?.permissions || []).includes('payment-delete');
+            
+            vouchers.forEach(voucher => {
+                const branchName = voucher.branchId?.name || 'Unknown';
+                const categoryName = voucher.categoryId?.name || voucher.category || 'Unknown';
+                const voucherNum = voucher.voucherNumber || 'N/A';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${voucherNum}</td>
+                    <td>${formatDate(voucher.date)}</td>
+                    <td><span class="badge bg-info">${categoryName}</span></td>
+                    <td>${branchName}</td>
+                    <td class="text-end">PKR ${voucher.amount.toLocaleString()}</td>
+                    <td>${voucher.paymentMethod || 'Cash'}</td>
+                    <td>${voucher.description || '-'}</td>
+                    <td class="no-print">
+                        <button class="btn btn-sm btn-info me-1" onclick="viewPaymentVoucher('${voucher._id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        ${canEditVoucher ? `<button class="btn btn-sm btn-warning me-1" onclick="editPaymentVoucher('${voucher._id}')"><i class="fas fa-edit"></i></button>` : ''}
+                        ${canDeleteVoucher ? `<button class="btn btn-sm btn-danger" onclick="deletePaymentVoucher('${voucher._id}')"><i class="fas fa-trash"></i></button>` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Clear Category Voucher List Tab Filters
+        function clearCategoryVoucherListFilters() {
+            document.getElementById('categoryVoucherListSearch').value = '';
+            document.getElementById('categoryVoucherListBranchFilter').value = '';
+            document.getElementById('categoryVoucherListCategoryFilter').value = '';
+            document.getElementById('categoryVoucherListFromDate').value = '';
+            document.getElementById('categoryVoucherListToDate').value = '';
+            loadCategoryVoucherListTab();
+        }
+        
+        // Print Category Voucher List Tab
+        function printCategoryVoucherListTab() {
+            const tbody = document.getElementById('categoryVoucherListTableBody');
+            if (!tbody) {
+                showNotification('No vouchers to print', 'error');
+                return;
+            }
+            
+            // Get filter information
+            const branchFilter = document.getElementById('categoryVoucherListBranchFilter')?.value || '';
+            const categoryFilter = document.getElementById('categoryVoucherListCategoryFilter')?.value || '';
+            const fromDate = document.getElementById('categoryVoucherListFromDate')?.value || '';
+            const toDate = document.getElementById('categoryVoucherListToDate')?.value || '';
+            const search = document.getElementById('categoryVoucherListSearch')?.value || '';
+            
+            // Get display names
+            const branchName = branchFilter ? appData.branches.find(b => b._id === branchFilter)?.name || 'All Branches' : 'All Branches';
+            const categoryName = categoryFilter ? appData.categories.find(c => c._id === categoryFilter)?.name || 'All Categories' : 'All Categories';
+            
+            const companyName = appData.settings?.companyName || 'D.Watson Group Of Pharmacies';
+            
+            // Extract rows from visible table (excluding empty/no data rows)
+            const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => {
+                const cells = row.querySelectorAll('td');
+                // Skip empty rows or "no data" rows
+                if (cells.length === 1 && (cells[0].textContent.includes('No vouchers') || cells[0].textContent.includes('Loading'))) {
+                    return false;
+                }
+                // Skip rows with less than 7 cells (action buttons column excluded)
+                return cells.length >= 7;
+            });
+            
+            if (rows.length === 0) {
+                showNotification('No vouchers to print', 'error');
+                return;
+            }
+            
+            const printContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Category Voucher List - ${new Date().toLocaleDateString('en-GB')}</title>
+    <style>
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #000;
+            background: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .print-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2c6e8a;
+            padding-bottom: 15px;
+        }
+        
+        .print-header h1 {
+            font-size: 28pt;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            color: #2c6e8a;
+        }
+        
+        .print-header .company-info {
+            font-size: 11pt;
+            color: #555;
+            margin: 5px 0;
+        }
+        
+        .filter-info {
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px solid #2c6e8a;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .filter-info p {
+            margin: 8px 0;
+            font-size: 10pt;
+            font-weight: 500;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 10pt;
+        }
+        
+        th {
+            background-color: #2c6e8a;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #1a4d63;
+        }
+        
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .text-end {
+            text-align: right;
+        }
+        
+        @page {
+            size: A4 portrait;
+            margin: 0.5in;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-header">
+        <h1>${companyName}</h1>
+        <div class="company-info">Category Voucher List</div>
+        <div class="company-info">Generated: ${new Date().toLocaleDateString('en-GB')}</div>
+    </div>
+    
+    <div class="filter-info">
+        <p><strong>Branch:</strong> ${branchName}</p>
+        <p><strong>Category:</strong> ${categoryName}</p>
+        <p><strong>From Date:</strong> ${fromDate || 'All Dates'}</p>
+        <p><strong>To Date:</strong> ${toDate || 'All Dates'}</p>
+        ${search ? `<p><strong>Search:</strong> ${search}</p>` : ''}
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Voucher #</th>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Branch</th>
+                <th class="text-end">Amount</th>
+                <th>Method</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${rows.map(row => {
+                const cells = row.querySelectorAll('td');
+                // Extract text content, removing badge/span HTML
+                const categoryText = cells[2].textContent.replace(/badge.*?>/g, '').replace(/span.*?>/g, '').trim();
+                return `
+                    <tr>
+                        <td>${cells[0].textContent.trim()}</td>
+                        <td>${cells[1].textContent.trim()}</td>
+                        <td>${categoryText}</td>
+                        <td>${cells[3].textContent.trim()}</td>
+                        <td class="text-end">${cells[4].textContent.trim()}</td>
+                        <td>${cells[5].textContent.trim()}</td>
+                        <td>${cells[6].textContent.trim()}</td>
+                    </tr>
+                `;
+            }).join('')}
+        </tbody>
+    </table>
+</body>
+</html>
+            `;
+            
+            const w = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+            if (!w) {
+                showNotification('Popup blocked. Please allow popups.', 'error');
+                return;
+            }
+            w.document.write(printContent);
+            w.document.close();
+            w.focus();
+            setTimeout(() => w.print(), 250);
+        }
+        
+        // ========================================
+        // CATEGORY VOUCHER SIMPLE LIST FUNCTIONS (Old - Keep for backward compatibility)
+        // ========================================
+        
+        // Initialize Category Voucher Simple List
+        function initializeCategoryVoucherSimpleList() {
+            populateCategoryVoucherSimpleFilters();
+            loadCategoryVoucherSimpleList();
+        }
+        
+        // Populate Category Voucher Simple Filters
+        function populateCategoryVoucherSimpleFilters() {
+            // Populate categories
+            const categoryFilter = document.getElementById('categoryVoucherSimpleListCategoryFilter');
+            if (categoryFilter && appData.categories) {
+                const firstOption = categoryFilter.options[0];
+                categoryFilter.innerHTML = '';
+                if (firstOption) categoryFilter.appendChild(firstOption);
+                appData.categories.forEach(c => {
+                    const option = document.createElement('option');
+                    option.value = c._id;
+                    option.textContent = c.name;
+                    categoryFilter.appendChild(option);
+                });
+            }
+            
+            // Populate branches
+            const branchFilter = document.getElementById('categoryVoucherSimpleListBranchFilter');
+            if (branchFilter && appData.branches) {
+                const firstOption = branchFilter.options[0];
+                branchFilter.innerHTML = '';
+                if (firstOption) branchFilter.appendChild(firstOption);
+                appData.branches.forEach(b => {
+                    const option = document.createElement('option');
+                    option.value = b._id;
+                    option.textContent = b.name;
+                    branchFilter.appendChild(option);
+                });
+            }
+        }
+        
+        // Load Category Voucher Simple List
+        function loadCategoryVoucherSimpleList() {
+            const listSection = document.getElementById('category-voucher-simple-list-section');
+            if (!listSection || listSection.style.display === 'none') {
+                return;
+            }
+            
+            const branchFilter = document.getElementById('categoryVoucherSimpleListBranchFilter')?.value || '';
+            const categoryFilter = document.getElementById('categoryVoucherSimpleListCategoryFilter')?.value || '';
+            const fromDate = document.getElementById('categoryVoucherSimpleListFromDate')?.value || '';
+            const toDate = document.getElementById('categoryVoucherSimpleListToDate')?.value || '';
+            const search = document.getElementById('categoryVoucherSimpleSearch')?.value || '';
+            
+            let url = '/category-payments';
+            const params = [];
+            
+            if (branchFilter) params.push(`branchId=${branchFilter}`);
+            if (categoryFilter) params.push(`categoryId=${categoryFilter}`);
+            if (fromDate) params.push(`from=${fromDate}`);
+            if (toDate) params.push(`to=${toDate}`);
+            
+            if (params.length > 0) {
+                url += '?' + params.join('&');
+            }
+            
+            // Use SEPARATE category payments API
+            api.getCategoryPayments(url).then(paymentsData => {
+                // No filtering needed - backend only returns category payments
+                let filteredPayments = paymentsData;
+                
+                // Apply search filter
+                if (search) {
+                    const searchLower = search.toLowerCase();
+                    filteredPayments = filteredPayments.filter(p => {
+                        return (p.voucherNumber && p.voucherNumber.toLowerCase().includes(searchLower)) ||
+                               (p.category && p.category.toLowerCase().includes(searchLower)) ||
+                               (p.categoryId && p.categoryId.name && p.categoryId.name.toLowerCase().includes(searchLower)) ||
+                               (p.description && p.description.toLowerCase().includes(searchLower)) ||
+                               (p.branchId && p.branchId.name && p.branchId.name.toLowerCase().includes(searchLower));
+                    });
+                }
+                
+                renderCategoryVoucherSimpleList(filteredPayments);
+            }).catch(error => {
+                console.error('Error loading category voucher list:', error);
+                showNotification('Failed to load voucher list', 'error');
+            });
+        }
+        
+        // Render Category Voucher Simple List
+        function renderCategoryVoucherSimpleList(vouchers) {
+            const tbody = document.getElementById('categoryVoucherSimpleListTable');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            if (vouchers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No category vouchers found</td></tr>';
+                return;
+            }
+            
+            const canEditVoucher = (appData.currentUser?.permissions || []).includes('payment-edit');
+            const canDeleteVoucher = (appData.currentUser?.permissions || []).includes('payment-delete');
+            
+            vouchers.forEach(voucher => {
+                const branchName = voucher.branchId?.name || 'Unknown';
+                const categoryName = voucher.categoryId?.name || voucher.category || 'Unknown';
+                const voucherNum = voucher.voucherNumber || 'N/A';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${voucherNum}</td>
+                    <td>${formatDate(voucher.date)}</td>
+                    <td><span class="badge bg-info">${categoryName}</span></td>
+                    <td>${branchName}</td>
+                    <td class="text-end">PKR ${voucher.amount.toLocaleString()}</td>
+                    <td>${voucher.paymentMethod || 'Cash'}</td>
+                    <td>${voucher.description || '-'}</td>
+                    <td class="no-print">
+                        <button class="btn btn-sm btn-info me-1" onclick="viewPaymentVoucher('${voucher._id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        ${canEditVoucher ? `<button class="btn btn-sm btn-warning me-1" onclick="editPaymentVoucher('${voucher._id}')"><i class="fas fa-edit"></i></button>` : ''}
+                        ${canDeleteVoucher ? `<button class="btn btn-sm btn-danger" onclick="deletePaymentVoucher('${voucher._id}')"><i class="fas fa-trash"></i></button>` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Clear Category Voucher Simple Filters
+        function clearCategoryVoucherSimpleFilters() {
+            document.getElementById('categoryVoucherSimpleSearch').value = '';
+            document.getElementById('categoryVoucherSimpleListBranchFilter').value = '';
+            document.getElementById('categoryVoucherSimpleListCategoryFilter').value = '';
+            document.getElementById('categoryVoucherSimpleListFromDate').value = '';
+            document.getElementById('categoryVoucherSimpleListToDate').value = '';
+            loadCategoryVoucherSimpleList();
+        }
+        
+        // Print Category Voucher Simple List
+        function printCategoryVoucherSimpleList() {
+            const tbody = document.getElementById('categoryVoucherSimpleListTable');
+            if (!tbody) {
+                showNotification('No vouchers to print', 'error');
+                return;
+            }
+            
+            // Get filter information
+            const branchFilter = document.getElementById('categoryVoucherSimpleListBranchFilter')?.value || '';
+            const categoryFilter = document.getElementById('categoryVoucherSimpleListCategoryFilter')?.value || '';
+            const fromDate = document.getElementById('categoryVoucherSimpleListFromDate')?.value || '';
+            const toDate = document.getElementById('categoryVoucherSimpleListToDate')?.value || '';
+            const search = document.getElementById('categoryVoucherSimpleSearch')?.value || '';
+            
+            // Get display names
+            const branchName = branchFilter ? appData.branches.find(b => b._id === branchFilter)?.name || 'All Branches' : 'All Branches';
+            const categoryName = categoryFilter ? appData.categories.find(c => c._id === categoryFilter)?.name || 'All Categories' : 'All Categories';
+            
+            const companyName = appData.settings?.companyName || 'D.Watson Group Of Pharmacies';
+            
+            // Extract rows from visible table (excluding empty/no data rows)
+            const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => {
+                const cells = row.querySelectorAll('td');
+                // Skip empty rows or "no data" rows
+                if (cells.length === 1 && (cells[0].textContent.includes('No vouchers') || cells[0].textContent.includes('Loading'))) {
+                    return false;
+                }
+                // Skip rows with less than 7 cells (action buttons column excluded)
+                return cells.length >= 7;
+            });
+            
+            if (rows.length === 0) {
+                showNotification('No vouchers to print', 'error');
+                return;
+            }
+            
+            const printContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Category Voucher List - ${new Date().toLocaleDateString('en-GB')}</title>
+    <style>
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #000;
+            background: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .print-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2c6e8a;
+            padding-bottom: 15px;
+        }
+        
+        .print-header h1 {
+            font-size: 28pt;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            color: #2c6e8a;
+        }
+        
+        .print-header .company-info {
+            font-size: 11pt;
+            color: #555;
+            margin: 5px 0;
+        }
+        
+        .filter-info {
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px solid #2c6e8a;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .filter-info p {
+            margin: 8px 0;
+            font-size: 10pt;
+            font-weight: 500;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 10pt;
+        }
+        
+        th {
+            background-color: #2c6e8a;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #1a4d63;
+        }
+        
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .text-end {
+            text-align: right;
+        }
+        
+        @page {
+            size: A4 portrait;
+            margin: 0.5in;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-header">
+        <h1>${companyName}</h1>
+        <div class="company-info">Category Voucher List</div>
+        <div class="company-info">Generated: ${new Date().toLocaleDateString('en-GB')}</div>
+    </div>
+    
+    <div class="filter-info">
+        <p><strong>Branch:</strong> ${branchName}</p>
+        <p><strong>Category:</strong> ${categoryName}</p>
+        <p><strong>From Date:</strong> ${fromDate || 'All Dates'}</p>
+        <p><strong>To Date:</strong> ${toDate || 'All Dates'}</p>
+        ${search ? `<p><strong>Search:</strong> ${search}</p>` : ''}
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Voucher #</th>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Branch</th>
+                <th class="text-end">Amount</th>
+                <th>Method</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${rows.map(row => {
+                const cells = row.querySelectorAll('td');
+                // Extract text content, removing badge/span HTML
+                const categoryText = cells[2].textContent.replace(/badge.*?>/g, '').replace(/span.*?>/g, '').trim();
+                return `
+                    <tr>
+                        <td>${cells[0].textContent.trim()}</td>
+                        <td>${cells[1].textContent.trim()}</td>
+                        <td>${categoryText}</td>
+                        <td>${cells[3].textContent.trim()}</td>
+                        <td class="text-end">${cells[4].textContent.trim()}</td>
+                        <td>${cells[5].textContent.trim()}</td>
+                        <td>${cells[6].textContent.trim()}</td>
+                    </tr>
+                `;
+            }).join('')}
+        </tbody>
+    </table>
+</body>
+</html>
+            `;
+            
+            const w = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+            if (!w) {
+                showNotification('Popup blocked. Please allow popups.', 'error');
+                return;
+            }
+            w.document.write(printContent);
+            w.document.close();
+            w.focus();
+            setTimeout(() => w.print(), 250);
+        }
+        
+        // ========================================
+        // CATEGORY VOUCHER LIST FUNCTIONS (Summary Report)
+        // ========================================
+        
+        // Initialize Category Voucher List
+        function initializeCategoryVoucherList() {
+            populateCategoryVoucherListFilters();
+            // Set default dates (current month)
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            
+            const fromDateEl = document.getElementById('categoryVoucherListFromDate');
+            const toDateEl = document.getElementById('categoryVoucherListToDate');
+            if (fromDateEl && !fromDateEl.value) {
+                fromDateEl.value = firstDay.toISOString().split('T')[0];
+            }
+            if (toDateEl && !toDateEl.value) {
+                toDateEl.value = lastDay.toISOString().split('T')[0];
+            }
+        }
+        
+        // Populate Category Voucher List Filters
+        function populateCategoryVoucherListFilters() {
+            // Populate categories
+            const categoryFilter = document.getElementById('categoryVoucherListCategoryFilter');
+            if (categoryFilter && appData.categories) {
+                const firstOption = categoryFilter.options[0];
+                categoryFilter.innerHTML = '';
+                if (firstOption) categoryFilter.appendChild(firstOption);
+                appData.categories.forEach(c => {
+                    const option = document.createElement('option');
+                    option.value = c._id;
+                    option.textContent = c.name;
+                    categoryFilter.appendChild(option);
+                });
+            }
+            
+            // Populate branches
+            const branchFilter = document.getElementById('categoryVoucherListBranchFilter');
+            if (branchFilter && appData.branches) {
+                const firstOption = branchFilter.options[0];
+                branchFilter.innerHTML = '';
+                if (firstOption) branchFilter.appendChild(firstOption);
+                appData.branches.forEach(b => {
+                    const option = document.createElement('option');
+                    option.value = b._id;
+                    option.textContent = b.name;
+                    branchFilter.appendChild(option);
+                });
+            }
+        }
+        
+        // Load Category Voucher List
+        function loadCategoryVoucherList() {
+            const categoryId = document.getElementById('categoryVoucherListCategoryFilter')?.value || '';
+            const branchId = document.getElementById('categoryVoucherListBranchFilter')?.value || '';
+            const fromDate = document.getElementById('categoryVoucherListFromDate')?.value || '';
+            const toDate = document.getElementById('categoryVoucherListToDate')?.value || '';
+            
+            if (!fromDate || !toDate) {
+                showNotification('Please select date range', 'error');
+                return;
+            }
+            
+            // Build filters for sales
+            const salesFilters = {};
+            if (categoryId) salesFilters.categoryId = categoryId;
+            if (branchId) salesFilters.branchId = branchId;
+            if (fromDate) salesFilters.from = fromDate;
+            if (toDate) salesFilters.to = toDate;
+            
+            // Build filters for category payments (use separate API)
+            let categoryPaymentUrl = '/category-payments';
+            const paymentParams = [];
+            if (branchId) paymentParams.push(`branchId=${branchId}`);
+            if (categoryId) paymentParams.push(`categoryId=${categoryId}`);
+            if (fromDate) paymentParams.push(`from=${fromDate}`);
+            if (toDate) paymentParams.push(`to=${toDate}`);
+            if (paymentParams.length > 0) {
+                categoryPaymentUrl += '?' + paymentParams.join('&');
+            }
+            
+            // Fetch sales and category payments in parallel
+            Promise.all([
+                api.getSales(salesFilters),
+                api.getCategoryPayments(categoryPaymentUrl)
+            ]).then(([sales, payments]) => {
+                // No filtering needed - backend only returns category payments
+                renderCategoryVoucherList(sales, payments);
+            }).catch(error => {
+                console.error('Error loading category voucher list:', error);
+                showNotification('Failed to load data', 'error');
+            });
+        }
+        
+        // Render Category Voucher List
+        function renderCategoryVoucherList(sales, payments) {
+            const tbody = document.getElementById('categoryVoucherListTable');
+            if (!tbody) return;
+            
+            const fromDate = document.getElementById('categoryVoucherListFromDate')?.value || '';
+            const toDate = document.getElementById('categoryVoucherListToDate')?.value || '';
+            
+            tbody.innerHTML = '';
+            
+            // Group sales by category and branch
+            const salesByCategoryBranch = {};
+            let totalSales = 0;
+            let totalCost = 0;
+            
+            sales.forEach(sale => {
+                const categoryId = sale.categoryId?._id || sale.categoryId || 'unknown';
+                const categoryName = sale.categoryId?.name || sale.category || 'Unknown';
+                const branchId = sale.branchId?._id || sale.branchId || 'unknown';
+                const branchName = sale.branchId?.name || 'Unknown';
+                
+                const key = `${categoryId}_${branchId}`;
+                if (!salesByCategoryBranch[key]) {
+                    salesByCategoryBranch[key] = {
+                        categoryId,
+                        categoryName,
+                        branchId,
+                        branchName,
+                        sales: 0,
+                        cost: 0
+                    };
+                }
+                
+                salesByCategoryBranch[key].sales += sale.total || 0;
+                salesByCategoryBranch[key].cost += sale.costTotal || 0;
+                totalSales += sale.total || 0;
+                totalCost += sale.costTotal || 0;
+            });
+            
+            // Group payments by category and branch
+            const paymentsByCategoryBranch = {};
+            let totalPayment = 0;
+            
+            payments.forEach(payment => {
+                // Skip if not a category voucher
+                if (payment.voucherType && payment.voucherType !== 'category') return;
+                if (!payment.categoryId) return;
+                
+                const categoryId = payment.categoryId?._id || payment.categoryId || 'unknown';
+                const categoryName = payment.categoryId?.name || payment.category || 'Unknown';
+                const branchId = payment.branchId?._id || payment.branchId || 'unknown';
+                const branchName = payment.branchId?.name || 'Unknown';
+                
+                const key = `${categoryId}_${branchId}`;
+                if (!paymentsByCategoryBranch[key]) {
+                    paymentsByCategoryBranch[key] = {
+                        categoryId,
+                        categoryName,
+                        branchId,
+                        branchName,
+                        payment: 0
+                    };
+                }
+                
+                paymentsByCategoryBranch[key].payment += payment.amount || 0;
+                totalPayment += payment.amount || 0;
+            });
+            
+            // Combine and render
+            const allKeys = new Set([
+                ...Object.keys(salesByCategoryBranch),
+                ...Object.keys(paymentsByCategoryBranch)
+            ]);
+            
+            allKeys.forEach(key => {
+                const saleData = salesByCategoryBranch[key] || {};
+                const paymentData = paymentsByCategoryBranch[key] || {};
+                
+                const categoryName = saleData.categoryName || paymentData.categoryName || 'Unknown';
+                const branchName = saleData.branchName || paymentData.branchName || 'Unknown';
+                const salesAmount = saleData.sales || 0;
+                const costAmount = saleData.cost || 0;
+                const paymentAmount = paymentData.payment || 0;
+                const balance = paymentAmount - costAmount;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${categoryName}</td>
+                    <td>${branchName}</td>
+                    <td>${fromDate && toDate ? `${fromDate} to ${toDate}` : formatDate(new Date())}</td>
+                    <td class="text-end">PKR ${salesAmount.toLocaleString()}</td>
+                    <td class="text-end">PKR ${costAmount.toLocaleString()}</td>
+                    <td class="text-end">PKR ${paymentAmount.toLocaleString()}</td>
+                    <td class="text-end ${balance < 0 ? 'text-danger' : balance > 0 ? 'text-success' : ''}">
+                        PKR ${balance.toLocaleString()}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Update summary cards
+            const balance = totalPayment - totalCost;
+            document.getElementById('categoryVoucherTotalSales').textContent = `PKR ${totalSales.toLocaleString()}`;
+            document.getElementById('categoryVoucherTotalCost').textContent = `PKR ${totalCost.toLocaleString()}`;
+            document.getElementById('categoryVoucherTotalPayment').textContent = `PKR ${totalPayment.toLocaleString()}`;
+            const balanceEl = document.getElementById('categoryVoucherBalance');
+            if (balanceEl) {
+                const span = balanceEl.querySelector('span');
+                if (span) {
+                    span.textContent = `PKR ${balance.toLocaleString()}`;
+                    span.className = balance < 0 ? 'text-danger' : balance > 0 ? 'text-success' : 'text-warning';
+                }
+            }
+            
+            if (tbody.children.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No data found for selected filters</td></tr>';
+            }
+        }
+        
+        // Clear Category Voucher Filters
+        function clearCategoryVoucherFilters() {
+            document.getElementById('categoryVoucherListCategoryFilter').value = '';
+            document.getElementById('categoryVoucherListBranchFilter').value = '';
+            document.getElementById('categoryVoucherListFromDate').value = '';
+            document.getElementById('categoryVoucherListToDate').value = '';
+            document.getElementById('categoryVoucherListTable').innerHTML = '<tr><td colspan="7" class="text-center text-muted">Click "Apply Filters" to load data</td></tr>';
+            document.getElementById('categoryVoucherTotalSales').textContent = '0';
+            document.getElementById('categoryVoucherTotalCost').textContent = '0';
+            document.getElementById('categoryVoucherTotalPayment').textContent = '0';
+            const balanceEl = document.getElementById('categoryVoucherBalance');
+            if (balanceEl) {
+                const span = balanceEl.querySelector('span');
+                if (span) {
+                    span.textContent = '0';
+                    span.className = 'text-warning';
+                }
+            }
+        }
+        
+        // Print Category Voucher List
+        function printCategoryVoucherList() {
+            const tbody = document.getElementById('categoryVoucherListTable');
+            if (!tbody) {
+                showNotification('No data to print', 'error');
+                return;
+            }
+            
+            const categoryId = document.getElementById('categoryVoucherListCategoryFilter')?.value || '';
+            const branchId = document.getElementById('categoryVoucherListBranchFilter')?.value || '';
+            const fromDate = document.getElementById('categoryVoucherListFromDate')?.value || '';
+            const toDate = document.getElementById('categoryVoucherListToDate')?.value || '';
+            
+            const categoryName = categoryId ? appData.categories.find(c => c._id === categoryId)?.name || 'All Categories' : 'All Categories';
+            const branchName = branchId ? appData.branches.find(b => b._id === branchId)?.name || 'All Branches' : 'All Branches';
+            
+            // Get totals from screen
+            const totalSales = document.getElementById('categoryVoucherTotalSales')?.textContent || '0';
+            const totalCost = document.getElementById('categoryVoucherTotalCost')?.textContent || '0';
+            const totalPayment = document.getElementById('categoryVoucherTotalPayment')?.textContent || '0';
+            const balanceEl = document.getElementById('categoryVoucherBalance');
+            const balanceText = balanceEl ? (balanceEl.querySelector('span')?.textContent || balanceEl.textContent || '0') : '0';
+            
+            const companyName = appData.settings?.companyName || 'D.Watson Group Of Pharmacies';
+            
+            // Extract rows from visible table (excluding empty/no data rows)
+            const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => {
+                const cells = row.querySelectorAll('td');
+                // Skip empty rows or "no data" rows
+                if (cells.length === 1 && (cells[0].textContent.includes('No data') || cells[0].textContent.includes('Click "Apply Filters"') || cells[0].textContent.includes('Loading'))) {
+                    return false;
+                }
+                // Valid rows should have at least 6 cells (Category, Branch, Sales, Cost, Payment, Balance)
+                return cells.length >= 6;
+            });
+            
+            if (rows.length === 0) {
+                showNotification('No data to print', 'error');
+                return;
+            }
+            
+            const printContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Category Voucher Report - ${new Date().toLocaleDateString('en-GB')}</title>
+    <style>
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #000;
+            background: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .print-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2c6e8a;
+            padding-bottom: 15px;
+        }
+        
+        .print-header h1 {
+            font-size: 28pt;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            color: #2c6e8a;
+        }
+        
+        .print-header .company-info {
+            font-size: 11pt;
+            color: #555;
+            margin: 5px 0;
+        }
+        
+        .filter-info {
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px solid #2c6e8a;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .filter-info p {
+            margin: 8px 0;
+            font-size: 10pt;
+            font-weight: 500;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 10pt;
+        }
+        
+        th {
+            background-color: #2c6e8a;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #1a4d63;
+        }
+        
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .text-end {
+            text-align: right;
+        }
+        
+        .summary {
+            margin-top: 30px;
+            padding: 20px;
+            border: 2px solid #2c6e8a;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 4px;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 8px;
+            font-size: 11pt;
+        }
+        
+        .summary-label {
+            font-weight: bold;
+            color: #2c6e8a;
+        }
+        
+        @page {
+            size: A4 portrait;
+            margin: 0.5in;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-header">
+        <h1>${companyName}</h1>
+        <div class="company-info">Category Voucher Report</div>
+        <div class="company-info">Generated: ${new Date().toLocaleDateString('en-GB')}</div>
+    </div>
+    
+    <div class="filter-info">
+        <p><strong>Category:</strong> ${categoryName}</p>
+        <p><strong>Branch:</strong> ${branchName}</p>
+        <p><strong>From Date:</strong> ${fromDate || 'N/A'}</p>
+        <p><strong>To Date:</strong> ${toDate || 'N/A'}</p>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Branch</th>
+                <th class="text-end">Sales</th>
+                <th class="text-end">Cost</th>
+                <th class="text-end">Payment</th>
+                <th class="text-end">Balance</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${rows.map(row => {
+                const cells = row.querySelectorAll('td');
+                // Extract values - removing any HTML tags and trimming
+                return `
+                    <tr>
+                        <td>${cells[0].textContent.trim()}</td>
+                        <td>${cells[1].textContent.trim()}</td>
+                        <td class="text-end">${cells[2] ? cells[2].textContent.trim() : ''}</td>
+                        <td class="text-end">${cells[3] ? cells[3].textContent.trim() : ''}</td>
+                        <td class="text-end">${cells[4] ? cells[4].textContent.trim() : ''}</td>
+                        <td class="text-end">${cells[5] ? cells[5].textContent.trim() : ''}</td>
+                    </tr>
+                `;
+            }).join('')}
+        </tbody>
+    </table>
+    
+    <div class="summary">
+        <div class="summary-row">
+            <span class="summary-label">Total Sales:</span>
+            <span>${totalSales}</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Total Cost:</span>
+            <span>${totalCost}</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Total Payment:</span>
+            <span>${totalPayment}</span>
+        </div>
+        <div class="summary-row" style="border-top: 2px solid #2c6e8a; margin-top: 15px; padding-top: 15px; font-size: 13pt; font-weight: bold;">
+            <span style="color: #2c6e8a;">Balance Payment:</span>
+            <span>${balanceText}</span>
+        </div>
+    </div>
+</body>
+</html>
+            `;
+            
+            const w = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+            if (!w) {
+                showNotification('Popup blocked. Please allow popups.', 'error');
+                return;
+            }
+            w.document.write(printContent);
+            w.document.close();
+            w.focus();
+            setTimeout(() => w.print(), 250);
         }
         
         // Filter Payment Vouchers
@@ -11863,6 +14132,328 @@ sortedBranches.forEach(data => {
             });
         }
         
+        // Generate Payment Report (Tab 4)
+        function generatePaymentReport() {
+            const dateFrom = document.getElementById('paymentReportFromDateFilter').value;
+            const dateTo = document.getElementById('paymentReportToDateFilter').value;
+            const branchId = document.getElementById('paymentReportBranchFilter').value;
+            const categoryId = document.getElementById('paymentReportCategoryFilter').value;
+            
+            // Update subtitle based on filters
+            const subtitle = document.getElementById('paymentReportSubtitle');
+            let subtitleText = '';
+            if (branchId) {
+                const branch = appData.branches.find(b => b._id === branchId);
+                if (branch) subtitleText += `📍 ${branch.name}`;
+            }
+            if (categoryId) {
+                const category = appData.categories.find(c => c._id === categoryId);
+                if (category) subtitleText += (subtitleText ? ' | ' : '') + `🏷️ ${category.name}`;
+            }
+            if (subtitleText) {
+                subtitle.style.display = 'block';
+                subtitle.textContent = subtitleText;
+            } else {
+                subtitle.style.display = 'none';
+            }
+            
+            const salesFilters = {};
+            if (dateFrom) salesFilters.from = dateFrom;
+            if (dateTo) salesFilters.to = dateTo;
+            if (branchId) salesFilters.branchId = branchId;
+            
+            const paymentFilters = {};
+            if (dateFrom) paymentFilters.from = dateFrom;
+            if (dateTo) paymentFilters.to = dateTo;
+            if (branchId) paymentFilters.branchId = branchId;
+            if (categoryId) paymentFilters.categoryId = categoryId;
+            
+            // Fetch sales and category payments from database in parallel
+            console.log('📊 Fetching payment report data from database...');
+            console.log('📊 Sales filters:', salesFilters);
+            console.log('📊 Payment filters:', paymentFilters);
+            
+            Promise.all([
+                api.getSales(salesFilters),
+                api.getCategoryPayments(paymentFilters)
+            ]).then(([salesData, paymentsData]) => {
+                console.log('✅ Sales data loaded from database:', salesData.length, 'records');
+                console.log('✅ Category payments data loaded from database:', paymentsData.length, 'records');
+                
+                // Ensure we have arrays
+                const salesArray = Array.isArray(salesData) ? salesData : [];
+                const paymentsArray = Array.isArray(paymentsData) ? paymentsData : [];
+                
+                // Filter sales by category if specified
+                let filteredSales = salesArray;
+                if (categoryId) {
+                    filteredSales = salesArray.filter(sale => {
+                        const saleCategoryId = sale.categoryId?._id || sale.categoryId;
+                        return saleCategoryId === categoryId;
+                    });
+                }
+                
+                console.log('✅ Filtered sales:', filteredSales.length, 'records');
+                
+                // Calculate totals by branch and category
+                const reportData = {};
+                
+                // Process sales data from database
+                filteredSales.forEach(sale => {
+                    // Handle populated or unpopulated branch/category references
+                    const saleBranchId = sale.branchId?._id || sale.branchId;
+                    const saleCategoryId = sale.categoryId?._id || sale.categoryId;
+                    const saleBranchName = sale.branchId?.name || appData.branches.find(b => b._id === saleBranchId || b._id.toString() === saleBranchId?.toString())?.name || 'Unknown';
+                    const saleCategoryName = sale.categoryId?.name || appData.categories.find(c => c._id === saleCategoryId || c._id.toString() === saleCategoryId?.toString())?.name || 'Unknown';
+                    
+                    const key = `${saleBranchId}-${saleCategoryId}`;
+                    if (!reportData[key]) {
+                        reportData[key] = {
+                            branch: saleBranchName,
+                            category: saleCategoryName,
+                            totalSales: 0,
+                            totalCost: 0,
+                            categoryPayments: 0,
+                            balancePayment: 0
+                        };
+                    }
+                    // Sum sales (total) and cost (costTotal) from database
+                    reportData[key].totalSales += parseFloat(sale.total || 0);
+                    reportData[key].totalCost += parseFloat(sale.costTotal || 0);
+                });
+                
+                // Process category payments data from database
+                paymentsArray.forEach(payment => {
+                    // Handle populated or unpopulated references
+                    const branchId = payment.branchId?._id || payment.branchId;
+                    const categoryId = payment.categoryId?._id || payment.categoryId;
+                    const branchName = payment.branchId?.name || appData.branches.find(b => {
+                        const bId = b._id?.toString() || b._id;
+                        const pId = branchId?.toString() || branchId;
+                        return bId === pId;
+                    })?.name || 'Unknown';
+                    const categoryName = payment.categoryId?.name || appData.categories.find(c => {
+                        const cId = c._id?.toString() || c._id;
+                        const pId = categoryId?.toString() || categoryId;
+                        return cId === pId;
+                    })?.name || 'Unknown';
+                    
+                    const key = `${branchId}-${categoryId}`;
+                    if (!reportData[key]) {
+                        // If no sales for this branch-category combo, still show payments
+                        reportData[key] = {
+                            branch: branchName,
+                            category: categoryName,
+                            totalSales: 0,
+                            totalCost: 0,
+                            categoryPayments: 0,
+                            balancePayment: 0
+                        };
+                    }
+                    // Sum category payments (amount) from database
+                    reportData[key].categoryPayments += parseFloat(payment.amount || 0);
+                });
+                
+                console.log('✅ Report data aggregated:', Object.keys(reportData).length, 'entries');
+                
+                // Calculate balance payment (Cost - Payment) for each entry
+                Object.values(reportData).forEach(item => {
+                    item.balancePayment = item.totalCost - item.categoryPayments;
+                });
+                
+                // Calculate summary totals
+                let summaryTotalSales = 0, summaryTotalCost = 0, summaryCategoryPayments = 0, summaryBalancePayment = 0;
+                Object.values(reportData).forEach(item => {
+                    summaryTotalSales += item.totalSales;
+                    summaryTotalCost += item.totalCost;
+                    summaryCategoryPayments += item.categoryPayments;
+                    summaryBalancePayment += item.balancePayment;
+                });
+                
+                // Update summary cards
+                document.getElementById('paymentSummaryTotalSales').textContent = `${summaryTotalSales.toLocaleString()}`;
+                document.getElementById('paymentSummaryTotalCost').textContent = `${summaryTotalCost.toLocaleString()}`;
+                document.getElementById('paymentSummaryCategoryPayments').textContent = `${summaryCategoryPayments.toLocaleString()}`;
+                document.getElementById('paymentSummaryBalancePayment').textContent = `${summaryBalancePayment.toLocaleString()}`;
+                
+                // Update table - Group by category when all categories selected, by branch otherwise
+                const tableBody = document.getElementById('paymentReportTableBody');
+                tableBody.innerHTML = '';
+                
+                // Determine grouping: if categoryId is empty (all categories), group by category; otherwise group by branch
+                const shouldGroupByCategory = (categoryId === '');
+                
+                // Hide external header since we're showing group names inside the table
+                const branchNameHeader = document.getElementById('paymentReportBranchNameHeader');
+                if (branchNameHeader) {
+                    branchNameHeader.style.display = 'none';
+                }
+                
+                if (shouldGroupByCategory) {
+                    // Group by Category when all categories are selected
+                    const categoryGroups = {};
+                    Object.values(reportData).forEach(item => {
+                        if (!categoryGroups[item.category]) {
+                            categoryGroups[item.category] = [];
+                        }
+                        categoryGroups[item.category].push(item);
+                    });
+                    
+                    // Display grouped by category
+                    Object.keys(categoryGroups).forEach(categoryName => {
+                        const categoryItems = categoryGroups[categoryName];
+                        
+                        // Calculate category totals
+                        let categoryTotalSales = 0, categoryTotalCost = 0, categoryTotalPayments = 0, categoryTotalBalance = 0;
+                        categoryItems.forEach(item => {
+                            categoryTotalSales += item.totalSales;
+                            categoryTotalCost += item.totalCost;
+                            categoryTotalPayments += item.categoryPayments;
+                            categoryTotalBalance += item.balancePayment;
+                        });
+                        
+                        // Show category name header - Dark teal
+                        const categoryNameRow = document.createElement('tr');
+                        categoryNameRow.className = 'category-name-row';
+                        categoryNameRow.innerHTML = `
+                            <td colspan="6" style="text-align: center; padding: 10px; background-color: #00685c; color: white; border-bottom: 5px solid white;">
+                                <h5 style="font-size: 1.8rem; color: white; font-weight: 700; margin: 0;">📂 ${categoryName}</h5>
+                            </td>
+                        `;
+                        tableBody.appendChild(categoryNameRow);
+                        
+                        // Add table headers for this category - Full black with white vertical borders
+                        const headerRow = document.createElement('tr');
+                        headerRow.className = 'category-header-row';
+                        headerRow.innerHTML = `
+                            <th style="background-color: #000000; color: white; font-weight: 700; padding: 12px; border-right: 2px solid white; border-left: 1px solid #333; border-top: 1px solid #333; border-bottom: 1px solid #333;">Category Name</th>
+                            <th style="background-color: #000000; color: white; font-weight: 700; padding: 12px; border-right: 2px solid white; border-top: 1px solid #333; border-bottom: 1px solid #333;">Branch</th>
+                            <th style="background-color: #000000; color: white; font-weight: 700; padding: 12px; text-align: right; border-right: 2px solid white; border-top: 1px solid #333; border-bottom: 1px solid #333;">Sale</th>
+                            <th style="background-color: #000000; color: white; font-weight: 700; padding: 12px; text-align: right; border-right: 2px solid white; border-top: 1px solid #333; border-bottom: 1px solid #333;">Cost</th>
+                            <th style="background-color: #000000; color: white; font-weight: 700; padding: 12px; text-align: right; border-right: 2px solid white; border-top: 1px solid #333; border-bottom: 1px solid #333;">Category Payments</th>
+                            <th style="background-color: #000000; color: white; font-weight: 700; padding: 12px; text-align: right; border-top: 1px solid #333; border-bottom: 1px solid #333;">Balance Payment</th>
+                        `;
+                        tableBody.appendChild(headerRow);
+                        
+                        // Add branch rows for this category
+                        categoryItems.forEach(item => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td style="padding: 10px;">${item.category}</td>
+                                <td style="padding: 10px;">${item.branch}</td>
+                                <td style="text-align: right; padding: 10px;">${item.totalSales.toLocaleString()}</td>
+                                <td style="text-align: right; padding: 10px;">${item.totalCost.toLocaleString()}</td>
+                                <td style="text-align: right; padding: 10px;">${item.categoryPayments.toLocaleString()}</td>
+                                <td style="text-align: right; padding: 10px;" class="${item.balancePayment >= 0 ? 'text-success' : 'text-danger'}">${item.balancePayment.toLocaleString()}</td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                        
+                        // Add category total row
+                        const categoryTotalRow = document.createElement('tr');
+                        categoryTotalRow.className = 'category-total-row';
+                        categoryTotalRow.innerHTML = `
+                            <td colspan="2" style="background-color: #f8f9fa; font-weight: 700; padding: 12px 15px;">
+                                <i class="fas fa-calculator me-2"></i>Category Total:
+                            </td>
+                            <td style="background-color: #f8f9fa; font-weight: 700; text-align: right; padding: 12px 15px;">${categoryTotalSales.toLocaleString()}</td>
+                            <td style="background-color: #f8f9fa; font-weight: 700; text-align: right; padding: 12px 15px;">${categoryTotalCost.toLocaleString()}</td>
+                            <td style="background-color: #f8f9fa; font-weight: 700; text-align: right; padding: 12px 15px;">${categoryTotalPayments.toLocaleString()}</td>
+                            <td style="background-color: #f8f9fa; font-weight: 700; text-align: right; padding: 12px 15px;" class="${categoryTotalBalance >= 0 ? 'text-success' : 'text-danger'}">${categoryTotalBalance.toLocaleString()}</td>
+                        `;
+                        tableBody.appendChild(categoryTotalRow);
+                        
+                        // Add spacing row
+                        const spacingRow = document.createElement('tr');
+                        spacingRow.innerHTML = '<td colspan="6" style="height: 20px; border: none;"></td>';
+                        tableBody.appendChild(spacingRow);
+                    });
+                } else {
+                    // Group by Branch when a specific category is selected
+                    const branchGroups = {};
+                    Object.values(reportData).forEach(item => {
+                        if (!branchGroups[item.branch]) {
+                            branchGroups[item.branch] = [];
+                        }
+                        branchGroups[item.branch].push(item);
+                    });
+                    
+                    // Display grouped by branch
+                    Object.keys(branchGroups).forEach(branchName => {
+                        const branchItems = branchGroups[branchName];
+                        
+                        // Calculate branch totals
+                        let branchTotalSales = 0, branchTotalCost = 0, branchCategoryPayments = 0, branchBalancePayment = 0;
+                        branchItems.forEach(item => {
+                            branchTotalSales += item.totalSales;
+                            branchTotalCost += item.totalCost;
+                            branchCategoryPayments += item.categoryPayments;
+                            branchBalancePayment += item.balancePayment;
+                        });
+                        
+                        // ALWAYS show branch name and headers - Dark teal
+                        const branchNameRow = document.createElement('tr');
+                        branchNameRow.className = 'branch-name-row';
+                        branchNameRow.innerHTML = `
+                            <td colspan="6" style="text-align: center; padding: 10px; background-color: #00685c; color: white; border-bottom: 5px solid white;">
+                                <h5 style="font-size: 1.8rem; color: white; font-weight: 700; margin: 0;">🏢 ${branchName}</h5>
+                            </td>
+                        `;
+                        tableBody.appendChild(branchNameRow);
+                        
+                        // Add table headers for this branch - Full black with white vertical borders
+                        const headerRow = document.createElement('tr');
+                        headerRow.className = 'branch-header-row';
+                        headerRow.innerHTML = `
+                            <th style="background-color: #000000; color: white; font-weight: 700; padding: 12px; border-right: 2px solid white; border-left: 1px solid #333; border-top: 1px solid #333; border-bottom: 1px solid #333;">Category Name</th>
+                            <th style="background-color: #000000; color: white; font-weight: 700; padding: 12px; border-right: 2px solid white; border-top: 1px solid #333; border-bottom: 1px solid #333;">Branch</th>
+                            <th style="background-color: #000000; color: white; font-weight: 700; padding: 12px; text-align: right; border-right: 2px solid white; border-top: 1px solid #333; border-bottom: 1px solid #333;">Sale</th>
+                            <th style="background-color: #000000; color: white; font-weight: 700; padding: 12px; text-align: right; border-right: 2px solid white; border-top: 1px solid #333; border-bottom: 1px solid #333;">Cost</th>
+                            <th style="background-color: #000000; color: white; font-weight: 700; padding: 12px; text-align: right; border-right: 2px solid white; border-top: 1px solid #333; border-bottom: 1px solid #333;">Category Payments</th>
+                            <th style="background-color: #000000; color: white; font-weight: 700; padding: 12px; text-align: right; border-top: 1px solid #333; border-bottom: 1px solid #333;">Balance Payment</th>
+                        `;
+                        tableBody.appendChild(headerRow);
+                        
+                        // Add category rows for this branch
+                        branchItems.forEach(item => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td style="padding: 10px;">${item.category}</td>
+                                <td style="padding: 10px;">${item.branch}</td>
+                                <td style="text-align: right; padding: 10px;">${item.totalSales.toLocaleString()}</td>
+                                <td style="text-align: right; padding: 10px;">${item.totalCost.toLocaleString()}</td>
+                                <td style="text-align: right; padding: 10px;">${item.categoryPayments.toLocaleString()}</td>
+                                <td style="text-align: right; padding: 10px;" class="${item.balancePayment >= 0 ? 'text-success' : 'text-danger'}">${item.balancePayment.toLocaleString()}</td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                        
+                        // Add branch total row
+                        const branchTotalRow = document.createElement('tr');
+                        branchTotalRow.className = 'branch-total-row';
+                        branchTotalRow.innerHTML = `
+                            <td colspan="2" style="background-color: #f8f9fa; font-weight: 700; padding: 12px 15px;">
+                                <i class="fas fa-calculator me-2"></i>Branch Total:
+                            </td>
+                            <td style="background-color: #f8f9fa; font-weight: 700; text-align: right; padding: 12px 15px;">${branchTotalSales.toLocaleString()}</td>
+                            <td style="background-color: #f8f9fa; font-weight: 700; text-align: right; padding: 12px 15px;">${branchTotalCost.toLocaleString()}</td>
+                            <td style="background-color: #f8f9fa; font-weight: 700; text-align: right; padding: 12px 15px;">${branchCategoryPayments.toLocaleString()}</td>
+                            <td style="background-color: #f8f9fa; font-weight: 700; text-align: right; padding: 12px 15px;" class="${branchBalancePayment >= 0 ? 'text-success' : 'text-danger'}">${branchBalancePayment.toLocaleString()}</td>
+                        `;
+                        tableBody.appendChild(branchTotalRow);
+                        
+                        // Add spacing row
+                        const spacingRow = document.createElement('tr');
+                        spacingRow.innerHTML = '<td colspan="6" style="height: 20px; border: none;"></td>';
+                        tableBody.appendChild(spacingRow);
+                    });
+                }
+            }).catch(error => {
+                console.error('Error generating payment report:', error);
+                showNotification('Failed to generate report', 'error');
+            });
+        }
+        
         // Generate Comparison Report (Tab 2)
         function generateComparisonReport() {
             const dateFrom = document.getElementById('comparisonReportDateFrom').value;
@@ -12343,6 +14934,175 @@ sortedBranches.forEach(data => {
             });
         }
         
+        // Print Payment Report Preview
+        function printPaymentReportPreview() {
+            const dateFrom = document.getElementById('paymentReportFromDateFilter').value;
+            const dateTo = document.getElementById('paymentReportToDateFilter').value;
+            const branchId = document.getElementById('paymentReportBranchFilter').value;
+            const categoryId = document.getElementById('paymentReportCategoryFilter').value;
+            
+            // Get branch info
+            const branch = branchId ? appData.branches.find(b => b._id === branchId) : null;
+            const branchName = branch ? branch.name : 'All Branches';
+            
+            // Get category info
+            const category = categoryId ? appData.categories.find(c => c._id === categoryId) : null;
+            const categoryName = category ? category.name : 'All Categories';
+            
+            const salesFilters = {};
+            if (dateFrom) salesFilters.from = dateFrom;
+            if (dateTo) salesFilters.to = dateTo;
+            if (branchId) salesFilters.branchId = branchId;
+            
+            const paymentFilters = {};
+            if (dateFrom) paymentFilters.from = dateFrom;
+            if (dateTo) paymentFilters.to = dateTo;
+            if (branchId) paymentFilters.branchId = branchId;
+            if (categoryId) paymentFilters.categoryId = categoryId;
+            
+            // Fetch sales and category payments from database in parallel
+            console.log('📊 [Print] Fetching payment report data from database...');
+            console.log('📊 [Print] Sales filters:', salesFilters);
+            console.log('📊 [Print] Payment filters:', paymentFilters);
+            
+            Promise.all([
+                api.getSales(salesFilters),
+                api.getCategoryPayments(paymentFilters)
+            ]).then(([salesData, paymentsData]) => {
+                console.log('✅ [Print] Sales data loaded from database:', Array.isArray(salesData) ? salesData.length : 0, 'records');
+                console.log('✅ [Print] Category payments data loaded from database:', Array.isArray(paymentsData) ? paymentsData.length : 0, 'records');
+                
+                // Ensure we have arrays
+                const salesArray = Array.isArray(salesData) ? salesData : [];
+                const paymentsArray = Array.isArray(paymentsData) ? paymentsData : [];
+                
+                // Filter sales by category if specified
+                let filteredSales = salesArray;
+                if (categoryId) {
+                    filteredSales = salesArray.filter(sale => {
+                        const saleCategoryId = sale.categoryId?._id || sale.categoryId;
+                        return saleCategoryId === categoryId;
+                    });
+                }
+                
+                // Calculate totals by branch and category
+                const reportData = {};
+                
+                // Process sales data from database
+                filteredSales.forEach(sale => {
+                    // Handle populated or unpopulated branch/category references
+                    const saleBranchId = sale.branchId?._id || sale.branchId;
+                    const saleCategoryId = sale.categoryId?._id || sale.categoryId;
+                    const saleBranchName = sale.branchId?.name || appData.branches.find(b => {
+                        const bId = b._id?.toString() || b._id;
+                        const sId = saleBranchId?.toString() || saleBranchId;
+                        return bId === sId;
+                    })?.name || 'Unknown';
+                    const saleCategoryName = sale.categoryId?.name || appData.categories.find(c => {
+                        const cId = c._id?.toString() || c._id;
+                        const sId = saleCategoryId?.toString() || saleCategoryId;
+                        return cId === sId;
+                    })?.name || 'Unknown';
+                    
+                    const key = `${saleBranchId}-${saleCategoryId}`;
+                    if (!reportData[key]) {
+                        reportData[key] = {
+                            branch: saleBranchName,
+                            category: saleCategoryName,
+                            totalSales: 0,
+                            totalCost: 0,
+                            categoryPayments: 0,
+                            balancePayment: 0
+                        };
+                    }
+                    // Sum sales (total) and cost (costTotal) from database
+                    reportData[key].totalSales += parseFloat(sale.total || 0);
+                    reportData[key].totalCost += parseFloat(sale.costTotal || 0);
+                });
+                
+                // Process category payments data from database
+                paymentsArray.forEach(payment => {
+                    const branchId = payment.branchId?._id || payment.branchId;
+                    const categoryId = payment.categoryId?._id || payment.categoryId;
+                    const branchName = payment.branchId?.name || appData.branches.find(b => {
+                        const bId = b._id?.toString() || b._id;
+                        const pId = branchId?.toString() || branchId;
+                        return bId === pId;
+                    })?.name || 'Unknown';
+                    const categoryName = payment.categoryId?.name || appData.categories.find(c => {
+                        const cId = c._id?.toString() || c._id;
+                        const pId = categoryId?.toString() || categoryId;
+                        return cId === pId;
+                    })?.name || 'Unknown';
+                    
+                    const key = `${branchId}-${categoryId}`;
+                    if (!reportData[key]) {
+                        reportData[key] = {
+                            branch: branchName,
+                            category: categoryName,
+                            totalSales: 0,
+                            totalCost: 0,
+                            categoryPayments: 0,
+                            balancePayment: 0
+                        };
+                    }
+                    // Sum category payments (amount) from database
+                    reportData[key].categoryPayments += parseFloat(payment.amount || 0);
+                });
+                
+                // Calculate balance payment (Cost - Payment)
+                Object.values(reportData).forEach(item => {
+                    item.balancePayment = item.totalCost - item.categoryPayments;
+                });
+                
+                // Calculate summary totals
+                let summaryTotalSales = 0, summaryTotalCost = 0, summaryCategoryPayments = 0, summaryBalancePayment = 0;
+                Object.values(reportData).forEach(item => {
+                    summaryTotalSales += item.totalSales;
+                    summaryTotalCost += item.totalCost;
+                    summaryCategoryPayments += item.categoryPayments;
+                    summaryBalancePayment += item.balancePayment;
+                });
+                
+                // Create print content - pass categoryId to determine grouping
+                const printContent = createPaymentReportPrintContent(
+                    Object.values(reportData),
+                    summaryTotalSales,
+                    summaryTotalCost,
+                    summaryCategoryPayments,
+                    summaryBalancePayment,
+                    branchName,
+                    categoryName,
+                    dateFrom,
+                    dateTo,
+                    categoryId
+                );
+                
+                // Open preview window and trigger print dialog
+                try {
+                    const previewWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+                    if (!previewWindow) {
+                        throw new Error('Popup blocked. Please allow popups for this site.');
+                    }
+                    previewWindow.document.write(printContent);
+                    previewWindow.document.close();
+                    
+                    // Wait for content to load, then trigger print dialog
+                    previewWindow.onload = function() {
+                        setTimeout(() => {
+                            previewWindow.print();
+                        }, 250);
+                    };
+                } catch (error) {
+                    console.error('Preview error:', error);
+                    showNotification('Preview failed: ' + error.message, 'error');
+                }
+            }).catch(error => {
+                console.error('Error generating payment report:', error);
+                showNotification('Failed to generate report', 'error');
+            });
+        }
+        
         // Print Comparison Report Preview
         function printComparisonReportPreview() {
             const dateFrom = document.getElementById('comparisonReportDateFrom').value;
@@ -12669,6 +15429,349 @@ sortedBranches.forEach(data => {
     
     <div class="report-section">
         <h3>📊 Detailed Sales Breakdown</h3>
+        ${tableRows}
+    </div>
+    
+    <div class="print-footer">
+        <p>This report was generated by D.Watson Pharmacy Management System</p>
+        <p>© ${new Date().getFullYear()} D.Watson Group Of Pharmacies - All Rights Reserved</p>
+    </div>
+</body>
+</html>
+            `;
+        }
+        
+        // Create Payment Report Print Content
+        function createPaymentReportPrintContent(reportData, totalSales, totalCost, categoryPayments, balancePayment, branchName, categoryName, dateFrom, dateTo, categoryId = '') {
+            const currentDate = new Date().toLocaleDateString('en-GB');
+            const dateRange = dateFrom && dateTo ? 
+                `${new Date(dateFrom).toLocaleDateString('en-GB')} - ${new Date(dateTo).toLocaleDateString('en-GB')}` : 
+                'All Time';
+            
+            // Determine grouping: if categoryId is empty (all categories), group by category; otherwise group by branch
+            const shouldGroupByCategory = (categoryId === '');
+            
+            // Build single table with appropriate grouping
+            let allRows = '';
+            
+            if (shouldGroupByCategory) {
+                // Group by Category when all categories are selected
+                const categoryGroups = {};
+                reportData.forEach(item => {
+                    if (!categoryGroups[item.category]) {
+                        categoryGroups[item.category] = [];
+                    }
+                    categoryGroups[item.category].push(item);
+                });
+                
+                Object.keys(categoryGroups).forEach(categoryName => {
+                    const categoryItems = categoryGroups[categoryName];
+                    
+                    // Calculate category totals
+                    let categoryTotalSales = 0, categoryTotalCost = 0, categoryTotalPayments = 0, categoryTotalBalance = 0;
+                    categoryItems.forEach(item => {
+                        categoryTotalSales += item.totalSales;
+                        categoryTotalCost += item.totalCost;
+                        categoryTotalPayments += item.categoryPayments;
+                        categoryTotalBalance += item.balancePayment;
+                    });
+                    
+                    // Show category name header - Dark teal
+                    allRows += `
+                        <tr style="background-color: #00685c;">
+                            <td colspan="6" style="text-align: center; padding: 10px; color: white; border-bottom: 5px solid white;">
+                                <h5 style="font-size: 1.8rem; color: white; font-weight: 700; margin: 0;">📂 ${categoryName}</h5>
+                            </td>
+                        </tr>
+                        <tr style="background-color: #000000; font-weight: bold;">
+                            <th style="background-color: #000000; color: white; text-align: left; padding: 10px; border-right: 2px solid white; border-left: 1px solid #333; border-top: 1px solid #333; border-bottom: 1px solid #333;">Category Name</th>
+                            <th style="background-color: #000000; color: white; text-align: left; padding: 10px; border-right: 2px solid white; border-top: 1px solid #333; border-bottom: 1px solid #333;">Branch</th>
+                            <th style="background-color: #000000; color: white; text-align: right; padding: 10px; border-right: 2px solid white; border-top: 1px solid #333; border-bottom: 1px solid #333;">Sale</th>
+                            <th style="background-color: #000000; color: white; text-align: right; padding: 10px; border-right: 2px solid white; border-top: 1px solid #333; border-bottom: 1px solid #333;">Cost</th>
+                            <th style="background-color: #000000; color: white; text-align: right; padding: 10px; border-right: 2px solid white; border-top: 1px solid #333; border-bottom: 1px solid #333;">Category Payments</th>
+                            <th style="background-color: #000000; color: white; text-align: right; padding: 10px; border-top: 1px solid #333; border-bottom: 1px solid #333;">Balance Payment</th>
+                        </tr>
+                    `;
+                    
+                    categoryItems.forEach(item => {
+                        allRows += `
+                            <tr>
+                                <td style="padding: 10px;">${item.category}</td>
+                                <td style="padding: 10px;">${item.branch}</td>
+                                <td style="text-align: right; padding: 10px;">${item.totalSales.toLocaleString()}</td>
+                                <td style="text-align: right; padding: 10px;">${item.totalCost.toLocaleString()}</td>
+                                <td style="text-align: right; padding: 10px;">${item.categoryPayments.toLocaleString()}</td>
+                                <td style="text-align: right; padding: 10px; ${item.balancePayment >= 0 ? 'color: #28a745;' : 'color: #dc3545;'}">${item.balancePayment.toLocaleString()}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    allRows += `
+                        <tr style="background-color: #f0f0f0; font-weight: bold;">
+                            <td colspan="2" style="padding: 12px 15px;">📊 ${categoryName} TOTAL</td>
+                            <td style="text-align: right; padding: 12px 15px;">${categoryTotalSales.toLocaleString()}</td>
+                            <td style="text-align: right; padding: 12px 15px;">${categoryTotalCost.toLocaleString()}</td>
+                            <td style="text-align: right; padding: 12px 15px;">${categoryTotalPayments.toLocaleString()}</td>
+                            <td style="text-align: right; padding: 12px 15px; ${categoryTotalBalance >= 0 ? 'color: #28a745;' : 'color: #dc3545;'}">${categoryTotalBalance.toLocaleString()}</td>
+                        </tr>
+                        <tr><td colspan="6" style="height: 15px; border: none;"></td></tr>
+                    `;
+                });
+            } else {
+                // Group by Branch when a specific category is selected
+                const branchGroups = {};
+                reportData.forEach(item => {
+                    if (!branchGroups[item.branch]) {
+                        branchGroups[item.branch] = [];
+                    }
+                    branchGroups[item.branch].push(item);
+                });
+                
+                Object.keys(branchGroups).forEach(branchName => {
+                    const branchItems = branchGroups[branchName];
+                    
+                    // ALWAYS show branch name and headers - Dark teal
+                    allRows += `
+                        <tr style="background-color: #00685c;">
+                            <td colspan="6" style="text-align: center; padding: 10px; color: white; border-bottom: 5px solid white;">
+                                <h5 style="font-size: 1.8rem; color: white; font-weight: 700; margin: 0;">🏢 ${branchName}</h5>
+                            </td>
+                        </tr>
+                        <tr style="background-color: #000000; font-weight: bold;">
+                            <th style="background-color: #000000; color: white; text-align: left; padding: 10px; border-right: 2px solid white; border-left: 1px solid #333; border-top: 1px solid #333; border-bottom: 1px solid #333;">Category Name</th>
+                            <th style="background-color: #000000; color: white; text-align: left; padding: 10px; border-right: 2px solid white; border-top: 1px solid #333; border-bottom: 1px solid #333;">Branch</th>
+                            <th style="background-color: #000000; color: white; text-align: right; padding: 10px; border-right: 2px solid white; border-top: 1px solid #333; border-bottom: 1px solid #333;">Sale</th>
+                            <th style="background-color: #000000; color: white; text-align: right; padding: 10px; border-right: 2px solid white; border-top: 1px solid #333; border-bottom: 1px solid #333;">Cost</th>
+                            <th style="background-color: #000000; color: white; text-align: right; padding: 10px; border-right: 2px solid white; border-top: 1px solid #333; border-bottom: 1px solid #333;">Category Payments</th>
+                            <th style="background-color: #000000; color: white; text-align: right; padding: 10px; border-top: 1px solid #333; border-bottom: 1px solid #333;">Balance Payment</th>
+                        </tr>
+                    `;
+                    
+                    let branchTotalSales = 0, branchTotalCost = 0, branchCategoryPayments = 0, branchBalancePayment = 0;
+                    branchItems.forEach(item => {
+                        allRows += `
+                            <tr>
+                                <td style="padding: 10px;">${item.category}</td>
+                                <td style="padding: 10px;">${item.branch}</td>
+                                <td style="text-align: right; padding: 10px;">${item.totalSales.toLocaleString()}</td>
+                                <td style="text-align: right; padding: 10px;">${item.totalCost.toLocaleString()}</td>
+                                <td style="text-align: right; padding: 10px;">${item.categoryPayments.toLocaleString()}</td>
+                                <td style="text-align: right; padding: 10px; ${item.balancePayment >= 0 ? 'color: #28a745;' : 'color: #dc3545;'}">${item.balancePayment.toLocaleString()}</td>
+                            </tr>
+                        `;
+                        branchTotalSales += item.totalSales;
+                        branchTotalCost += item.totalCost;
+                        branchCategoryPayments += item.categoryPayments;
+                        branchBalancePayment += item.balancePayment;
+                    });
+                    
+                    allRows += `
+                        <tr style="background-color: #f0f0f0; font-weight: bold;">
+                            <td colspan="2" style="padding: 12px 15px;">📊 ${branchName} TOTAL</td>
+                            <td style="text-align: right; padding: 12px 15px;">${branchTotalSales.toLocaleString()}</td>
+                            <td style="text-align: right; padding: 12px 15px;">${branchTotalCost.toLocaleString()}</td>
+                            <td style="text-align: right; padding: 12px 15px;">${branchCategoryPayments.toLocaleString()}</td>
+                            <td style="text-align: right; padding: 12px 15px; ${branchBalancePayment >= 0 ? 'color: #28a745;' : 'color: #dc3545;'}">${branchBalancePayment.toLocaleString()}</td>
+                        </tr>
+                        <tr><td colspan="6" style="height: 15px; border: none;"></td></tr>
+                    `;
+                });
+            }
+            
+            const tableRows = `
+                <table>
+                    <tbody>
+                        ${allRows}
+                    </tbody>
+                </table>
+            `;
+            
+            return `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Report - ${currentDate}</title>
+    <style>
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #000;
+            background: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .print-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2c6e8a;
+            padding-bottom: 15px;
+        }
+        
+        .print-header h1 {
+            font-size: 28pt;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            color: #2c6e8a;
+        }
+        
+        .print-header .company-info {
+            font-size: 11pt;
+            color: #555;
+            margin: 5px 0;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #2c6e8a 0%, #4fb3d9 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .summary-card h4 {
+            margin: 0 0 10px 0;
+            font-size: 11pt;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .summary-card .value {
+            font-size: 22pt;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .summary-card .label {
+            font-size: 9pt;
+            opacity: 0.9;
+        }
+        
+        .report-section {
+            margin-bottom: 25px;
+        }
+        
+        .report-section h3 {
+            font-size: 14pt;
+            color: #2c6e8a;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #2c6e8a;
+            padding-bottom: 5px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 10pt;
+        }
+        
+        th {
+            background-color: #000000;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #333;
+        }
+        
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .print-footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 9pt;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+            
+            .summary-card {
+                padding: 10px 12px !important;
+            }
+            
+            .summary-card h4 {
+                margin: 0 0 5px 0 !important;
+                font-size: 10pt !important;
+            }
+            
+            .summary-card .value {
+                font-size: 18pt !important;
+                margin: 5px 0 !important;
+            }
+            
+            .summary-card .label {
+                font-size: 8pt !important;
+            }
+            
+            .summary-cards {
+                gap: 10px !important;
+                margin-bottom: 20px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-header">
+        <h1>D.Watson Group Of Pharmacies</h1>
+        <div class="company-info">Payment Report</div>
+        <div class="company-info">Branch: ${branchName} | Category: ${categoryName}</div>
+        <div class="company-info">Period: ${dateRange}</div>
+        <div class="company-info">Generated: ${currentDate}</div>
+    </div>
+    
+    <div class="summary-cards">
+        <div class="summary-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+            <h4>Total Sales</h4>
+            <div class="value">${totalSales.toLocaleString()}</div>
+            <div class="label">Revenue Generated</div>
+        </div>
+        <div class="summary-card" style="background: linear-gradient(135deg, #136F63 0%, #17a2b8 100%);">
+            <h4>Total Cost</h4>
+            <div class="value">${totalCost.toLocaleString()}</div>
+            <div class="label">Cost of Goods Sold</div>
+        </div>
+        <div class="summary-card" style="background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);">
+            <h4>Category Payments</h4>
+            <div class="value">${categoryPayments.toLocaleString()}</div>
+            <div class="label">Total Payments Made</div>
+        </div>
+        <div class="summary-card" style="background: linear-gradient(135deg, #CF2A2A 0%, #ff6b6b 100%);">
+            <h4>Balance Payment</h4>
+            <div class="value">${balancePayment.toLocaleString()}</div>
+            <div class="label">Cost - Payments</div>
+        </div>
+    </div>
+    
+    <div class="report-section">
+        <h3>📊 Detailed Payment Breakdown</h3>
         ${tableRows}
     </div>
     
