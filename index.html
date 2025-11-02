@@ -2878,7 +2878,8 @@
                 </form>
             </div>
             <div class="login-footer">
-                <p>© 2025 D.Watson Group of Pharmacies. All rights reserved & created by Bilal Shah </p>
+                <p>© Copyright D Watson. All Rights Reserved</p>
+                <p>Designed by Bilal Shah</p>
             </div>
         </div>
     </div>
@@ -2910,7 +2911,7 @@
                 <button class="mobile-menu-toggle" id="mobileMenuToggle">
                     <i class="fas fa-bars"></i>
                 </button>
-                <a class="navbar-brand" href="#" data-section="dashboard" title="Haris Bakhtawari Warehouse — Click to return to the Sales Dashboard.">
+                <a class="navbar-brand" href="#dashboard" data-section="dashboard">
                     <img src="logo.png" alt="Haris Bakhtawari Warehouse" class="navbar-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <span class="navbar-text ms-2">
                         <span class="company-name">Haris Bakhtawari Warehouse</span>
@@ -3002,6 +3003,11 @@
                         <i class="fas fa-cog"></i>Settings
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-section="support-chat" id="supportChatLink">
+                        <i class="fab fa-whatsapp"></i>Support Chat
+                    </a>
+                </li>
             </ul>
         </div>
         
@@ -3033,16 +3039,28 @@
                             <select class="form-select d-none" id="categoryBreakdownBranchFilter" style="min-width: 180px;">
                                 <option value="">All Branches</option>
                             </select>
-                            <!-- Filter Button (Circular) -->
-                            <button class="btn btn-primary circular-btn" id="filterDashboardBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Filter">
+                            <!-- Branch Filter Button (Circular) -->
+                            <button class="btn btn-primary circular-btn" id="filterDashboardBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Filter by Branch">
                                 <i class="fas fa-filter"></i>
                             </button>
-                            <!-- Filter Dropdown Menu -->
+                            <!-- Branch Filter Dropdown Menu -->
                             <ul class="dropdown-menu" id="filterDashboardDropdown" aria-labelledby="filterDashboardBtn">
                                 <li class="dropdown-item-text fw-bold">Filter by Branch:</li>
                                 <li><hr class="dropdown-divider"></li>
                                 <!-- Options will be populated dynamically -->
                             </ul>
+                            <!-- Month Filter Button (Circular) -->
+                            <button class="btn btn-primary circular-btn" id="monthFilterBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Filter by Month">
+                                <i class="fas fa-calendar-alt"></i>
+                            </button>
+                            <!-- Month Filter Dropdown Menu -->
+                            <ul class="dropdown-menu" id="monthFilterDropdown" aria-labelledby="monthFilterBtn">
+                                <li class="dropdown-item-text fw-bold">Filter by Month:</li>
+                                <li><hr class="dropdown-divider"></li>
+                                <!-- Options will be populated dynamically -->
+                            </ul>
+                            <!-- Hidden input to store selected month value -->
+                            <input type="hidden" id="dashboardMonthFilter" value="">
                             <!-- Refresh Button (Circular) -->
                             <button class="btn btn-primary circular-btn" id="refreshDashboardBtn" title="Refresh">
                                 <i class="fas fa-sync-alt"></i>
@@ -6433,7 +6451,9 @@
                             // Keep user logged in even after max retries
                             showMainApp();
                             if (typeof loadDashboard === 'function') {
-                                loadDashboard();
+                                const monthFilter = document.getElementById('dashboardMonthFilter');
+                                const selectedMonth = monthFilter ? monthFilter.value : null;
+                                loadDashboard(selectedMonth || null);
                             }
                             return;
                         }
@@ -6449,7 +6469,9 @@
                         showMainApp();
                         // Refresh dashboard data even on network error
                         if (typeof loadDashboard === 'function') {
-                            loadDashboard();
+                            const monthFilter = document.getElementById('dashboardMonthFilter');
+                            const selectedMonth = monthFilter ? monthFilter.value : null;
+                            loadDashboard(selectedMonth || null);
                         }
                         return;
                     }
@@ -6471,9 +6493,47 @@
                 // Load initial data
                 loadInitialData();
                 
-                // Refresh dashboard data on page load
-                if (typeof loadDashboard === 'function') {
-                    loadDashboard();
+                // Check if there's a hash in URL (for new tab support)
+                const hash = window.location.hash.replace('#', '');
+                if (hash && hash !== '') {
+                    // Delay slightly to ensure DOM is ready
+                    setTimeout(() => {
+                        const section = hash;
+                        const permissions = user.groupId?.permissions || [];
+                        
+                        // Check if user has permission for this section
+                        let hasPermission = false;
+                        if (['groups', 'users', 'settings'].includes(section)) {
+                            hasPermission = permissions.includes('admin');
+                        } else {
+                            hasPermission = permissions.includes(section) || permissions.includes('admin');
+                        }
+                        
+                        if (hasPermission) {
+                            showSection(section);
+                            
+                            // Update active state
+                            document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
+                            const activeLink = document.querySelector(`.sidebar .nav-link[data-section="${section}"]`);
+                            if (activeLink) {
+                                activeLink.classList.add('active');
+                            }
+                        } else {
+                            // No permission for requested section, show dashboard instead
+                            if (typeof loadDashboard === 'function') {
+                                const monthFilter = document.getElementById('dashboardMonthFilter');
+                                const selectedMonth = monthFilter ? monthFilter.value : null;
+                                loadDashboard(selectedMonth || null);
+                            }
+                        }
+                    }, 100);
+                } else {
+                    // No hash, load dashboard as default
+                    if (typeof loadDashboard === 'function') {
+                        const monthFilter = document.getElementById('dashboardMonthFilter');
+                        const selectedMonth = monthFilter ? monthFilter.value : null;
+                        loadDashboard(selectedMonth || null);
+                    }
                 }
                 
             } catch (error) {
@@ -6489,9 +6549,44 @@
                     // For other errors, keep user logged in
                     console.warn('Non-auth error, keeping user logged in:', error.message);
                     showMainApp();
-                    // Refresh dashboard data even on other errors
-                    if (typeof loadDashboard === 'function') {
-                        loadDashboard();
+                    
+                    // Check if there's a hash in URL (for new tab support)
+                    const hash = window.location.hash.replace('#', '');
+                    if (hash && hash !== '') {
+                        // Delay slightly to ensure DOM is ready
+                        setTimeout(() => {
+                            const section = hash;
+                            const permissions = appData.currentUser?.permissions || [];
+                            
+                            // Check if user has permission for this section
+                            let hasPermission = false;
+                            if (['groups', 'users', 'settings'].includes(section)) {
+                                hasPermission = permissions.includes('admin');
+                            } else {
+                                hasPermission = permissions.includes(section) || permissions.includes('admin');
+                            }
+                            
+                            if (hasPermission) {
+                                showSection(section);
+                                
+                                // Update active state
+                                document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
+                                const activeLink = document.querySelector(`.sidebar .nav-link[data-section="${section}"]`);
+                                if (activeLink) {
+                                    activeLink.classList.add('active');
+                                }
+                            } else {
+                                // No permission for requested section, show dashboard instead
+                                if (typeof loadDashboard === 'function') {
+                                    loadDashboard();
+                                }
+                            }
+                        }, 100);
+                    } else {
+                        // No hash, load dashboard as default
+                        if (typeof loadDashboard === 'function') {
+                            loadDashboard();
+                        }
                     }
                 }
             }
@@ -6723,6 +6818,7 @@
             // Logo click handler - navigate to dashboard
             document.querySelector('.navbar-brand').addEventListener('click', function(e) {
                 e.preventDefault();
+                window.location.hash = 'dashboard';
                 showSection('dashboard');
                 
                 // Update active state
@@ -6756,6 +6852,12 @@
             
             // Navigation
             document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+                // Set href to hash for right-click "Open in new tab" support
+                const section = link.getAttribute('data-section');
+                if (section) {
+                    link.href = '#' + section;
+                }
+                
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     const section = this.getAttribute('data-section');
@@ -6774,6 +6876,8 @@
                         return;
                     }
                     
+                    // Update URL hash for new tab support
+                    window.location.hash = section;
                     showSection(section);
                     
                     // Update active state
@@ -6788,9 +6892,42 @@
                 });
             });
             
-            // Refresh dashboard
+            // Handle browser back/forward and direct hash navigation
+            window.addEventListener('hashchange', function() {
+                const hash = window.location.hash.replace('#', '');
+                if (hash && appData.currentUser) {
+                    const section = hash;
+                    const permissions = appData.currentUser?.permissions || [];
+                    
+                    // Check permissions before showing section
+                    if (['groups', 'users', 'settings'].includes(section) && !permissions.includes('admin')) {
+                        showNotification('You need admin privileges to access this section', 'error');
+                        return;
+                    }
+                    
+                    if (section && !['groups', 'users', 'settings'].includes(section) && !permissions.includes(section)) {
+                        showNotification(`You don't have permission to access ${section}`, 'error');
+                        return;
+                    }
+                    
+                    showSection(section);
+                    
+                    // Update active state
+                    document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
+                    const activeLink = document.querySelector(`.sidebar .nav-link[data-section="${section}"]`);
+                    if (activeLink) {
+                        activeLink.classList.add('active');
+                    }
+                }
+            });
+            
+            // Populate month filter dropdown on initialization
+            populateMonthFilter();
+            
+            // Refresh dashboard button - refreshes with current month filter
             document.getElementById('refreshDashboardBtn').addEventListener('click', function() {
-                loadDashboard();
+                const selectedMonth = document.getElementById('dashboardMonthFilter').value;
+                loadDashboard(selectedMonth || null);
                 showNotification('Dashboard refreshed successfully!', 'success');
             });
             
@@ -6804,20 +6941,209 @@
             
             // Refresh comparison table button
             document.getElementById('refreshComparisonTableBtn').addEventListener('click', function() {
-                loadDashboard();
+                const selectedMonth = document.getElementById('dashboardMonthFilter').value;
+                loadDashboard(selectedMonth || null);
                 showNotification('Comparison tables refreshed successfully!', 'success');
             });
             
             // Category breakdown branch filter
             document.getElementById('categoryBreakdownBranchFilter').addEventListener('change', function() {
-                loadDashboard();
+                const selectedMonth = document.getElementById('dashboardMonthFilter').value;
+                loadDashboard(selectedMonth || null);
             });
             
-            // Sales entry form
+            // Populate month filter when dashboard section becomes active
+            // This ensures it's populated even if dashboard loads before DOM is ready
+            const dashboardSection = document.getElementById('dashboard-section');
+            if (dashboardSection) {
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.target.classList.contains('active')) {
+                            populateMonthFilter();
+                        }
+                    });
+                });
+                observer.observe(dashboardSection, { attributes: true, attributeFilter: ['class'] });
+            }
+            
+            // Sales entry form - prevent default form submission (including Enter key)
             document.getElementById('salesEntryForm').addEventListener('submit', function(e) {
                 e.preventDefault();
-                saveSalesEntry();
+                // Don't save on form submit - only save via Alt+S or button click
+                // Form submission is now disabled for Enter key
             });
+            
+            // Prevent Enter key from submitting the sales form
+            const salesForm = document.getElementById('salesEntryForm');
+            if (salesForm) {
+                salesForm.addEventListener('keydown', function(e) {
+                    // Prevent Enter key from submitting form
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+            }
+            
+            // Global Alt+S keyboard shortcut for all save buttons across all screens
+            document.addEventListener('keydown', function(e) {
+                // Check if Alt+S is pressed (not when typing in input fields like search boxes)
+                if (e.altKey && (e.key === 's' || e.key === 'S')) {
+                    // Skip if user is typing in certain input fields (like search, date filters, etc.)
+                    const activeElement = document.activeElement;
+                    const isInputField = activeElement && (
+                        activeElement.tagName === 'INPUT' || 
+                        activeElement.tagName === 'TEXTAREA'
+                    );
+                    
+                    // Allow Alt+S in modals and forms, but skip in search/filter inputs
+                    const skipInputs = ['search', 'filter', 'month'];
+                    if (isInputField) {
+                        const inputId = activeElement.id ? activeElement.id.toLowerCase() : '';
+                        const inputType = activeElement.type ? activeElement.type.toLowerCase() : '';
+                        // Skip if it's a search or filter input
+                        if (skipInputs.some(skip => inputId.includes(skip) || inputType.includes(skip))) {
+                            // Don't prevent default for search/filter inputs - allow browser default
+                            return;
+                        }
+                    }
+                    
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                    // Check which section is active and trigger the appropriate save action
+                    let saveActionTriggered = false;
+                    
+                    // 1. Sales Entry Section
+                    const salesSection = document.getElementById('sales-section');
+                    if (salesSection && salesSection.classList.contains('active')) {
+                        // Check if branch is selected before saving
+                        const branchId = document.getElementById('saleBranch');
+                        if (branchId && (!branchId.value || branchId.value === '')) {
+                            showNotification('Please select a branch before saving', 'error');
+                            branchId.focus();
+                            return;
+                        }
+                        // Proceed with save
+                        saveSalesEntry();
+                        saveActionTriggered = true;
+                    }
+                    
+                    // 2. Categories Section
+                    const categoriesSection = document.getElementById('categories-section');
+                    if (!saveActionTriggered && categoriesSection && categoriesSection.classList.contains('active')) {
+                        const saveBtn = document.getElementById('saveCategoryBtn');
+                        const addCategoryModal = document.getElementById('addCategoryModal');
+                        if (saveBtn && addCategoryModal && window.getComputedStyle(addCategoryModal).display !== 'none') {
+                            // Check if modal is visible
+                            const modal = bootstrap.Modal.getInstance(addCategoryModal);
+                            if (modal && modal._isShown) {
+                                saveBtn.click();
+                                saveActionTriggered = true;
+                            }
+                        }
+                    }
+                    
+                    // 3. Branches Section
+                    const branchesSection = document.getElementById('branches-section');
+                    if (!saveActionTriggered && branchesSection && branchesSection.classList.contains('active')) {
+                        const saveBtn = document.getElementById('saveBranchBtn');
+                        const addBranchModal = document.getElementById('addBranchModal');
+                        if (saveBtn && addBranchModal && window.getComputedStyle(addBranchModal).display !== 'none') {
+                            const modal = bootstrap.Modal.getInstance(addBranchModal);
+                            if (modal && modal._isShown) {
+                                saveBtn.click();
+                                saveActionTriggered = true;
+                            }
+                        }
+                    }
+                    
+                    // 4. Suppliers Section
+                    const suppliersSection = document.getElementById('suppliers-section');
+                    if (!saveActionTriggered && suppliersSection && suppliersSection.classList.contains('active')) {
+                        const saveBtn = document.getElementById('saveSupplierBtn');
+                        const addSupplierModal = document.getElementById('addSupplierModal');
+                        if (saveBtn && addSupplierModal && window.getComputedStyle(addSupplierModal).display !== 'none') {
+                            const modal = bootstrap.Modal.getInstance(addSupplierModal);
+                            if (modal && modal._isShown) {
+                                saveBtn.click();
+                                saveActionTriggered = true;
+                            }
+                        }
+                    }
+                    
+                    // 5. Groups Section
+                    const groupsSection = document.getElementById('groups-section');
+                    if (!saveActionTriggered && groupsSection && groupsSection.classList.contains('active')) {
+                        const saveBtn = document.getElementById('saveGroupBtn');
+                        const addGroupModal = document.getElementById('addGroupModal');
+                        if (saveBtn && addGroupModal && window.getComputedStyle(addGroupModal).display !== 'none') {
+                            const modal = bootstrap.Modal.getInstance(addGroupModal);
+                            if (modal && modal._isShown) {
+                                saveBtn.click();
+                                saveActionTriggered = true;
+                            }
+                        }
+                    }
+                    
+                    // 6. Users Section
+                    const usersSection = document.getElementById('users-section');
+                    if (!saveActionTriggered && usersSection && usersSection.classList.contains('active')) {
+                        const saveBtn = document.getElementById('saveUserBtn');
+                        const addUserModal = document.getElementById('addUserModal');
+                        if (saveBtn && addUserModal && window.getComputedStyle(addUserModal).display !== 'none') {
+                            const modal = bootstrap.Modal.getInstance(addUserModal);
+                            if (modal && modal._isShown) {
+                                saveBtn.click();
+                                saveActionTriggered = true;
+                            }
+                        }
+                    }
+                    
+                    // 7. Settings Section
+                    const settingsSection = document.getElementById('settings-section');
+                    if (!saveActionTriggered && settingsSection && settingsSection.classList.contains('active')) {
+                        const settingsForm = document.getElementById('settingsForm');
+                        const saveSettingsBtn = settingsForm ? settingsForm.querySelector('button[type="submit"]') : null;
+                        if (saveSettingsBtn) {
+                            saveSettingsBtn.click();
+                            saveActionTriggered = true;
+                        }
+                    }
+                    
+                    // 8. Payment Vouchers Section (Supplier)
+                    const paymentVouchersSection = document.getElementById('payment-vouchers-section');
+                    if (!saveActionTriggered && paymentVouchersSection && paymentVouchersSection.classList.contains('active')) {
+                        // Check if payment voucher form exists and is visible
+                        const paymentForm = document.getElementById('paymentVoucherForm');
+                        if (paymentForm && window.getComputedStyle(paymentForm).display !== 'none') {
+                            // Find the save/submit button in payment voucher form
+                            const savePaymentBtn = paymentForm.querySelector('button[type="submit"], button.btn-primary');
+                            if (savePaymentBtn && !savePaymentBtn.disabled) {
+                                savePaymentBtn.click();
+                                saveActionTriggered = true;
+                            }
+                        }
+                    }
+                    
+                    // Show notification if no save action was triggered
+                    if (!saveActionTriggered) {
+                        // Don't show notification if user was just typing in a field
+                        if (!isInputField || (activeElement && activeElement.closest('form'))) {
+                            // Silent - don't annoy user if they're not in a saveable context
+                        }
+                    }
+                }
+            });
+            
+            // Save Sale button click handler (explicit click on button still works)
+            const saveSaleButton = document.querySelector('#salesEntryForm button[type="submit"]');
+            if (saveSaleButton) {
+                saveSaleButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    saveSalesEntry();
+                });
+            }
             
             // Reset sales form
             document.getElementById('resetSalesForm').addEventListener('click', function() {
@@ -7568,6 +7894,11 @@
         function showSection(sectionId) {
             console.log('🔄 showSection called with:', sectionId);
             
+            // Update URL hash (only if different to avoid unnecessary hashchange events)
+            if (window.location.hash !== '#' + sectionId) {
+                window.history.replaceState(null, null, '#' + sectionId);
+            }
+            
             // Check permissions BEFORE showing section
             if (appData.currentUser) {
                 const permissions = appData.currentUser.permissions || [];
@@ -7707,7 +8038,10 @@
             // Initialize section-specific content
             switch(sectionId) {
                 case 'dashboard':
-                    loadDashboard();
+                    // Load dashboard with selected month filter (or current month if not set)
+                    const monthFilter = document.getElementById('dashboardMonthFilter');
+                    const selectedMonth = monthFilter ? monthFilter.value : null;
+                    loadDashboard(selectedMonth || null);
                     break;
                 case 'categories':
                     loadCategories();
@@ -8172,11 +8506,37 @@
         // ========================================
         
         // Load dashboard
-        async function loadDashboard() {
+        async function loadDashboard(selectedMonth = null) {
             try {
-                // Load all data in parallel
+                let monthStart, monthEnd;
+                
+                // Use selected month or default to current month
+                if (selectedMonth) {
+                    // Parse YYYY-MM format from month input
+                    const [year, month] = selectedMonth.split('-').map(Number);
+                    monthStart = new Date(year, month - 1, 1);
+                    monthEnd = new Date(year, month, 0, 23, 59, 59, 999);
+                } else {
+                // Calculate current month date range
+                const now = new Date();
+                    monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                    monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+                }
+                
+                // Format dates as YYYY-MM-DD for API
+                const formatDate = (date) => {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                };
+                
+                // Load data with month filter
                 const [sales, branches, categories] = await Promise.all([
-                    api.getSales(),
+                    api.getSales({
+                        from: formatDate(monthStart),
+                        to: formatDate(monthEnd)
+                    }),
                     api.getBranches(),
                     api.getCategories()
                 ]);
@@ -8193,6 +8553,9 @@
                 
                 // Populate category breakdown branch filter
                 populateCategoryBreakdownBranchFilter();
+                
+                // Populate month filter dropdown
+                populateMonthFilter();
                 
                 loadBranchCards(categoryBreakdownFilter);
                 loadComparisonTables();
@@ -8645,6 +9008,110 @@ sortedBranches.forEach(data => {
                 `;
                 container.appendChild(card);
             });
+        }
+        
+        // Populate month filter dropdown
+        function populateMonthFilter() {
+            const dropdownMenu = document.getElementById('monthFilterDropdown');
+            const hiddenInput = document.getElementById('dashboardMonthFilter');
+            
+            if (!dropdownMenu) return;
+            
+            // Clear all items
+            dropdownMenu.innerHTML = '';
+            
+            // Re-add header
+            const header = document.createElement('li');
+            header.className = 'dropdown-item-text fw-bold';
+            header.textContent = 'Filter by Month:';
+            dropdownMenu.appendChild(header);
+            
+            const divider = document.createElement('li');
+            divider.innerHTML = '<hr class="dropdown-divider">';
+            dropdownMenu.appendChild(divider);
+            
+            // Helper function to format month label
+            function formatMonthLabel(year, month) {
+                const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'];
+                return `${monthNames[month - 1]} ${year}`;
+            }
+            
+            // Helper function to format month value (YYYY-MM)
+            function formatMonthValue(year, month) {
+                return `${year}-${String(month).padStart(2, '0')}`;
+            }
+            
+            // Add "Current Month" option
+            const now = new Date();
+            const currentMonthValue = formatMonthValue(now.getFullYear(), now.getMonth() + 1);
+            const currentMonthItem = document.createElement('li');
+            const currentMonthLink = document.createElement('a');
+            currentMonthLink.className = 'dropdown-item';
+            currentMonthLink.href = '#';
+            currentMonthLink.textContent = `Current Month (${formatMonthLabel(now.getFullYear(), now.getMonth() + 1)})`;
+            currentMonthLink.dataset.value = currentMonthValue;
+            currentMonthLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (hiddenInput) hiddenInput.value = currentMonthValue;
+                updateMonthFilterButtonText(formatMonthLabel(now.getFullYear(), now.getMonth() + 1));
+                loadDashboard(currentMonthValue);
+                showNotification(`Dashboard filtered for ${formatMonthLabel(now.getFullYear(), now.getMonth() + 1)}`, 'success');
+            });
+            currentMonthItem.appendChild(currentMonthLink);
+            dropdownMenu.appendChild(currentMonthItem);
+            
+            // Add divider
+            const divider2 = document.createElement('li');
+            divider2.innerHTML = '<hr class="dropdown-divider">';
+            dropdownMenu.appendChild(divider2);
+            
+            // Add last 12 months (including current month)
+            for (let i = 0; i < 12; i++) {
+                const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const year = date.getFullYear();
+                const month = date.getMonth() + 1;
+                const monthValue = formatMonthValue(year, month);
+                const monthLabel = formatMonthLabel(year, month);
+                
+                const monthItem = document.createElement('li');
+                const monthLink = document.createElement('a');
+                monthLink.className = 'dropdown-item';
+                monthLink.href = '#';
+                monthLink.textContent = monthLabel;
+                monthLink.dataset.value = monthValue;
+                
+                // Highlight current month
+                if (i === 0) {
+                    monthLink.style.fontWeight = 'bold';
+                    monthLink.style.color = 'var(--primary-color)';
+                }
+                
+                monthLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (hiddenInput) hiddenInput.value = monthValue;
+                    updateMonthFilterButtonText(monthLabel);
+                    loadDashboard(monthValue);
+                    showNotification(`Dashboard filtered for ${monthLabel}`, 'success');
+                });
+                
+                monthItem.appendChild(monthLink);
+                dropdownMenu.appendChild(monthItem);
+            }
+            
+            // Set default to current month
+            if (hiddenInput && !hiddenInput.value) {
+                hiddenInput.value = currentMonthValue;
+                updateMonthFilterButtonText(formatMonthLabel(now.getFullYear(), now.getMonth() + 1));
+            }
+        }
+        
+        // Update month filter button tooltip/title
+        function updateMonthFilterButtonText(monthText) {
+            const monthFilterBtn = document.getElementById('monthFilterBtn');
+            if (monthFilterBtn) {
+                monthFilterBtn.title = `Filter by Month: ${monthText}`;
+            }
         }
         
         // Populate category breakdown branch filter
@@ -9741,8 +10208,16 @@ sortedBranches.forEach(data => {
             const branchId = document.getElementById('saleBranch').value;
             const notes = document.getElementById('saleNotes').value;
             
-            if (!date || !branchId) {
-                showNotification('Please fill in all required fields', 'error');
+            // Check branch first (most important validation)
+            if (!branchId || branchId === '') {
+                showNotification('Please select a branch before saving', 'error');
+                document.getElementById('saleBranch').focus();
+                return;
+            }
+            
+            if (!date) {
+                showNotification('Please select a date before saving', 'error');
+                document.getElementById('saleDate').focus();
                 return;
             }
             
@@ -10577,6 +11052,12 @@ sortedBranches.forEach(data => {
                 return;
             }
             
+            // Save current checkbox selections before refresh
+            const checkedBoxes = Array.from(document.querySelectorAll('.payment-select:checked'));
+            const selectedIds = checkedBoxes.map(cb => cb.value);
+            window.appData = window.appData || {};
+            appData.paymentVoucherSelectedIds = selectedIds;
+            
             const branchFilter = document.getElementById('paymentVoucherListBranchFilter')?.value || '';
             const supplierFilter = document.getElementById('paymentVoucherListSupplierFilter')?.value || '';
             const fromDate = document.getElementById('paymentVoucherListFromDate')?.value || '';
@@ -10674,6 +11155,9 @@ sortedBranches.forEach(data => {
                 return;
             }
             
+            // Get previously selected IDs from appData
+            const selectedIds = appData.paymentVoucherSelectedIds || [];
+            
             // Separate permissions for supplier and category vouchers
             const canEditSupplierVoucher = (appData.currentUser?.permissions || []).includes('payment-edit') || (appData.currentUser?.permissions || []).includes('admin');
             const canDeleteSupplierVoucher = (appData.currentUser?.permissions || []).includes('payment-delete') || (appData.currentUser?.permissions || []).includes('admin');
@@ -10688,6 +11172,9 @@ sortedBranches.forEach(data => {
                 const entityName = voucher.supplierId?.name || voucher.supplier || 'Unknown';
                 const voucherNum = voucher.voucherNumber || 'N/A';
                 
+                // Check if this voucher was previously selected
+                const isChecked = selectedIds.includes(String(voucher._id));
+                
                 // Use supplier voucher permissions only (this is supplier voucher list)
                 const canEdit = canEditSupplierVoucher;
                 const canDelete = canDeleteSupplierVoucher;
@@ -10695,7 +11182,7 @@ sortedBranches.forEach(data => {
                 const deleteFunction = 'deletePaymentVoucher';
                 
                 row.innerHTML = `
-                    <td class="no-print"><input type="checkbox" class="payment-select" value="${voucher._id}"></td>
+                    <td class="no-print"><input type="checkbox" class="payment-select" value="${voucher._id}" ${isChecked ? 'checked' : ''}></td>
                     <td>${voucherNum}</td>
                     <td>${formatDate(voucher.date)}</td>
                     <td><span class="badge bg-primary me-1">Supplier</span>${entityName}</td>
@@ -10774,7 +11261,6 @@ sortedBranches.forEach(data => {
                 <th style="text-align: left; width: 10%; padding: 10px 6px;">Date</th>
                 ${includeSupplierCol ? '<th style="text-align: left; width: 18%; padding: 10px 6px;">Supplier</th>' : ''}
                 <th style="text-align: center; width: 10%; padding: 10px 6px;">PM</th>
-                <th style="text-align: center; width: 10%; padding: 10px 6px;">Status</th>
                 <th style="text-align: left; width: ${includeSupplierCol ? '28%' : '38%'}; padding: 10px 6px;">Description</th>
                 <th style="text-align: right; width: 16%; padding: 10px 6px;">Amount</th>
             </tr>
@@ -10788,9 +11274,6 @@ sortedBranches.forEach(data => {
                 const paymentMethod = voucher.paymentMethod || 'Cash';
                 const supplierName = voucher.supplierId?.name || voucher.supplier || 'Unknown';
                 const description = voucher.description || '-';
-                const displayStatus = 'PAID';
-                const statusColor = '#000';
-                const statusBg = '#f8f9fa';
                 const rowBg = index % 2 === 0 ? '#ffffff' : '#f8f9fa';
 
                 printContent += `
@@ -10800,7 +11283,6 @@ sortedBranches.forEach(data => {
                 <td style="padding: 10px 6px; border: 1px solid #333; color: #000; font-size: 11pt; width: 10%; vertical-align: top;">${voucherDate}</td>
                 ${includeSupplierCol ? `<td style=\"padding: 10px 6px; border: 1px solid #333; color: #000; font-size: 11pt; width: 18%; vertical-align: top;\">${supplierName}</td>` : ''}
                 <td style="padding: 10px 6px; border: 1px solid #333; text-align: center; color: #000; font-size: 11pt; width: 10%; vertical-align: top;">${paymentMethod}</td>
-                <td style="padding: 10px 6px; border: 1px solid #333; text-align: center; background: ${statusBg}; color: ${statusColor}; font-weight: bold; font-size: 11pt; text-transform: uppercase; width: 10%; vertical-align: top;">${displayStatus}</td>
                 <td style="padding: 10px 6px; border: 1px solid #333; color: #000; font-size: 11pt; width: ${includeSupplierCol ? '28%' : '38%'}; white-space: normal; word-wrap: break-word; overflow-wrap: break-word; vertical-align: top; line-height: 1.4;">${description}</td>
                 <td style="padding: 10px 6px; border: 1px solid #333; text-align: right; font-weight: bold; color: #000; font-size: 11pt; width: 16%; white-space: nowrap; vertical-align: top;">${amount.toLocaleString()}</td>
             </tr>`;
@@ -10844,6 +11326,18 @@ sortedBranches.forEach(data => {
             w.document.close();
             w.focus();
             w.print();
+            
+            // Uncheck all checkboxes after printing
+            setTimeout(() => {
+                document.querySelectorAll('.payment-select:checked').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                // Also uncheck the "select all" checkbox
+                const selectAllCheckbox = document.getElementById('paymentSelectAll');
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = false;
+                }
+            }, 500);
         };
         
         // View Payment Voucher - Opens in new window like sale report
@@ -11066,7 +11560,7 @@ sortedBranches.forEach(data => {
                 const statusBg = '#f0f9f4';
                 const displayStatus = 'PAID';
                 
-                // Create complete HTML document for print (same design as sale report)
+                // Create complete HTML document for print (matching print selected vouchers list structure and colors)
                 const printContent = `
 <!DOCTYPE html>
 <html>
@@ -11084,161 +11578,189 @@ sortedBranches.forEach(data => {
             margin: 0.5in;
         }
         
-        @media screen {
-            body {
-                display: flex;
-                justify-content: center;
-                align-items: flex-start;
-                min-height: 100vh;
-                background: #f5f5f5;
-                padding: 20px;
-            }
-            
-            .professional-voucher {
-                max-width: 850px;
-                width: 100%;
-                margin: 0 auto;
-            }
-        }
-        
         body {
-            font-family: 'Arial', sans-serif;
-            font-size: 11pt;
-            line-height: 1.5;
+            font-family: Arial, sans-serif;
+            font-size: 12pt;
+            line-height: 1.4;
             color: #000;
             background: #fff;
             margin: 0;
             padding: 20px;
         }
         
-        .professional-voucher {
-            border: 2px solid #2c6e8a;
-            padding: 40px;
-            background: #ffffff;
-            width: 100%;
-            max-width: 850px;
-            box-sizing: border-box;
-            page-break-inside: avoid;
-            margin: 0 auto;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-        }
-        
         .print-header {
             text-align: center;
             margin-bottom: 30px;
-            border-bottom: 3px solid #2c6e8a;
-            padding-bottom: 15px;
+            padding: 30px 25px;
+            background: #00685c;
+            color: #ffffff;
+            border-bottom: 3px solid #000;
         }
         
-        .print-header h1 {
-            font-size: 28pt;
+        .print-header h2 {
+            margin: 0;
+            font-size: 24pt;
             font-weight: bold;
-            margin: 0 0 10px 0;
-            color: #2c6e8a;
+            letter-spacing: 1px;
+            color: #ffffff;
         }
         
-        .print-header .company-info {
-            font-size: 11pt;
-            color: #555;
-            margin: 5px 0;
+        .print-header .voucher-title {
+            margin: 10px 0 0 0;
+            font-size: 16pt;
+            font-weight: bold;
+            color: #ffffff;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        .print-header .voucher-subtitle {
+            margin: 8px 0 0 0;
+            font-size: 10pt;
+            color: #ffffff;
         }
         
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
-            font-size: 10pt;
+            margin-bottom: 30px;
+            border: 1px solid #333;
+            background: white;
+            table-layout: fixed;
         }
         
         table th {
-            background-color: #2c6e8a;
-            color: white;
             padding: 12px;
-            text-align: left;
+            border: 1px solid #333;
             font-weight: bold;
-            border: 1px solid #1a4d63;
+            color: #ffffff;
+            font-size: 11pt;
+            text-align: left;
+            background-color: #00685c;
         }
         
         table td {
-            padding: 10px;
-            border: 1px solid #ddd;
+            padding: 12px;
+            border: 1px solid #333;
+            font-size: 11pt;
+            word-wrap: break-word;
         }
         
         tr:nth-child(even) {
-            background-color: #f9f9f9;
+            background-color: #f8f9fa;
         }
         
-        @media print {
-            body {
-                padding: 0;
-            }
-            
-            .professional-voucher {
-                max-width: 100%;
-                padding: 30px;
-            }
+        .summary-section {
+            border: 2px solid #000;
+            padding: 25px;
+            margin-top: 35px;
+            background: #ffffff;
+        }
+        
+        .signature-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 60px;
+            padding-top: 35px;
+            border-top: 2px solid #333;
+        }
+        
+        .signature-box {
+            width: 45%;
+            text-align: center;
+        }
+        
+        .signature-box p {
+            margin: 0 0 12px 0;
+            font-weight: bold;
+            color: #000;
+            font-size: 12pt;
+            letter-spacing: 0.5px;
+        }
+        
+        .signature-line {
+            border-top: 2px solid #000;
+            margin-top: 60px;
+            padding-top: 8px;
+        }
+        
+        .signature-line p {
+            margin: 0;
+            color: #000;
+            font-size: 10pt;
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
 <body>
-    <div class="professional-voucher">
-        <!-- Professional Header (same as sale report) -->
-        <div class="print-header">
-            <h1>${companyName}</h1>
-            <div class="company-info">Payment Management System</div>
-            <div class="company-info">Payment Voucher</div>
-            <div class="company-info">Generated: ${new Date().toLocaleDateString('en-GB')}</div>
+    <!-- Professional Header (matching print selected vouchers list) -->
+    <div class="print-header">
+        <h2>${companyName}</h2>
+        <p class="voucher-title">PAYMENT VOUCHER</p>
+        <p class="voucher-subtitle">Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+    </div>
+    
+    <!-- Branch and Supplier Info (matching print selected vouchers) -->
+    <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border: 1px solid #333;">
+        <div style="display: flex; justify-content: space-between; font-size: 13pt; font-weight: bold; color: #000;">
+            <div><span style="color: #00685c;">Branch:</span> <span>${branchName}</span></div>
+            <div><span style="color: #00685c;">${entityLabel}:</span> <span>${entityName}</span></div>
         </div>
-        
-        <!-- Voucher Details Table -->
-        <table>
-            <tr>
-                <th style="background-color: #2c6e8a; width: 30%;">Voucher Number</th>
-                <td style="font-weight: bold; font-size: 12pt;">${voucherNum}</td>
+    </div>
+    
+    <!-- Voucher Table (matching print selected vouchers list - same columns and rows) -->
+    <table>
+        <thead>
+            <tr style="background: #00685c;">
+                <th style="text-align: center; width: 4%; padding: 10px 6px;">#</th>
+                <th style="text-align: left; width: 12%; padding: 10px 6px;">V.No</th>
+                <th style="text-align: left; width: 10%; padding: 10px 6px;">Date</th>
+                <th style="text-align: left; width: 18%; padding: 10px 6px;">${entityLabel}</th>
+                <th style="text-align: center; width: 10%; padding: 10px 6px;">PM</th>
+                <th style="text-align: center; width: 10%; padding: 10px 6px;">Status</th>
+                <th style="text-align: left; width: 28%; padding: 10px 6px;">Description</th>
+                <th style="text-align: right; width: 16%; padding: 10px 6px;">Amount</th>
             </tr>
-            <tr>
-                <th style="background-color: #2c6e8a;">Date</th>
-                <td>${formatDate(voucher.date)}</td>
+        </thead>
+        <tbody>
+            <tr style="background-color: #ffffff; vertical-align: top;">
+                <td style="padding: 10px 6px; border: 1px solid #333; font-weight: bold; color: #000; text-align: center; font-size: 11pt; width: 4%; vertical-align: top;">1</td>
+                <td style="padding: 10px 6px; border: 1px solid #333; font-weight: bold; color: #000; font-size: 11pt; width: 12%; vertical-align: top;">${voucherNum}</td>
+                <td style="padding: 10px 6px; border: 1px solid #333; color: #000; font-size: 11pt; width: 10%; vertical-align: top;">${formatDate(voucher.date)}</td>
+                <td style="padding: 10px 6px; border: 1px solid #333; color: #000; font-size: 11pt; width: 18%; vertical-align: top;">${entityName}</td>
+                <td style="padding: 10px 6px; border: 1px solid #333; text-align: center; color: #000; font-size: 11pt; width: 10%; vertical-align: top;">${voucher.paymentMethod || 'Cash'}</td>
+                <td style="padding: 10px 6px; border: 1px solid #333; text-align: center; background: ${statusBg}; color: ${statusColor}; font-weight: bold; font-size: 11pt; text-transform: uppercase; width: 10%; vertical-align: top;">${displayStatus}</td>
+                <td style="padding: 10px 6px; border: 1px solid #333; color: #000; font-size: 11pt; width: 28%; white-space: normal; word-wrap: break-word; overflow-wrap: break-word; vertical-align: top; line-height: 1.4;">${voucher.description || '-'}</td>
+                <td style="padding: 10px 6px; border: 1px solid #333; text-align: right; font-weight: bold; color: #000; font-size: 11pt; width: 16%; white-space: nowrap; vertical-align: top;">${voucher.amount.toLocaleString()}</td>
             </tr>
-            <tr>
-                <th style="background-color: #2c6e8a;">${entityLabel}</th>
-                <td style="font-weight: 600;">${entityName}</td>
-            </tr>
-            <tr>
-                <th style="background-color: #2c6e8a;">Branch</th>
-                <td>${branchName}</td>
-            </tr>
-            <tr>
-                <th style="background-color: #2c6e8a;">Payment Method</th>
-                <td>${voucher.paymentMethod || 'Cash'}</td>
-            </tr>
-            <tr>
-                <th style="background-color: #2c6e8a;">Status</th>
-                <td style="font-weight: bold; color: ${statusColor}; background: ${statusBg}; padding: 8px; text-align: center; border-radius: 4px;">${displayStatus}</td>
-            </tr>
-            <tr>
-                <th style="background-color: #2c6e8a;">Description</th>
-                <td>${voucher.description || 'No description provided'}</td>
-            </tr>
-            <tr style="background-color: #f0f9f4; border-top: 3px solid #2c6e8a;">
-                <th style="background-color: #00685c; font-size: 12pt; padding: 15px;">Total Amount</th>
-                <td style="font-size: 18pt; font-weight: bold; color: #2c6e8a; padding: 15px; text-align: right;">${voucher.amount.toLocaleString()}</td>
+        </tbody>
+    </table>
+    
+    <!-- Summary Section (matching print selected vouchers) -->
+    <div class="summary-section">
+        <h3 style="text-align:center; margin-bottom:25px; text-transform:uppercase; font-size:16pt; font-weight:bold; color:#000; letter-spacing:2px; padding-bottom:15px; border-bottom:2px solid #333;">SUMMARY</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr style="background-color: #f0f0f0;">
+                <td style="padding: 12px; border: 1px solid #333; font-weight: bold; width: 30%; background: #f8f9fa; color: #000; font-size: 12pt;">Total Vouchers:</td>
+                <td style="padding: 12px; border: 1px solid #333; width: 20%; color: #000; font-weight: bold; font-size: 12pt;">1</td>
+                <td style="padding: 12px; border: 1px solid #333; font-weight: bold; width: 30%; background: #f8f9fa; color: #000; font-size: 12pt;">Total Amount:</td>
+                <td style="padding: 12px; border: 1px solid #333; font-weight: bold; width: 20%; text-align: right; color: #000; font-size: 12pt;">${voucher.amount.toLocaleString()}</td>
             </tr>
         </table>
-        
-        <!-- Professional Signature Section -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 40px; padding-top: 20px; border-top: 2px solid #2c6e8a;">
-            <div style="width: 48%; text-align: center; padding: 0 5px;">
-                <p style="margin: 0 0 6px 0; font-weight: bold; color: #2c6e8a; font-size: 10pt; letter-spacing: 0.3px; text-transform: uppercase;">PREPARED BY</p>
-                <div style="border-top: 1px solid #2c6e8a; margin-top: 50px; padding-top: 5px; height: 60px;">
-                    <p style="margin: 0; color: #666; font-size: 9pt;">Signature & Date</p>
-                </div>
+    </div>
+    
+    <!-- Signature Section (matching print selected vouchers list) -->
+    <div class="signature-section">
+        <div class="signature-box">
+            <p>PREPARED BY</p>
+            <div class="signature-line">
+                <p>Signature & Date</p>
             </div>
-            <div style="width: 48%; text-align: center; padding: 0 5px;">
-                <p style="margin: 0 0 6px 0; font-weight: bold; color: #2c6e8a; font-size: 10pt; letter-spacing: 0.3px; text-transform: uppercase;">CASH RECEIVED BY</p>
-                <div style="border-top: 1px solid #2c6e8a; margin-top: 50px; padding-top: 5px; height: 60px;">
-                    <p style="margin: 0; color: #666; font-size: 9pt;">Signature & Date</p>
-                </div>
+        </div>
+        <div class="signature-box">
+            <p>CASH RECEIVED BY</p>
+            <div class="signature-line">
+                <p>Signature & Date</p>
             </div>
         </div>
     </div>
@@ -12925,7 +13447,6 @@ sortedBranches.forEach(data => {
                 <th style="text-align: left; width: 10%; padding: 10px 6px;">Date</th>
                 ${includeSupplierCol ? '<th style="text-align: left; width: 18%; padding: 10px 6px;">Supplier</th>' : ''}
                 <th style="text-align: center; width: 10%; padding: 10px 6px;">PM</th>
-                <th style="text-align: center; width: 10%; padding: 10px 6px;">Status</th>
                 <th style="text-align: left; width: ${includeSupplierCol ? '28%' : '38%'}; padding: 10px 6px;">Description</th>
                 <th style="text-align: right; width: 16%; padding: 10px 6px;">Amount</th>
             </tr>
@@ -12941,16 +13462,7 @@ sortedBranches.forEach(data => {
                     const methodVouchers = vouchersByMethod[method];
                     const methodTotal = methodVouchers.reduce((sum, v) => sum + (v.amount || 0), 0);
                     
-                    // Add payment method header row
-                    printContent += `
-                                <tr style="background-color: #2c6e8a; color: #ffffff;">
-                                    <td colspan="${includeSupplierCol ? '8' : '7'}" style="padding: 12px 8px; border: 2px solid #1a4d63; font-weight: bold; font-size: 13pt; text-align: center; text-transform: uppercase;">
-                                        ${method} - ${methodVouchers.length} Voucher(s) - Total: ${methodTotal.toLocaleString()}
-                                    </td>
-                                </tr>
-                    `;
-                    
-                    // Add each voucher in this payment method group
+                    // Add each voucher in this payment method group FIRST
                     methodVouchers.forEach((voucher, voucherIndex) => {
                         globalRowIndex++;
                         const voucherNum = voucher.voucherNumber || 'N/A';
@@ -12958,10 +13470,6 @@ sortedBranches.forEach(data => {
                         const amount = voucher.amount || 0;
                         const description = voucher.description || '-';
                         const supplierName = voucher.supplierId?.name || voucher.supplier || 'Unknown';
-                        // All vouchers show PAID status
-                        const displayStatus = 'PAID';
-                        const statusColor = '#000';
-                        const statusBg = '#f8f9fa';
                         
                         // Professional alternate row colors - matching sale report
                         const rowBg = voucherIndex % 2 === 0 ? '#ffffff' : '#f8f9fa';
@@ -12973,12 +13481,21 @@ sortedBranches.forEach(data => {
                                     <td style="padding: 10px 6px; border: 1px solid #333; color: #000; font-size: 11pt; width: 10%; vertical-align: top;">${voucherDate}</td>
                                     ${includeSupplierCol ? `<td style=\"padding: 10px 6px; border: 1px solid #333; color: #000; font-size: 11pt; width: 18%; vertical-align: top;\">${supplierName}</td>` : ''}
                                     <td style="padding: 10px 6px; border: 1px solid #333; text-align: center; color: #000; font-size: 11pt; width: 10%; vertical-align: top;">${method}</td>
-                                    <td style="padding: 10px 6px; border: 1px solid #333; text-align: center; background: ${statusBg}; color: ${statusColor}; font-weight: bold; font-size: 11pt; text-transform: uppercase; width: 10%; vertical-align: top;">${displayStatus}</td>
                                     <td style="padding: 10px 6px; border: 1px solid #333; color: #000; font-size: 11pt; width: ${includeSupplierCol ? '28%' : '38%'}; white-space: normal; word-wrap: break-word; overflow-wrap: break-word; vertical-align: top; line-height: 1.4;">${description || '-'}</td>
                                     <td style="padding: 10px 6px; border: 1px solid #333; text-align: right; font-weight: bold; color: #000; font-size: 11pt; width: 16%; white-space: nowrap; vertical-align: top;">${amount.toLocaleString()}</td>
                                 </tr>
                         `;
                     });
+                    
+                    // Add payment method subtotal row AFTER all vouchers for this method
+                    printContent += `
+                                <tr style="background-color: #000000; color: #ffffff;">
+                                    <td colspan="${includeSupplierCol ? '6' : '5'}" style="padding: 12px 8px; border: 2px solid #000000; font-weight: bold; font-size: 13pt; text-align: center; text-transform: uppercase;">
+                                        Subtotal ${method} Paid
+                                    </td>
+                                    <td style="padding: 12px 8px; border: 2px solid #000000; font-weight: bold; font-size: 13pt; text-align: right; color: #ffffff; white-space: nowrap;">${methodTotal.toLocaleString()}</td>
+                                </tr>
+                    `;
                 });
                 
                 printContent += `

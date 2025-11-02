@@ -11,17 +11,19 @@ import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-dotenv.config();
-
 // ========================================
 // SERVER INITIALIZATION AND CONFIGURATION
 // ========================================
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Configure dotenv to load from server directory
+dotenv.config({ path: path.join(__dirname, '.env') });
+
 const app = express();
 const port = process.env.PORT || 5000;
 const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URL;
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // ========================================
 // MIDDLEWARE CONFIGURATION
@@ -57,7 +59,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('dev'));
-
+/*
 // DEBUG: Log ALL incoming requests to see what's happening
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/')) {
@@ -65,19 +67,35 @@ app.use((req, res, next) => {
   }
   next();
 });
-
+*/
 // ========================================
 // RATE LIMITING MIDDLEWARE
 // ========================================
 
-// Simple in-memory rate limiting
+// Simple in-memory rate limiting with cleanup
 const rateLimitMap = new Map();
+const MAX_MAP_SIZE = 10000; // Maximum number of unique IPs to track
+const CLEANUP_INTERVAL = 60 * 60 * 1000; // Clean every hour
+
+// Periodic cleanup to prevent memory leaks
+setInterval(() => {
+  if (rateLimitMap.size > 0) {
+    console.log(`🧹 Rate limit cleanup: clearing ${rateLimitMap.size} entries`);
+    rateLimitMap.clear();
+  }
+}, CLEANUP_INTERVAL);
 
 const rateLimit = (maxRequests = 10, windowMs = 15 * 60 * 1000) => {
   return (req, res, next) => {
     const clientId = req.ip || req.connection.remoteAddress;
     const now = Date.now();
     const windowStart = now - windowMs;
+    
+    // Limit map size to prevent memory issues
+    if (rateLimitMap.size >= MAX_MAP_SIZE && !rateLimitMap.has(clientId)) {
+      console.warn('⚠️ Rate limit map at max size, clearing old entries');
+      rateLimitMap.clear();
+    }
     
     // Clean old entries
     if (rateLimitMap.has(clientId)) {
@@ -374,9 +392,14 @@ const CategoryPayment = mongoose.model('CategoryPayment', CategoryPaymentSchema)
 // AUTHENTICATION CONFIGURATION
 // ========================================
 // Validate environment variables
-const JWT_SECRET = process.env.JWT_SECRET || 'pharmacy_sales_secret_key';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // JWT secret validation for production
+if (!JWT_SECRET) {
+  console.error('❌ JWT_SECRET environment variable is required');
+  console.error('Please set JWT_SECRET in your .env file');
+  process.exit(1);
+}
 
 
 // ========================================
@@ -511,7 +534,10 @@ app.post('/api/admin/promote-user', async (req, res) => {
     const { username, adminPassword } = req.body;
     
     // Verify admin password
-    const expectedPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    const expectedPassword = process.env.ADMIN_PASSWORD;
+    if (!expectedPassword) {
+      return res.status(503).json({ error: 'Admin password not configured on server' });
+    }
     if (adminPassword !== expectedPassword) {
       return res.status(403).json({ error: 'Invalid admin password' });
     }
@@ -650,21 +676,18 @@ app.post('/api/auth/login', checkDatabaseConnection, async (req, res) => {
     user.lastLogin = new Date();
     await user.save();
     
-    // Fetch the user again to ensure we have the latest data
-    const updatedUser = await User.findById(user._id).populate('groupId');
-    
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
     
     res.json({
       token,
       user: {
-        id: updatedUser._id,
-        username: updatedUser.username,
-        fullName: updatedUser.fullName,
-        email: updatedUser.email,
-        groupId: updatedUser.groupId,
-        branches: updatedUser.branches,
-        permissions: updatedUser.groupId.permissions
+        id: user._id,
+        username: user.username,
+        fullName: user.fullName,
+        email: user.email,
+        groupId: user.groupId,
+        branches: user.branches,
+        permissions: user.groupId.permissions
       }
     });
   } catch (error) {
@@ -2201,7 +2224,7 @@ app.delete('/api/category-payments/:id', authenticate, hasPermission('category-v
 // ========================================
 
 // Admin Delete Action
-app.post('/api/admin/delete', async (req, res) => {
+app.post('/api/admin/delete', checkDatabaseConnection, async (req, res) => {
   try {
     const { resource, id, password } = req.body || {};
     const expected = String(process.env.ADMIN_PASSWORD || '');
@@ -2212,11 +2235,17 @@ app.post('/api/admin/delete', async (req, res) => {
     }
     
     if (provided.trim() !== expected.trim()) {
+      console.warn('Admin delete auth failed');
       return res.status(403).json({ error: 'Invalid admin password' });
     }
 
     if (!resource || !id) {
       return res.status(400).json({ error: 'resource and id are required' });
+    }
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid ID format' });
     }
 
     let deleted = null;
@@ -2258,7 +2287,7 @@ app.post('/api/admin/delete', async (req, res) => {
 });
 
 // Admin Update Action
-app.post('/api/admin/update', async (req, res) => {
+app.post('/api/admin/update', checkDatabaseConnection, async (req, res) => {
   try {
     const { resource, id, payload, password } = req.body || {};
     const expected = String(process.env.ADMIN_PASSWORD || '');
@@ -2276,6 +2305,11 @@ app.post('/api/admin/update', async (req, res) => {
 
     if (!resource || !id || !payload) {
       return res.status(400).json({ error: 'resource, id and payload are required' });
+    }
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid ID format' });
     }
 
     let updated = null;
@@ -2531,9 +2565,16 @@ app.listen(port, () => {
 });
 
 // Start seeding when database is ready (if connected)
-mongoose.connection.once('open', () => {
+const handleDatabaseReady = () => {
   seedDefaultData();
-});
+};
+
+// Handle if already connected
+if (mongoose.connection.readyState === 1) {
+  handleDatabaseReady();
+} else {
+  mongoose.connection.once('open', handleDatabaseReady);
+}
 
 // ========================================
 // ERROR HANDLING MIDDLEWARE

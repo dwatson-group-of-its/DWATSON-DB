@@ -176,6 +176,6 @@ ISC
 
 ---
 
-**Developed by [MR Wasi](https://github.com/Itxxwasi)**  
+**Developed by Bilal Shah & Wasi**  
 **GitHub**: [@Itxxwasi](https://github.com/Itxxwasi)  
 **D.Watson Pharmacy Management System**
