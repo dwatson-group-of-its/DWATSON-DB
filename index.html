@@ -5012,6 +5012,45 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- API Keys Management Section (Admin Only) -->
+                <div class="card mt-4 admin-only" id="apiKeysSection">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-key me-2"></i>API Keys Management
+                            </h5>
+                            <button class="btn btn-primary" id="createApiKeyBtn">
+                                <i class="fas fa-plus me-2"></i>Create API Key
+                            </button>
+                        </div>
+                        <p class="text-muted mb-4">
+                            Generate API keys to allow external applications to access your data securely. API keys provide programmatic access without requiring user login.
+                        </p>
+                        <div id="apiKeysList" class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>API Key</th>
+                                        <th>Status</th>
+                                        <th>Usage</th>
+                                        <th>Last Used</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="apiKeysTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted">
+                                            <i class="fas fa-spinner fa-spin me-2"></i>Loading API keys...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -5086,6 +5125,70 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary" id="saveBranchBtn">Save Branch</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Create API Key Modal -->
+    <div class="modal fade" id="createApiKeyModal" tabindex="-1" aria-labelledby="createApiKeyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createApiKeyModalLabel">
+                        <i class="fas fa-key me-2"></i>Create New API Key
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="apiKeyForm">
+                        <div class="mb-3">
+                            <label for="apiKeyName" class="form-label">Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="apiKeyName" placeholder="e.g., Mobile App, External Integration" required>
+                            <div class="form-text">A descriptive name to identify this API key</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="apiKeyDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="apiKeyDescription" rows="3" placeholder="Optional description for this API key"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="apiKeyExpiresAt" class="form-label">Expiration Date (Optional)</label>
+                            <input type="date" class="form-control" id="apiKeyExpiresAt">
+                            <div class="form-text">Leave empty for no expiration</div>
+                        </div>
+                    </form>
+                    
+                    <!-- API Key Display (shown after creation) -->
+                    <div id="apiKeyResult" class="d-none mt-4">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Important:</strong> Save these credentials now! The API secret will not be shown again.
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">API Key</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="generatedApiKey" readonly>
+                                <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('generatedApiKey')">
+                                    <i class="fas fa-copy"></i> Copy
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">API Secret</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="generatedApiSecret" readonly>
+                                <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('generatedApiSecret')">
+                                    <i class="fas fa-copy"></i> Copy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="closeApiKeyModal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveApiKeyBtn">
+                        <i class="fas fa-plus me-2"></i>Create API Key
+                    </button>
                 </div>
             </div>
         </div>
@@ -5679,6 +5782,35 @@
                     method: 'PUT',
                     body: JSON.stringify(settings)
                 });
+            }
+            
+            // API Keys
+            async getApiKeys() {
+                return this.request('/api-keys');
+            }
+            
+            async createApiKey(apiKeyData) {
+                return this.request('/api-keys', {
+                    method: 'POST',
+                    body: JSON.stringify(apiKeyData)
+                });
+            }
+            
+            async updateApiKey(id, apiKeyData) {
+                return this.request(`/api-keys/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(apiKeyData)
+                });
+            }
+            
+            async deleteApiKey(id) {
+                return this.request(`/api-keys/${id}`, {
+                    method: 'DELETE'
+                });
+            }
+            
+            async getApiKeyStats(id) {
+                return this.request(`/api-keys/${id}/stats`);
             }
             
             // Branches
@@ -7763,6 +7895,31 @@
                 e.preventDefault();
                 saveSettings();
             });
+            
+            // API Key Management Event Listeners
+            const createApiKeyBtn = document.getElementById('createApiKeyBtn');
+            if (createApiKeyBtn) {
+                createApiKeyBtn.addEventListener('click', function() {
+                    resetApiKeyModal();
+                    const modal = new bootstrap.Modal(document.getElementById('createApiKeyModal'));
+                    modal.show();
+                });
+            }
+            
+            const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
+            if (saveApiKeyBtn) {
+                saveApiKeyBtn.addEventListener('click', function() {
+                    createApiKey();
+                });
+            }
+            
+            // Reset modal when closed
+            const createApiKeyModal = document.getElementById('createApiKeyModal');
+            if (createApiKeyModal) {
+                createApiKeyModal.addEventListener('hidden.bs.modal', function() {
+                    resetApiKeyModal();
+                });
+            }
             
             // Backup and restore
             document.getElementById('backupDataBtn').addEventListener('click', backupData);
@@ -18297,6 +18454,180 @@ sortedBranches.forEach(data => {
                 console.error('Error loading settings:', error);
                 showNotification('Failed to load settings: ' + error.message, 'error');
             });
+            
+            // Load API keys if admin
+            loadApiKeys();
+        }
+        
+        // Load API Keys
+        function loadApiKeys() {
+            if (!isAdmin()) return;
+            
+            api.getApiKeys().then(apiKeys => {
+                const tbody = document.getElementById('apiKeysTableBody');
+                if (!tbody) return;
+                
+                if (!apiKeys || apiKeys.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">
+                                <i class="fas fa-key me-2"></i>No API keys found. Click "Create API Key" to generate one.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = apiKeys.map(key => {
+                    const statusBadge = key.isActive 
+                        ? '<span class="badge bg-success">Active</span>'
+                        : '<span class="badge bg-secondary">Inactive</span>';
+                    const lastUsed = key.lastUsed 
+                        ? new Date(key.lastUsed).toLocaleDateString() + ' ' + new Date(key.lastUsed).toLocaleTimeString()
+                        : 'Never';
+                    const created = new Date(key.createdAt).toLocaleDateString();
+                    const expires = key.expiresAt 
+                        ? new Date(key.expiresAt).toLocaleDateString()
+                        : 'Never';
+                    
+                    return `
+                        <tr>
+                            <td>
+                                <strong>${key.name || 'Unnamed'}</strong>
+                                ${key.description ? `<br><small class="text-muted">${key.description}</small>` : ''}
+                            </td>
+                            <td><code class="text-primary">${key.apiKey}</code></td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <span class="badge bg-info">${key.usageCount || 0}</span>
+                            </td>
+                            <td><small>${lastUsed}</small></td>
+                            <td><small>${created}</small></td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="toggleApiKeyStatus('${key._id}', ${key.isActive})" title="Toggle Status">
+                                        <i class="fas fa-${key.isActive ? 'pause' : 'play'}"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="deleteApiKey('${key._id}', '${key.name}')" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }).catch(error => {
+                console.error('Error loading API keys:', error);
+                const tbody = document.getElementById('apiKeysTableBody');
+                if (tbody) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center text-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Error loading API keys: ${error.message}
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+        
+        // Create API Key
+        async function createApiKey() {
+            const name = document.getElementById('apiKeyName').value.trim();
+            const description = document.getElementById('apiKeyDescription').value.trim();
+            const expiresAt = document.getElementById('apiKeyExpiresAt').value;
+            
+            if (!name) {
+                showNotification('API key name is required', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('saveApiKeyBtn');
+            
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
+                
+                const apiKeyData = {
+                    name,
+                    description: description || '',
+                    expiresAt: expiresAt || null
+                };
+                
+                const result = await api.createApiKey(apiKeyData);
+                
+                // Hide form and show result
+                document.getElementById('apiKeyForm').style.display = 'none';
+                document.getElementById('apiKeyResult').classList.remove('d-none');
+                document.getElementById('generatedApiKey').value = result.apiKey;
+                document.getElementById('generatedApiSecret').value = result.apiSecret;
+                
+                // Update button
+                btn.innerHTML = '<i class="fas fa-check me-2"></i>Created!';
+                
+                // Reload API keys list
+                loadApiKeys();
+                
+                // Show success notification
+                showNotification('API key created successfully! Save the credentials now.', 'success');
+                
+            } catch (error) {
+                console.error('Error creating API key:', error);
+                showNotification('Failed to create API key: ' + error.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-plus me-2"></i>Create API Key';
+            }
+        }
+        
+        // Toggle API Key Status
+        async function toggleApiKeyStatus(id, currentStatus) {
+            if (!confirm(`Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this API key?`)) {
+                return;
+            }
+            
+            try {
+                await api.updateApiKey(id, { isActive: !currentStatus });
+                showNotification(`API key ${currentStatus ? 'deactivated' : 'activated'} successfully`, 'success');
+                loadApiKeys();
+            } catch (error) {
+                console.error('Error updating API key:', error);
+                showNotification('Failed to update API key: ' + error.message, 'error');
+            }
+        }
+        
+        // Delete API Key
+        async function deleteApiKey(id, name) {
+            if (!confirm(`Are you sure you want to delete the API key "${name}"? This action cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                await api.deleteApiKey(id);
+                showNotification('API key deleted successfully', 'success');
+                loadApiKeys();
+            } catch (error) {
+                console.error('Error deleting API key:', error);
+                showNotification('Failed to delete API key: ' + error.message, 'error');
+            }
+        }
+        
+        // Copy to Clipboard helper
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            element.select();
+            element.setSelectionRange(0, 99999); // For mobile devices
+            document.execCommand('copy');
+            showNotification('Copied to clipboard!', 'success');
+        }
+        
+        // Reset API Key Modal
+        function resetApiKeyModal() {
+            document.getElementById('apiKeyForm').reset();
+            document.getElementById('apiKeyForm').style.display = 'block';
+            document.getElementById('apiKeyResult').classList.add('d-none');
+            const btn = document.getElementById('saveApiKeyBtn');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-plus me-2"></i>Create API Key';
         }
         
         // Save settings

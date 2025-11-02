@@ -377,6 +377,26 @@ const CategoryPaymentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// API Key Schema - For external API access
+const ApiKeySchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    description: { type: String, default: '' },
+    apiKey: { type: String, required: true, unique: true },
+    apiSecret: { type: String, required: true },
+    isActive: { type: Boolean, default: true },
+    lastUsed: { type: Date },
+    usageCount: { type: Number, default: 0 },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    expiresAt: { type: Date } // Optional expiration date
+  },
+  { timestamps: true }
+);
+
+// Index for faster lookups
+ApiKeySchema.index({ apiKey: 1 });
+ApiKeySchema.index({ isActive: 1 });
+
 // Model Creation
 const Branch = mongoose.model('Branch', BranchSchema);
 const Category = mongoose.model('Category', CategorySchema);
@@ -387,6 +407,7 @@ const Settings = mongoose.model('Settings', SettingsSchema);
 const Supplier = mongoose.model('Supplier', SupplierSchema);
 const Payment = mongoose.model('Payment', PaymentSchema);
 const CategoryPayment = mongoose.model('CategoryPayment', CategoryPaymentSchema);
+const ApiKey = mongoose.model('ApiKey', ApiKeySchema);
 
 // ========================================
 // AUTHENTICATION CONFIGURATION
@@ -522,6 +543,62 @@ const hasPermission = (permission) => {
     
     next();
   };
+};
+
+// ========================================
+// API KEY AUTHENTICATION MIDDLEWARE
+// ========================================
+
+// API Key Authentication Middleware - For external API access
+const authenticateApiKey = async (req, res, next) => {
+  res.setHeader('Content-Type', 'application/json');
+  
+  try {
+    // Get API key and secret from headers or query params
+    const apiKey = req.header('X-API-Key') || req.query.apiKey;
+    const apiSecret = req.header('X-API-Secret') || req.query.apiSecret;
+    
+    if (!apiKey || !apiSecret) {
+      return res.status(401).json({ 
+        error: 'API authentication required',
+        message: 'Please provide both X-API-Key and X-API-Secret headers'
+      });
+    }
+    
+    // Find API key in database
+    const keyRecord = await ApiKey.findOne({ 
+      apiKey: apiKey,
+      isActive: true 
+    });
+    
+    if (!keyRecord) {
+      return res.status(401).json({ error: 'Invalid API key' });
+    }
+    
+    // Check if key has expired
+    if (keyRecord.expiresAt && new Date() > keyRecord.expiresAt) {
+      return res.status(401).json({ error: 'API key has expired' });
+    }
+    
+    // Verify secret (using bcrypt for secure comparison)
+    const secretMatch = await bcrypt.compare(apiSecret, keyRecord.apiSecret);
+    
+    if (!secretMatch) {
+      return res.status(401).json({ error: 'Invalid API secret' });
+    }
+    
+    // Update last used and usage count
+    keyRecord.lastUsed = new Date();
+    keyRecord.usageCount = (keyRecord.usageCount || 0) + 1;
+    await keyRecord.save();
+    
+    // Attach API key info to request for later use
+    req.apiKey = keyRecord;
+    next();
+  } catch (error) {
+    console.error('API key authentication error:', error);
+    res.status(401).json({ error: 'Authentication failed' });
+  }
 };
 
 // ========================================
@@ -2347,6 +2424,390 @@ app.post('/api/admin/update', checkDatabaseConnection, async (req, res) => {
   } catch (error) {
     console.error('Admin update error:', error.message);
     return res.status(500).json({ error: error.message });
+  }
+});
+
+// ========================================
+// API KEY MANAGEMENT ROUTES (Admin Only)
+// ========================================
+
+// Get All API Keys
+app.get('/api/api-keys', authenticate, isAdmin, checkDatabaseConnection, async (req, res) => {
+  try {
+    const apiKeys = await ApiKey.find()
+      .populate('createdBy', 'username fullName')
+      .sort({ createdAt: -1 })
+      .select('-apiSecret'); // Don't return the secret hash
+    
+    res.json(apiKeys);
+  } catch (error) {
+    console.error('Error fetching API keys:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create New API Key
+app.post('/api/api-keys', authenticate, isAdmin, checkDatabaseConnection, async (req, res) => {
+  try {
+    const { name, description, expiresAt } = req.body;
+    
+    if (!name) {
+      return res.status(400).json({ error: 'API key name is required' });
+    }
+    
+    // Generate unique API key and secret
+    const apiKey = `dw_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    const apiSecret = `${Math.random().toString(36).substring(2, 15)}${Date.now()}${Math.random().toString(36).substring(2, 15)}`;
+    
+    // Hash the secret before storing
+    const salt = await bcrypt.genSalt(10);
+    const hashedSecret = await bcrypt.hash(apiSecret, salt);
+    
+    // Create API key record
+    const apiKeyRecord = await ApiKey.create({
+      name: name.trim(),
+      description: description || '',
+      apiKey: apiKey,
+      apiSecret: hashedSecret,
+      isActive: true,
+      createdBy: req.user._id,
+      expiresAt: expiresAt ? new Date(expiresAt) : null
+    });
+    
+    // Return the API key and secret (only shown once!)
+    res.status(201).json({
+      id: apiKeyRecord._id,
+      name: apiKeyRecord.name,
+      description: apiKeyRecord.description,
+      apiKey: apiKey, // Return the plain text key (only time it will be shown)
+      apiSecret: apiSecret, // Return the plain text secret (only time it will be shown)
+      isActive: apiKeyRecord.isActive,
+      expiresAt: apiKeyRecord.expiresAt,
+      createdAt: apiKeyRecord.createdAt,
+      warning: '⚠️ Save these credentials now! The API secret will not be shown again.'
+    });
+  } catch (error) {
+    console.error('Error creating API key:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update API Key (toggle active status, update name/description)
+app.put('/api/api-keys/:id', authenticate, isAdmin, checkDatabaseConnection, async (req, res) => {
+  try {
+    const { name, description, isActive, expiresAt } = req.body;
+    
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid API key ID format' });
+    }
+    
+    const updateData = {};
+    if (name !== undefined) updateData.name = name.trim();
+    if (description !== undefined) updateData.description = description;
+    if (isActive !== undefined) updateData.isActive = isActive;
+    if (expiresAt !== undefined) updateData.expiresAt = expiresAt ? new Date(expiresAt) : null;
+    
+    const updated = await ApiKey.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    ).populate('createdBy', 'username fullName').select('-apiSecret');
+    
+    if (!updated) {
+      return res.status(404).json({ error: 'API key not found' });
+    }
+    
+    res.json(updated);
+  } catch (error) {
+    console.error('Error updating API key:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete API Key
+app.delete('/api/api-keys/:id', authenticate, isAdmin, checkDatabaseConnection, async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid API key ID format' });
+    }
+    
+    const deleted = await ApiKey.findByIdAndDelete(req.params.id);
+    
+    if (!deleted) {
+      return res.status(404).json({ error: 'API key not found' });
+    }
+    
+    res.json({ ok: true, message: 'API key deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting API key:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get API Key Usage Stats
+app.get('/api/api-keys/:id/stats', authenticate, isAdmin, checkDatabaseConnection, async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid API key ID format' });
+    }
+    
+    const apiKey = await ApiKey.findById(req.params.id).select('-apiSecret');
+    
+    if (!apiKey) {
+      return res.status(404).json({ error: 'API key not found' });
+    }
+    
+    res.json({
+      id: apiKey._id,
+      name: apiKey.name,
+      usageCount: apiKey.usageCount || 0,
+      lastUsed: apiKey.lastUsed,
+      createdAt: apiKey.createdAt,
+      isActive: apiKey.isActive,
+      expiresAt: apiKey.expiresAt
+    });
+  } catch (error) {
+    console.error('Error fetching API key stats:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ========================================
+// PUBLIC API ENDPOINTS (API Key Authentication)
+// ========================================
+
+// Get All Sales (Public API with API Key)
+app.get('/api/public/sales', authenticateApiKey, checkDatabaseConnection, async (req, res) => {
+  try {
+    const filter = {};
+    
+    // Build filter from query parameters
+    if (req.query.branchId && req.query.branchId !== 'undefined' && req.query.branchId.trim() !== '') {
+      filter.branchId = req.query.branchId;
+    }
+    
+    if (req.query.categoryId && req.query.categoryId !== 'undefined' && req.query.categoryId.trim() !== '') {
+      filter.categoryId = req.query.categoryId;
+    }
+    
+    if (req.query.from || req.query.to) {
+      filter.date = {};
+      if (req.query.from) {
+        filter.date.$gte = new Date(req.query.from);
+      }
+      if (req.query.to) {
+        filter.date.$lte = new Date(req.query.to);
+      }
+    }
+    
+    const sales = await Sale.find(filter)
+      .sort({ date: -1 })
+      .populate('branchId', 'name')
+      .populate('categoryId', 'name');
+    
+    res.json({
+      success: true,
+      count: sales.length,
+      data: sales
+    });
+  } catch (error) {
+    console.error('Error fetching sales (public API):', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get All Payments (Public API with API Key)
+app.get('/api/public/payments', authenticateApiKey, checkDatabaseConnection, async (req, res) => {
+  try {
+    const filter = {};
+    
+    // Build filter from query parameters
+    if (req.query.branchId && req.query.branchId !== 'undefined' && req.query.branchId.trim() !== '') {
+      filter.branchId = req.query.branchId;
+    }
+    
+    if (req.query.supplierId && req.query.supplierId !== 'undefined' && req.query.supplierId.trim() !== '') {
+      filter.supplierId = req.query.supplierId;
+    }
+    
+    if (req.query.from || req.query.to) {
+      filter.date = {};
+      if (req.query.from) {
+        filter.date.$gte = new Date(req.query.from);
+      }
+      if (req.query.to) {
+        filter.date.$lte = new Date(req.query.to);
+      }
+    }
+    
+    const payments = await Payment.find(filter)
+      .sort({ date: -1 })
+      .populate('branchId', 'name')
+      .populate('supplierId', 'name');
+    
+    res.json({
+      success: true,
+      count: payments.length,
+      data: payments
+    });
+  } catch (error) {
+    console.error('Error fetching payments (public API):', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get All Category Payments (Public API with API Key)
+app.get('/api/public/category-payments', authenticateApiKey, checkDatabaseConnection, async (req, res) => {
+  try {
+    const filter = {};
+    
+    // Build filter from query parameters
+    if (req.query.branchId && req.query.branchId !== 'undefined' && req.query.branchId.trim() !== '') {
+      filter.branchId = req.query.branchId;
+    }
+    
+    if (req.query.categoryId && req.query.categoryId !== 'undefined' && req.query.categoryId.trim() !== '') {
+      filter.categoryId = req.query.categoryId;
+    }
+    
+    if (req.query.from || req.query.to) {
+      filter.date = {};
+      if (req.query.from) {
+        filter.date.$gte = new Date(req.query.from);
+      }
+      if (req.query.to) {
+        filter.date.$lte = new Date(req.query.to);
+      }
+    }
+    
+    const categoryPayments = await CategoryPayment.find(filter)
+      .sort({ date: -1 })
+      .populate('branchId', 'name')
+      .populate('categoryId', 'name');
+    
+    res.json({
+      success: true,
+      count: categoryPayments.length,
+      data: categoryPayments
+    });
+  } catch (error) {
+    console.error('Error fetching category payments (public API):', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get All Branches (Public API with API Key)
+app.get('/api/public/branches', authenticateApiKey, checkDatabaseConnection, async (req, res) => {
+  try {
+    const branches = await Branch.find().sort({ createdAt: -1 });
+    
+    res.json({
+      success: true,
+      count: branches.length,
+      data: branches
+    });
+  } catch (error) {
+    console.error('Error fetching branches (public API):', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get All Categories (Public API with API Key)
+app.get('/api/public/categories', authenticateApiKey, checkDatabaseConnection, async (req, res) => {
+  try {
+    const categories = await Category.find().sort({ createdAt: -1 });
+    
+    res.json({
+      success: true,
+      count: categories.length,
+      data: categories
+    });
+  } catch (error) {
+    console.error('Error fetching categories (public API):', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get All Suppliers (Public API with API Key)
+app.get('/api/public/suppliers', authenticateApiKey, checkDatabaseConnection, async (req, res) => {
+  try {
+    const suppliers = await Supplier.find().sort({ createdAt: -1 });
+    
+    res.json({
+      success: true,
+      count: suppliers.length,
+      data: suppliers
+    });
+  } catch (error) {
+    console.error('Error fetching suppliers (public API):', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get Dashboard Summary (Public API with API Key)
+app.get('/api/public/dashboard', authenticateApiKey, checkDatabaseConnection, async (req, res) => {
+  try {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    
+    // Build date filter if provided
+    const dateFilter = {};
+    if (req.query.from || req.query.to) {
+      dateFilter.date = {};
+      if (req.query.from) dateFilter.date.$gte = new Date(req.query.from);
+      if (req.query.to) dateFilter.date.$lte = new Date(req.query.to);
+    }
+    
+    // Get sales totals
+    const allSales = await Sale.find(dateFilter);
+    const totalSales = allSales.reduce((sum, sale) => sum + (sale.total || 0), 0);
+    const totalProfit = allSales.reduce((sum, sale) => sum + (sale.profit || 0), 0);
+    
+    // Get monthly sales
+    const monthlySales = await Sale.find({ 
+      ...dateFilter,
+      date: { $gte: startOfMonth }
+    });
+    const monthlyTotal = monthlySales.reduce((sum, sale) => sum + (sale.total || 0), 0);
+    
+    // Get payment totals
+    const allPayments = await Payment.find(dateFilter);
+    const totalPayments = allPayments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+    
+    // Get category payment totals
+    const allCategoryPayments = await CategoryPayment.find(dateFilter);
+    const totalCategoryPayments = allCategoryPayments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+    
+    // Get counts
+    const branchCount = await Branch.countDocuments();
+    const categoryCount = await Category.countDocuments();
+    const supplierCount = await Supplier.countDocuments();
+    
+    res.json({
+      success: true,
+      data: {
+        summary: {
+          totalSales,
+          totalProfit,
+          monthlySales: monthlyTotal,
+          totalPayments,
+          totalCategoryPayments,
+          netAmount: totalSales - totalPayments - totalCategoryPayments
+        },
+        counts: {
+          branches: branchCount,
+          categories: categoryCount,
+          suppliers: supplierCount,
+          sales: allSales.length,
+          payments: allPayments.length,
+          categoryPayments: allCategoryPayments.length
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard (public API):', error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 
