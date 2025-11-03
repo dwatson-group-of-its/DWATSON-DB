@@ -517,6 +517,7 @@ const isAdmin = (req, res, next) => {
 };
 
 // Permission Check Middleware - Check if user has specific permission
+// Supports hierarchical permissions: if user has parent permission, they get access to sub-permissions
 const hasPermission = (permission) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -537,11 +538,62 @@ const hasPermission = (permission) => {
     }
     
     // Check for specific permission
-    if (!req.user.groupId.permissions.includes(permission)) {
-      return res.status(403).json({ error: `Access denied. ${permission} permission required.` });
+    if (req.user.groupId.permissions.includes(permission)) {
+      return next();
     }
     
-    next();
+    // Hierarchical permission checking: If user has parent permission, grant access to sub-permissions
+    // "reports" permission grants access to all report-related endpoints
+    if (req.user.groupId.permissions.includes('reports')) {
+      const reportSubPermissions = [
+        'payment-voucher-list',      // Payment reports
+        'category-voucher-list',     // Category payment reports
+        'payment-reports'            // General payment reports
+      ];
+      if (reportSubPermissions.includes(permission)) {
+        return next();
+      }
+    }
+    
+    // "payments" permission grants access to payment-related endpoints
+    if (req.user.groupId.permissions.includes('payments')) {
+      const paymentSubPermissions = [
+        'payment-dashboard',
+        'payment-vouchers',
+        'payment-voucher-list',
+        'payment-reports',
+        'payment-edit',
+        'payment-delete'
+      ];
+      if (paymentSubPermissions.includes(permission)) {
+        return next();
+      }
+    }
+    
+    // "sales" permission grants access to sales-related endpoints
+    if (req.user.groupId.permissions.includes('sales')) {
+      const salesSubPermissions = [
+        'sales-edit',
+        'sales-delete'
+      ];
+      if (salesSubPermissions.includes(permission)) {
+        return next();
+      }
+    }
+    
+    // "category-voucher" permission grants access to category voucher endpoints
+    if (req.user.groupId.permissions.includes('category-voucher')) {
+      const categoryVoucherSubPermissions = [
+        'category-voucher-list',
+        'category-voucher-edit',
+        'category-voucher-delete'
+      ];
+      if (categoryVoucherSubPermissions.includes(permission)) {
+        return next();
+      }
+    }
+    
+    return res.status(403).json({ error: `Access denied. ${permission} permission required.` });
   };
 };
 
@@ -1595,8 +1647,15 @@ app.delete('/api/sales/:id', authenticate, hasPermission('sales-delete'), checkD
       return res.status(404).json({ error: 'Sale not found' });
     }
     
-    if (!req.user.groupId.permissions.includes('admin') && !req.user.branches.includes(sale.branchId)) {
-      return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+    // Check if user has access to this sale's branch (only if not admin)
+    if (!req.user.groupId.permissions.includes('admin')) {
+      // Convert branchId to string for comparison (handle both ObjectId and populated object)
+      const saleBranchId = sale.branchId?._id ? sale.branchId._id.toString() : sale.branchId?.toString() || sale.branchId;
+      const userBranchIds = req.user.branches.map(b => b._id ? b._id.toString() : b.toString());
+      
+      if (!userBranchIds.includes(saleBranchId)) {
+        return res.status(403).json({ error: 'Access denied. You do not have permission to access this branch.' });
+      }
     }
 
     const deleted = await Sale.findByIdAndDelete(req.params.id);
@@ -1800,9 +1859,11 @@ app.get('/api/payments/:id', authenticate, checkDatabaseConnection, async (req, 
       return res.status(404).json({ error: 'Payment not found' });
     }
     
-    // Check permissions: user needs payment-edit OR payment-voucher-list permission to view/edit
+    // Check permissions: user needs payment-edit OR payment-voucher-list OR reports permission to view/edit
+    // Reports permission grants access to view payment data for reporting purposes
     const hasPaymentPermission = req.user.groupId.permissions.includes('payment-edit') || 
                                   req.user.groupId.permissions.includes('payment-voucher-list') ||
+                                  req.user.groupId.permissions.includes('reports') ||
                                   req.user.groupId.permissions.includes('admin');
     
     if (!hasPaymentPermission) {
@@ -2161,9 +2222,11 @@ app.get('/api/category-payments/:id', authenticate, checkDatabaseConnection, asy
       return res.status(404).json({ error: 'Category payment not found' });
     }
     
-    // Check permissions: user needs category-voucher-edit OR category-voucher-list permission to view/edit
+    // Check permissions: user needs category-voucher-edit OR category-voucher-list OR reports permission to view/edit
+    // Reports permission grants access to view category payment data for reporting purposes
     const hasCategoryPermission = req.user.groupId.permissions.includes('category-voucher-edit') || 
                                    req.user.groupId.permissions.includes('category-voucher-list') ||
+                                   req.user.groupId.permissions.includes('reports') ||
                                    req.user.groupId.permissions.includes('admin');
     
     if (!hasCategoryPermission) {
