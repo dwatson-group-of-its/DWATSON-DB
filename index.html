@@ -463,6 +463,13 @@
             overflow-y: auto;
         }
         
+        /* Sidebar hidden by default on mobile */
+        @media (max-width: 767px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+        }
+        
         .sidebar .nav-link {
             color: var(--dark-text);
             padding: 12px 20px;
@@ -2026,6 +2033,28 @@
                 margin-bottom: 15px;
             }
             
+            /* Payment Voucher List - Fix date inputs on mobile */
+            #payment-voucher-list-section .filter-section .col-md-3 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+            
+            #payment-voucher-list-section .filter-section .d-flex.gap-2 {
+                flex-direction: column;
+                gap: 10px !important;
+            }
+            
+            #payment-voucher-list-section .filter-section .d-flex.gap-2 input {
+                width: 100% !important;
+            }
+            
+            #payment-voucher-list-section .form-control,
+            #payment-voucher-list-section .form-select {
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+            
             /* Payment Dashboard Charts - Full width on mobile */
             #payment-dashboard-section .row.mb-4 .col-md-8,
             #payment-dashboard-section .row.mb-4 .col-md-4 {
@@ -2069,6 +2098,28 @@
                 padding: 8px 5px;
             }
             
+            /* Payment Voucher List - Filter section fixes */
+            #payment-voucher-list-section .filter-section .col-md-3 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+            
+            #payment-voucher-list-section .filter-section .d-flex.gap-2 {
+                flex-direction: column;
+                gap: 10px !important;
+            }
+            
+            #payment-voucher-list-section .filter-section .d-flex.gap-2 input {
+                width: 100% !important;
+            }
+            
+            #payment-voucher-list-section .form-control,
+            #payment-voucher-list-section .form-select {
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+            
             /* Button groups - Stack on mobile */
             #payment-voucher-list-section .d-flex.justify-content-between {
                 flex-direction: column;
@@ -2082,7 +2133,7 @@
             
             #payment-voucher-list-section .d-flex.justify-content-between .btn {
                 width: 100%;
-                margin: 0 !important;
+                margin: 5px 0 !important;
             }
             
             /* Payment Reports - Compact layout */
@@ -2804,6 +2855,682 @@
             margin-bottom: 0;
             font-size: 0.875rem;
             color: #6c757d;
+        }
+        
+        /* ========================================
+           COMPREHENSIVE RESPONSIVE DESIGN
+           ======================================== */
+        
+        /* Mobile Menu Toggle Button */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 5px;
+            left: 10px;
+            z-index: 1000;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .mobile-menu-toggle:hover {
+            background: var(--accent-color);
+        }
+        
+        /* Large Screens (Desktops) - 1200px and above */
+        @media (min-width: 1200px) {
+            .voucher-container {
+                max-width: 900px;
+            }
+            
+            .dashboard-title {
+                font-size: 2rem;
+            }
+            
+            .card-body {
+                padding: 25px;
+            }
+        }
+        
+        /* Medium Screens (Tablets/Laptops) - 768px to 1199px */
+        @media (min-width: 768px) and (max-width: 1199px) {
+            :root {
+                --sidebar-width: 220px;
+            }
+            
+            .main-content {
+                margin-left: 220px;
+            }
+            
+            .content-section.active {
+                margin-left: 220px;
+            }
+            
+            .dashboard-title {
+                font-size: 1.6rem;
+            }
+            
+            .card-body {
+                padding: 20px;
+            }
+            
+            .table-responsive {
+                overflow-x: auto;
+            }
+            
+            .voucher-container {
+                max-width: 100%;
+                padding: 15px;
+            }
+            
+            /* Payment Voucher List - Fix date section on tablets */
+            #payment-voucher-list-section .filter-section .row > [class*="col-md-"] {
+                margin-bottom: 15px;
+            }
+            
+            #payment-voucher-list-section .filter-section .col-md-3 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+            
+            /* Date Range - Stack on tablets if needed */
+            #payment-voucher-list-section .filter-section .d-flex.gap-2 {
+                flex-direction: column;
+                gap: 10px !important;
+            }
+            
+            #payment-voucher-list-section .filter-section .d-flex.gap-2 input {
+                width: 100% !important;
+            }
+            
+            /* Ensure inputs don't overflow */
+            #payment-voucher-list-section .form-control,
+            #payment-voucher-list-section .form-select {
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+            
+            /* Button groups - Wrap on tablets */
+            #payment-voucher-list-section .d-flex.justify-content-between {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            #payment-voucher-list-section .d-flex.justify-content-between .btn {
+                flex: 1;
+                min-width: 150px;
+            }
+        }
+        
+        /* Laptop Screens - 992px to 1199px - Specific fix for date inputs */
+        @media (min-width: 992px) and (max-width: 1199px) {
+            /* Payment Voucher List - Ensure all filter columns stack properly on laptops */
+            #payment-voucher-list-section .filter-section .row > [class*="col-md-"] {
+                flex: 0 0 50%;
+                max-width: 50%;
+                margin-bottom: 15px;
+            }
+            
+            /* Date range column - Make it full width and stack dates vertically */
+            /* Target the column that contains date inputs */
+            #payment-voucher-list-section .filter-section .row > .col-md-3:last-child,
+            #payment-voucher-list-section .filter-section .row > div:last-child {
+                flex: 0 0 100% !important;
+                max-width: 100% !important;
+            }
+            
+            /* Date inputs - Stack vertically on laptops */
+            #payment-voucher-list-section .filter-section .d-flex.gap-2 {
+                flex-direction: column;
+                gap: 10px !important;
+            }
+            
+            #payment-voucher-list-section .filter-section .d-flex.gap-2 input {
+                width: 100% !important;
+                min-width: 100%;
+                max-width: 100%;
+            }
+            
+            /* Ensure all form controls fit properly */
+            #payment-voucher-list-section .filter-section .form-control,
+            #payment-voucher-list-section .filter-section .form-select {
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+        }
+        
+        /* Small Screens (Tablets) - 576px to 767px */
+        @media (min-width: 576px) and (max-width: 767px) {
+            :root {
+                --sidebar-width: 200px;
+            }
+            
+            .sidebar {
+                width: 200px;
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .content-section.active {
+                margin-left: 0;
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .navbar-brand {
+                margin-left: 50px;
+            }
+            
+            .dashboard-title {
+                font-size: 1.4rem;
+            }
+            
+            .card-body {
+                padding: 15px;
+            }
+            
+            /* Stack form columns */
+            .row > [class*="col-md-"] {
+                margin-bottom: 15px;
+            }
+            
+            /* Smaller table font */
+            .table {
+                font-size: 0.9rem;
+            }
+            
+            .table th,
+            .table td {
+                padding: 8px 10px;
+            }
+            
+            /* Payment Voucher List - Fix date section on small tablets */
+            #payment-voucher-list-section .filter-section .col-md-3 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+            
+            #payment-voucher-list-section .filter-section .d-flex.gap-2 {
+                flex-direction: column;
+                gap: 10px !important;
+            }
+            
+            #payment-voucher-list-section .filter-section .d-flex.gap-2 input {
+                width: 100% !important;
+            }
+            
+            #payment-voucher-list-section .form-control,
+            #payment-voucher-list-section .form-select {
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+            
+            #payment-voucher-list-section .d-flex.justify-content-between {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            #payment-voucher-list-section .d-flex.justify-content-between > div {
+                width: 100%;
+            }
+            
+            #payment-voucher-list-section .d-flex.justify-content-between .btn {
+                width: 100%;
+                margin: 5px 0 !important;
+            }
+        }
+        
+        /* Extra Small Screens (Mobile) - Below 576px */
+        @media (max-width: 575px) {
+            :root {
+                --sidebar-width: 280px;
+            }
+            
+            /* Mobile Menu Toggle */
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            /* Sidebar - Hidden by default on mobile */
+            .sidebar {
+                width: 280px;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 999;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .sidebar-overlay.active {
+                display: block;
+            }
+            
+            /* Main Content - Full width on mobile */
+            .main-content {
+                margin-left: 0 !important;
+            }
+            
+            .content-section,
+            .content-section.active {
+                margin-left: 0 !important;
+                padding-left: 10px;
+                padding-right: 10px;
+                padding-bottom: 15px;
+            }
+            
+            /* Navbar adjustments */
+            .navbar {
+                padding: 8px 15px;
+            }
+            
+            .navbar-brand {
+                margin-left: 45px;
+                font-size: 0.9rem;
+            }
+            
+            .navbar-logo {
+                height: 35px;
+                max-width: 150px;
+            }
+            
+            .company-name {
+                font-size: 0.8rem;
+            }
+            
+            /* Dashboard Header */
+            .dashboard-header {
+                margin-bottom: 15px;
+            }
+            
+            .dashboard-title {
+                font-size: 1.3rem;
+                margin-bottom: 8px;
+            }
+            
+            .dashboard-subtitle {
+                font-size: 0.9rem;
+            }
+            
+            /* Cards */
+            .card {
+                margin-bottom: 15px;
+            }
+            
+            .card-body {
+                padding: 15px;
+            }
+            
+            .card-header {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+            
+            /* Forms - Stack all columns */
+            .row > [class*="col-"] {
+                margin-bottom: 15px;
+            }
+            
+            .form-control,
+            .form-select {
+                font-size: 16px; /* Prevents zoom on iOS */
+                padding: 10px;
+            }
+            
+            .form-label {
+                font-size: 0.9rem;
+                margin-bottom: 5px;
+            }
+            
+            /* Buttons */
+            .btn {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+                white-space: nowrap;
+            }
+            
+            .btn-group {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+            
+            .btn-group .btn {
+                flex: 1;
+                min-width: 80px;
+            }
+            
+            /* Tables - Horizontal scroll */
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+            }
+            
+            .table {
+                font-size: 0.85rem;
+                min-width: 600px;
+            }
+            
+            .table th,
+            .table td {
+                padding: 8px 6px;
+                white-space: nowrap;
+            }
+            
+            /* Table actions - Stack buttons */
+            .table .btn {
+                padding: 4px 8px;
+                font-size: 0.8rem;
+                margin: 2px;
+            }
+            
+            /* Filter Sections */
+            .filter-section {
+                margin-bottom: 15px;
+            }
+            
+            .filter-section .row {
+                margin-left: -5px;
+                margin-right: -5px;
+            }
+            
+            .filter-section .row > [class*="col-"] {
+                padding-left: 5px;
+                padding-right: 5px;
+                margin-bottom: 10px;
+            }
+            
+            /* Stats Cards */
+            .stat-card .card-body {
+                padding: 15px;
+            }
+            
+            .stat-card h3 {
+                font-size: 1.5rem;
+            }
+            
+            .stat-card h6 {
+                font-size: 0.85rem;
+            }
+            
+            /* KPI Cards */
+            .branch-kpi-label,
+            .branch-kpi-value {
+                font-size: 0.8rem;
+                padding: 6px 8px;
+            }
+            
+            /* Payment Voucher List - Compact */
+            #payment-voucher-list-section .table {
+                font-size: 0.8rem;
+            }
+            
+            #payment-voucher-list-section .table th,
+            #payment-voucher-list-section .table td {
+                padding: 6px 4px;
+            }
+            
+            /* Payment Voucher List - Filter Section Responsive */
+            #payment-voucher-list-section .filter-section .row > [class*="col-md-"] {
+                margin-bottom: 15px;
+            }
+            
+            /* Date Range - Stack vertically on mobile */
+            #payment-voucher-list-section .filter-section .d-flex.gap-2 {
+                flex-direction: column;
+                gap: 10px !important;
+            }
+            
+            #payment-voucher-list-section .filter-section .d-flex.gap-2 input {
+                width: 100% !important;
+            }
+            
+            /* Button groups in payment voucher list */
+            #payment-voucher-list-section .d-flex.justify-content-between {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            #payment-voucher-list-section .d-flex.justify-content-between > div {
+                width: 100%;
+            }
+            
+            #payment-voucher-list-section .d-flex.justify-content-between .btn {
+                width: 100%;
+                margin: 5px 0 !important;
+            }
+            
+            /* Ensure filter inputs don't overflow */
+            #payment-voucher-list-section .form-control,
+            #payment-voucher-list-section .form-select {
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+            
+            /* Button Groups - Stack vertically */
+            .d-flex.justify-content-between {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .d-flex.justify-content-between > div {
+                width: 100%;
+            }
+            
+            .d-flex.justify-content-between .btn {
+                width: 100%;
+                margin: 0 !important;
+            }
+            
+            /* Charts */
+            .chart-container {
+                height: 250px !important;
+            }
+            
+            /* Modals */
+            .modal-dialog {
+                margin: 10px;
+                max-width: calc(100% - 20px);
+            }
+            
+            .modal-content {
+                padding: 15px;
+            }
+            
+            .modal-header {
+                padding: 10px 15px;
+            }
+            
+            .modal-body {
+                padding: 15px;
+            }
+            
+            /* Tabs */
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .nav-tabs .nav-link {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+            
+            .report-tab {
+                font-size: 0.85rem;
+                padding: 8px 12px;
+            }
+            
+            /* Badges */
+            .badge {
+                font-size: 0.75rem;
+                padding: 4px 8px;
+            }
+            
+            /* Notifications */
+            .notification {
+                top: 50px;
+                right: 10px;
+                left: 10px;
+                max-width: calc(100% - 20px);
+                padding: 12px 15px;
+                font-size: 0.9rem;
+            }
+            
+            /* Payment Voucher Print Preview - Responsive */
+            .voucher-container {
+                max-width: 100%;
+                padding: 10px;
+            }
+            
+            .header-band h1 {
+                font-size: 22pt;
+            }
+            
+            .branch-band .branch-name {
+                font-size: 16pt;
+            }
+            
+            .recipient-band .recipient-name {
+                font-size: 14pt;
+            }
+            
+            .details-table td {
+                padding: 10px 12px;
+                font-size: 13pt;
+            }
+            
+            .paid-amount-value {
+                font-size: 24pt;
+            }
+            
+            /* Summary Cards - Stack */
+            .row.mb-4 > [class*="col-"] {
+                margin-bottom: 15px;
+            }
+            
+            /* Dropdowns */
+            .dropdown-menu {
+                max-width: 100%;
+                font-size: 0.9rem;
+            }
+            
+            /* Input Groups */
+            .input-group {
+                flex-wrap: wrap;
+            }
+            
+            .input-group-text {
+                font-size: 0.9rem;
+                padding: 8px 12px;
+            }
+            
+            /* Pagination */
+            .pagination {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .page-link {
+                padding: 6px 10px;
+                font-size: 0.85rem;
+            }
+            
+            /* Permission Grid */
+            .permission-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            /* User/Groups Cards */
+            .user-info,
+            .branch-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .user-avatar {
+                margin-bottom: 10px;
+                margin-right: 0;
+            }
+            
+            /* Login Section */
+            .login-card {
+                padding: 20px;
+                margin: 20px;
+            }
+            
+            .login-logo {
+                max-width: 150px;
+            }
+            
+            /* Footer adjustments */
+            .footer {
+                padding: 15px 10px;
+                font-size: 0.85rem;
+            }
+        }
+        
+        /* Landscape Mobile - 480px to 767px in landscape */
+        @media (max-width: 767px) and (orientation: landscape) {
+            .sidebar {
+                width: 250px;
+            }
+            
+            .chart-container {
+                height: 200px !important;
+            }
+            
+            .dashboard-header {
+                margin-bottom: 10px;
+            }
+        }
+        
+        /* Very Small Screens - Below 360px */
+        @media (max-width: 360px) {
+            .dashboard-title {
+                font-size: 1.1rem;
+            }
+            
+            .card-body {
+                padding: 10px;
+            }
+            
+            .btn {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+            
+            .table {
+                font-size: 0.75rem;
+            }
+            
+            .form-control,
+            .form-select {
+                font-size: 14px;
+                padding: 8px;
+            }
         }
     </style>
 </head>
@@ -6537,6 +7264,10 @@
             document.getElementById('mainApp').style.display = 'block';
             // Start inactivity watchdog after showing app
             startInactivityWatch();
+            // Set default dates when main app is shown
+            setTimeout(() => {
+                setDefaultDates();
+            }, 100);
         }
         
         // Retry mechanism with exponential backoff
@@ -6796,6 +7527,9 @@
                 // Update UI based on permissions
                 updateSidebarPermissions();
                 updateCurrentUserUI();
+                
+                // Set default dates after data is loaded
+                setDefaultDates();
                 
                 // Load dashboard only if user has dashboard permission
                 const permissions = appData.currentUser?.permissions || [];
@@ -8192,6 +8926,9 @@
                 console.error('Error resetting scroll position:', error);
             }
             
+            // Set default dates to current date when section is shown
+            setDefaultDates();
+            
             // Initialize section-specific content
             switch(sectionId) {
                 case 'dashboard':
@@ -8285,21 +9022,24 @@
                     // Scroll to top before loading
                     setTimeout(() => {
                         window.scrollTo(0, 0);
-                        // Don't auto-load vouchers - user must select dates first
-                        // Only populate filters, don't load data automatically
+                        // Populate filters
                         populatePaymentModuleFilters();
                         populateCategoryVoucherListTabFilters();
                         
-                        // Clear/hide existing data if no dates selected
+                        // Set default dates and auto-load if dates are set
+                        setDefaultDates();
                         const fromDate = document.getElementById('paymentVoucherListFromDate')?.value || '';
                         const toDate = document.getElementById('paymentVoucherListToDate')?.value || '';
-                        if (!fromDate && !toDate) {
+                        if (fromDate || toDate) {
+                            // Auto-load vouchers with default dates
+                            loadPaymentVoucherList();
+                        } else {
                             const tbody = document.querySelector('#payment-voucher-list-section table tbody');
                             if (tbody) {
                                 tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">Please select at least one date (From or To) to view voucher list</td></tr>';
                             }
                         }
-                    }, 0);
+                    }, 100);
                     break;
                 case 'category-voucher-simple-list':
                     setTimeout(() => {
@@ -18864,6 +19604,58 @@ sortedBranches.forEach(data => {
             const month = String(d.getMonth() + 1).padStart(2, '0');
             const day = String(d.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
+        }
+        
+        // Get current date in YYYY-MM-DD format
+        function getCurrentDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // Set default dates to current date for all date inputs
+        function setDefaultDates() {
+            const currentDate = getCurrentDate();
+            
+            // List of all date input IDs that should default to current date
+            const dateInputIds = [
+                // Sales section
+                'salesListDateFrom',
+                'salesListDateTo',
+                'saleDate',
+                // Payment vouchers
+                'paymentVoucherDate',
+                'categoryVoucherDate',
+                // Payment voucher list
+                'paymentVoucherListFromDate',
+                'paymentVoucherListToDate',
+                // Category voucher lists
+                'categoryVoucherListFromDate',
+                'categoryVoucherListToDate',
+                'categoryVoucherSimpleListFromDate',
+                'categoryVoucherSimpleListToDate',
+                // Reports
+                'paymentReportFromDate',
+                'paymentReportToDate',
+                'paymentReportFromDateFilter',
+                'paymentReportToDateFilter',
+                'salesReportDateFrom',
+                'salesReportDateTo',
+                'comparisonReportDateFrom',
+                'comparisonReportDateTo',
+                'datewiseReportDateFrom',
+                'datewiseReportDateTo'
+            ];
+            
+            // Set default date for each input if it's empty
+            dateInputIds.forEach(inputId => {
+                const input = document.getElementById(inputId);
+                if (input && !input.value) {
+                    input.value = currentDate;
+                }
+            });
         }
         
         // ========================================
