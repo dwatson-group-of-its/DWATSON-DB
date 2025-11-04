@@ -11249,7 +11249,7 @@ sortedBranches.forEach(data => {
                 
                 // Apply method filter if provided
                 if (methodFilter) {
-                    const norm = (m) => (m || 'Cash').toLowerCase();
+                    const norm = (m) => String(m || 'Cash').toLowerCase();
                     const target = norm(methodFilter);
                     filteredPayments = filteredPayments.filter(p => norm(p.paymentMethod) === target);
                 }
@@ -11257,10 +11257,12 @@ sortedBranches.forEach(data => {
                 if (search) {
                     const searchLower = search.toLowerCase();
                     filteredPayments = filteredPayments.filter(p => {
-                        return (p.voucherNumber && p.voucherNumber.toLowerCase().includes(searchLower)) ||
-                               (p.supplier && p.supplier.toLowerCase().includes(searchLower)) ||
-                               (p.description && p.description.toLowerCase().includes(searchLower)) ||
-                               (p.branchId && p.branchId.name && p.branchId.name.toLowerCase().includes(searchLower));
+                        return (p.voucherNumber && String(p.voucherNumber).toLowerCase().includes(searchLower)) ||
+                               (p.supplierId?.name && String(p.supplierId.name).toLowerCase().includes(searchLower)) ||
+                               (p.supplier && String(p.supplier).toLowerCase().includes(searchLower)) ||
+                               (p.description && String(p.description).toLowerCase().includes(searchLower)) ||
+                               (p.branchId?.name && String(p.branchId.name).toLowerCase().includes(searchLower)) ||
+                               (p.paymentMethod && String(p.paymentMethod).toLowerCase().includes(searchLower));
                     });
                 }
                 
@@ -11717,7 +11719,26 @@ sortedBranches.forEach(data => {
                 const statusBg = '#f0f9f4';
                 const displayStatus = 'PAID';
                 
-                // Create complete HTML document for print (matching print selected vouchers list structure and colors)
+                // Format date as DD-MMM-YYYY (e.g., 02-Nov-2025)
+                const voucherDate = new Date(voucher.date);
+                const day = String(voucherDate.getDate()).padStart(2, '0');
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const month = monthNames[voucherDate.getMonth()];
+                const year = voucherDate.getFullYear();
+                const formattedDate = `${day}-${month}-${year}`;
+                
+                // Get payment method details
+                const paymentMethod = voucher.paymentMethod || 'Cash';
+                const remarks = voucher.description || voucher.remarks || '';
+                const chequeNumber = voucher.chequeNumber || '';
+                
+                // Format recipient name (uppercase with spaces)
+                const recipientName = entityName.toUpperCase().replace(/[^A-Z0-9\s]/g, '');
+                
+                // Format branch name (uppercase)
+                const formattedBranchName = branchName.toUpperCase();
+                
+                // Create complete HTML document for print (matching the image design exactly)
                 const printContent = `
 <!DOCTYPE html>
 <html>
@@ -11732,194 +11753,312 @@ sortedBranches.forEach(data => {
         
         @page {
             size: A4 portrait;
-            margin: 0.5in;
+            margin: 0.3in;
         }
         
         body {
-            font-family: Arial, sans-serif;
+            font-family: Calibri, Arial, sans-serif;
             font-size: 12pt;
             line-height: 1.4;
             color: #000;
             background: #fff;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
         }
         
-        .print-header {
+        .voucher-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            position: relative;
+        }
+        
+        .header-band {
+            background: #000;
+            color: #fff;
+            padding: 8px 20px;
             text-align: center;
-            margin-bottom: 30px;
-            padding: 30px 25px;
-            background: #00685c;
-            color: #ffffff;
-            border-bottom: 3px solid #000;
+            vertical-align: middle;
         }
         
-        .print-header h2 {
+        .header-band h1 {
             margin: 0;
-            font-size: 24pt;
+            font-size: 28pt;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #fff;
+            text-transform: uppercase;
+            font-family: Calibri, Arial, sans-serif;
+            line-height: 1.2;
+        }
+        
+        .header-band .divider-line {
+            width: 100%;
+            height: 1px;
+            background: #fff;
+            margin-top: 5px;
+        }
+        
+        .branch-band {
+            background: #000;
+            color: #fff;
+            padding: 8px 20px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        .branch-band .branch-name {
+            margin: 0;
+            font-size: 20pt;
             font-weight: bold;
             letter-spacing: 1px;
-            color: #ffffff;
-        }
-        
-        .print-header .voucher-title {
-            margin: 10px 0 0 0;
-            font-size: 16pt;
-            font-weight: bold;
-            color: #ffffff;
-            letter-spacing: 2px;
+            color: #fff;
             text-transform: uppercase;
+            font-family: Calibri, Arial, sans-serif;
+            line-height: 1.2;
         }
         
-        .print-header .voucher-subtitle {
-            margin: 8px 0 0 0;
-            font-size: 10pt;
-            color: #ffffff;
+        .branch-band .divider-line {
+            width: 100%;
+            height: 1px;
+            background: #fff;
+            margin-top: 5px;
         }
         
-        table {
+        .recipient-band {
+            background: #000;
+            color: #fff;
+            padding: 8px 20px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        .recipient-band .recipient-name {
+            margin: 0;
+            font-size: 18pt;
+            font-weight: bold;
+            letter-spacing: 1px;
+            color: #fff;
+            text-transform: uppercase;
+            font-family: Calibri, Arial, sans-serif;
+            line-height: 1.2;
+        }
+        
+        .details-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        
+        .main-body-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        
+        .vertical-divider {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 2px;
+            background: #fff;
+            height: 100%;
+            transform: translateX(-50%);
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .details-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
-            border: 1px solid #333;
-            background: white;
-            table-layout: fixed;
+            margin: 0;
+            position: relative;
         }
         
-        table th {
-            padding: 12px;
-            border: 1px solid #333;
+        .details-table td {
+            padding: 8px 15px;
+            border: 1px solid #000;
+            font-size: 15pt;
+            text-align: center;
+            vertical-align: middle;
+            font-family: Calibri, Arial, sans-serif;
+        }
+        
+        .details-table td.label {
+            background: #fff;
+            color: #000;
+            font-weight: normal;
+            width: 50%;
+        }
+        
+        .details-table td.value {
+            background: #fff;
+            color: #000;
+            width: 50%;
+        }
+        
+        .details-table td.header {
+            background: #000;
+            color: #fff;
             font-weight: bold;
-            color: #ffffff;
-            font-size: 11pt;
-            text-align: left;
-            background-color: #00685c;
+            text-transform: uppercase;
+            font-size: 13pt;
+            padding: 8px 15px;
         }
         
-        table td {
-            padding: 12px;
-            border: 1px solid #333;
-            font-size: 11pt;
-            word-wrap: break-word;
+        .details-table td.paid-amount-cell {
+            background: #000;
+            color: #fff;
+            padding: 6px 20px;
+            text-align: center;
+            vertical-align: middle;
+            font-family: Calibri, Arial, sans-serif;
+            width: 50%;
+            border: 1px solid #000;
+            border-bottom: none;
+            position: relative;
         }
         
-        tr:nth-child(even) {
-            background-color: #f8f9fa;
+        .paid-amount-cell-wrapper {
+            position: relative;
+            padding-bottom: 3px;
         }
         
-        .summary-section {
-            border: 2px solid #000;
-            padding: 25px;
-            margin-top: 35px;
-            background: #ffffff;
+        .paid-amount-cell-wrapper::after {
+            display: none;
         }
         
-        .signature-section {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 60px;
-            padding-top: 35px;
-            border-top: 2px solid #333;
-        }
-        
-        .signature-box {
-            width: 45%;
+        .paid-amount-label {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #fff;
+            text-transform: uppercase;
             text-align: center;
         }
         
-        .signature-box p {
-            margin: 0 0 12px 0;
+        .paid-amount-value {
+            font-size: 32pt;
             font-weight: bold;
-            color: #000;
-            font-size: 12pt;
-            letter-spacing: 0.5px;
+            color: #fff;
+            text-align: center;
+        }
+        
+        
+        .signature-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0;
+        }
+        
+        .signature-table td {
+            padding: 20px 15px 10px 15px;
+            border: 1px solid #000;
+            text-align: center;
+            vertical-align: middle;
+            width: 50%;
+            height: 100px;
+            background: #fff;
+        }
+        
+        .signature-cell {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            height: 100%;
+            padding-bottom: 5px;
         }
         
         .signature-line {
-            border-top: 2px solid #000;
-            margin-top: 60px;
-            padding-top: 8px;
+            width: 60%;
+            height: 1px;
+            background: #000;
+            margin: 0 auto 18px;
         }
         
-        .signature-line p {
+        .signature-label {
             margin: 0;
+            font-size: 11pt;
+            font-weight: normal;
             color: #000;
-            font-size: 10pt;
+            text-transform: uppercase;
             letter-spacing: 0.5px;
+            font-family: Calibri, Arial, sans-serif;
         }
     </style>
 </head>
 <body>
-    <!-- Professional Header (matching print selected vouchers list) -->
-    <div class="print-header">
-        <h2>${companyName}</h2>
-        <p class="voucher-title">PAYMENT VOUCHER</p>
-        <p class="voucher-subtitle">Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-    </div>
-    
-    <!-- Branch and Supplier Info (matching print selected vouchers) -->
-    <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border: 1px solid #333;">
-        <div style="display: flex; justify-content: space-between; font-size: 13pt; font-weight: bold; color: #000;">
-            <div><span style="color: #00685c;">Branch:</span> <span>${branchName}</span></div>
-            <div><span style="color: #00685c;">${entityLabel}:</span> <span>${entityName}</span></div>
+    <div class="voucher-container">
+        <!-- Main Title: PAYMENT VOUCHER -->
+        <div class="header-band">
+            <h1>PAYMENT VOUCHER</h1>
+            <div class="divider-line"></div>
         </div>
-    </div>
-    
-    <!-- Voucher Table (matching print selected vouchers list - same columns and rows) -->
-    <table>
-        <thead>
-            <tr style="background: #00685c;">
-                <th style="text-align: center; width: 4%; padding: 10px 6px;">#</th>
-                <th style="text-align: left; width: 12%; padding: 10px 6px;">V.No</th>
-                <th style="text-align: left; width: 10%; padding: 10px 6px;">Date</th>
-                <th style="text-align: left; width: 18%; padding: 10px 6px;">${entityLabel}</th>
-                <th style="text-align: center; width: 10%; padding: 10px 6px;">PM</th>
-                <th style="text-align: center; width: 10%; padding: 10px 6px;">Status</th>
-                <th style="text-align: left; width: 28%; padding: 10px 6px;">Description</th>
-                <th style="text-align: right; width: 16%; padding: 10px 6px;">Amount</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr style="background-color: #ffffff; vertical-align: top;">
-                <td style="padding: 10px 6px; border: 1px solid #333; font-weight: bold; color: #000; text-align: center; font-size: 11pt; width: 4%; vertical-align: top;">1</td>
-                <td style="padding: 10px 6px; border: 1px solid #333; font-weight: bold; color: #000; font-size: 11pt; width: 12%; vertical-align: top;">${voucherNum}</td>
-                <td style="padding: 10px 6px; border: 1px solid #333; color: #000; font-size: 11pt; width: 10%; vertical-align: top;">${formatDate(voucher.date)}</td>
-                <td style="padding: 10px 6px; border: 1px solid #333; color: #000; font-size: 11pt; width: 18%; vertical-align: top;">${entityName}</td>
-                <td style="padding: 10px 6px; border: 1px solid #333; text-align: center; color: #000; font-size: 11pt; width: 10%; vertical-align: top;">${voucher.paymentMethod || 'Cash'}</td>
-                <td style="padding: 10px 6px; border: 1px solid #333; text-align: center; background: ${statusBg}; color: ${statusColor}; font-weight: bold; font-size: 11pt; text-transform: uppercase; width: 10%; vertical-align: top;">${displayStatus}</td>
-                <td style="padding: 10px 6px; border: 1px solid #333; color: #000; font-size: 11pt; width: 28%; white-space: normal; word-wrap: break-word; overflow-wrap: break-word; vertical-align: top; line-height: 1.4;">${voucher.description || '-'}</td>
-                <td style="padding: 10px 6px; border: 1px solid #333; text-align: right; font-weight: bold; color: #000; font-size: 11pt; width: 16%; white-space: nowrap; vertical-align: top;">${voucher.amount.toLocaleString()}</td>
-            </tr>
-        </tbody>
-    </table>
-    
-    <!-- Summary Section (matching print selected vouchers) -->
-    <div class="summary-section">
-        <h3 style="text-align:center; margin-bottom:25px; text-transform:uppercase; font-size:16pt; font-weight:bold; color:#000; letter-spacing:2px; padding-bottom:15px; border-bottom:2px solid #333;">SUMMARY</h3>
-        <table style="width: 100%; border-collapse: collapse;">
-            <tr style="background-color: #f0f0f0;">
-                <td style="padding: 12px; border: 1px solid #333; font-weight: bold; width: 30%; background: #f8f9fa; color: #000; font-size: 12pt;">Total Vouchers:</td>
-                <td style="padding: 12px; border: 1px solid #333; width: 20%; color: #000; font-weight: bold; font-size: 12pt;">1</td>
-                <td style="padding: 12px; border: 1px solid #333; font-weight: bold; width: 30%; background: #f8f9fa; color: #000; font-size: 12pt;">Total Amount:</td>
-                <td style="padding: 12px; border: 1px solid #333; font-weight: bold; width: 20%; text-align: right; color: #000; font-size: 12pt;">${voucher.amount.toLocaleString()}</td>
+        
+        <!-- Branch Name Row -->
+        <div class="branch-band">
+            <div class="branch-name">${formattedBranchName}</div>
+            <div class="divider-line"></div>
+        </div>
+        
+        <!-- Recipient/Payee Information -->
+        <div class="recipient-band">
+            <div class="recipient-name">${recipientName}</div>
+        </div>
+        
+        <!-- Details and Paid Amount Section with Vertical Divider -->
+        <div class="main-body-wrapper">
+            <div class="vertical-divider"></div>
+            <div class="details-wrapper">
+                <table class="details-table">
+                    <tr>
+                        <td class="label">Date:</td>
+                        <td class="value">${formattedDate}</td>
+                    </tr>
+                    <tr>
+                        <td class="header">Method of Payment</td>
+                        <td class="header">Remarks</td>
+                    </tr>
+                    <tr>
+                        <td class="value">${paymentMethod === 'Cheque' ? 'Cheque Payment' : paymentMethod}</td>
+                        <td class="value">${paymentMethod === 'Cheque' && chequeNumber ? chequeNumber : (remarks ? remarks.toUpperCase() : '-')}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <!-- Paid Amount Section -->
+            <table class="details-table">
+                <tr>
+                    <td class="paid-amount-cell">
+                        <div class="paid-amount-cell-wrapper">
+                            <div class="paid-amount-label">Paid Amount</div>
+                        </div>
+                    </td>
+                    <td class="paid-amount-cell">
+                        <div class="paid-amount-cell-wrapper">
+                            <div class="paid-amount-value">${voucher.amount.toLocaleString()}</div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <!-- Signature Section -->
+        <table class="signature-table">
+            <tr>
+                <td>
+                    <div class="signature-cell">
+                        <div class="signature-line"></div>
+                        <p class="signature-label">PREPARED BY</p>
+                    </div>
+                </td>
+                <td>
+                    <div class="signature-cell">
+                        <div class="signature-line"></div>
+                        <p class="signature-label">RECEIVED BY</p>
+                    </div>
+                </td>
             </tr>
         </table>
-    </div>
-    
-    <!-- Signature Section (matching print selected vouchers list) -->
-    <div class="signature-section">
-        <div class="signature-box">
-            <p>PREPARED BY</p>
-            <div class="signature-line">
-                <p>Signature & Date</p>
-            </div>
-        </div>
-        <div class="signature-box">
-            <p>CASH RECEIVED BY</p>
-            <div class="signature-line">
-                <p>Signature & Date</p>
-            </div>
-        </div>
     </div>
 </body>
 </html>
