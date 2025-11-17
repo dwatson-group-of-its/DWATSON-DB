@@ -164,7 +164,15 @@ function initialiseMobileMenu() {
             return;
         }
 
+        // Load menu items immediately to ensure they're available
+        loadMobileMenu();
+
         const openMenu = () => {
+            // Ensure menu is loaded before opening
+            if (!panel.dataset.loaded) {
+                loadMobileMenu();
+                panel.dataset.loaded = 'true';
+            }
             panel.classList.add('active');
             document.body.classList.add('mobile-menu-open');
         };
@@ -175,29 +183,52 @@ function initialiseMobileMenu() {
         };
 
         // Toggle menu when hamburger button is clicked
-        toggle.addEventListener('click', () => {
+        toggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             if (panel.classList.contains('active')) {
                 closeMenu();
             } else {
                 openMenu();
             }
         });
+        
         if (closeBtn) {
-            closeBtn.addEventListener('click', closeMenu);
+            closeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                closeMenu();
+            });
         }
 
-        // Close when clicking outside panel
+        // Close when clicking outside panel (on the overlay)
         panel.addEventListener('click', (e) => {
             if (e.target === panel) {
                 closeMenu();
             }
         });
 
-        // Close menu when a link is clicked
+        // Close menu when a link is clicked (but not dropdown toggles)
         panel.addEventListener('click', (e) => {
             const link = e.target.closest('a');
-            if (link && link.getAttribute('href')) {
-                closeMenu();
+            if (link && link.getAttribute('href') && !link.classList.contains('dropdown-toggle')) {
+                // Only close if it's not a dropdown toggle and has a real href
+                const href = link.getAttribute('href');
+                if (href && href !== '#' && !link.closest('.has-children .dropdown-toggle')) {
+                    closeMenu();
+                }
+            }
+        });
+        
+        // Handle dropdown expansion in mobile menu
+        panel.addEventListener('click', (e) => {
+            const dropdownLink = e.target.closest('.mobile-menu-list .has-children > .cms-item-title');
+            if (dropdownLink && dropdownLink.closest('.has-children')) {
+                const menuItem = dropdownLink.closest('.menu-item');
+                if (menuItem && menuItem.classList.contains('has-children')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    menuItem.classList.toggle('expanded');
+                }
             }
         });
     } catch (err) {
@@ -1295,8 +1326,25 @@ function initialiseGlobalDelegates() {
             event.stopPropagation();
             const panel = document.getElementById('mobileMenuPanel');
             if (panel) {
+                // Load menu items if not already loaded
+                if (!panel.dataset.loaded) {
+                    loadMobileMenu();
+                    panel.dataset.loaded = 'true';
+                }
                 panel.classList.toggle('active');
                 document.body.classList.toggle('mobile-menu-open');
+            }
+            return false;
+        }
+        
+        // Handle mobile menu dropdown toggles
+        const mobileDropdownToggle = event.target.closest('.mobile-menu-list .dropdown-toggle');
+        if (mobileDropdownToggle) {
+            event.preventDefault();
+            event.stopPropagation();
+            const menuItem = mobileDropdownToggle.closest('.menu-item');
+            if (menuItem) {
+                menuItem.classList.toggle('expanded');
             }
             return false;
         }
@@ -1398,21 +1446,78 @@ function loadMobileMenu() {
     const mobileMenuList = document.getElementById('mobileMenuList');
     if (!mobileMenuList) return;
 
-    // Clone main menu items
+    // Clone main menu items from desktop navigation
     const mainMenu = document.getElementById('menu-main-menu');
     if (mainMenu) {
-        mobileMenuList.innerHTML = Array.from(mainMenu.children).map(li => {
+        // Clear existing items
+        mobileMenuList.innerHTML = '';
+        
+        // Clone each menu item
+        Array.from(mainMenu.children).forEach(li => {
             const clone = li.cloneNode(true);
-            // Remove dropdown toggle behavior for mobile
+            
+            // Fix dropdown toggles for mobile - make them expandable
             const dropdownToggle = clone.querySelector('.dropdown-toggle');
             if (dropdownToggle) {
-                dropdownToggle.addEventListener('click', function(e) {
+                // Remove Bootstrap dropdown attributes
+                dropdownToggle.removeAttribute('data-bs-toggle');
+                dropdownToggle.removeAttribute('id');
+                
+                // Change href to # if it's just #
+                if (dropdownToggle.getAttribute('href') === '#') {
+                    dropdownToggle.setAttribute('href', '#');
+                }
+                
+                // Add click handler for mobile expansion
+                const toggleElement = dropdownToggle;
+                toggleElement.addEventListener('click', function(e) {
                     e.preventDefault();
+                    e.stopPropagation();
                     clone.classList.toggle('expanded');
                 });
             }
-            return clone.outerHTML;
-        }).join('');
+            
+            // Remove any Bootstrap-specific classes that might interfere
+            clone.querySelectorAll('[data-bs-toggle]').forEach(el => {
+                el.removeAttribute('data-bs-toggle');
+            });
+            
+            mobileMenuList.appendChild(clone);
+        });
+        
+        // Also sync dropdown content if available
+        syncMobileMenuDropdowns();
+    }
+}
+
+// Sync dropdown content from desktop to mobile menu
+function syncMobileMenuDropdowns() {
+    // Sync Makeup categories
+    const desktopMakeup = document.getElementById('makeupMenu');
+    const mobileMakeup = document.getElementById('mobileMakeupMenu');
+    if (desktopMakeup && mobileMakeup) {
+        mobileMakeup.innerHTML = desktopMakeup.innerHTML;
+    }
+    
+    // Sync Skincare categories
+    const desktopSkincare = document.getElementById('skincareMenu');
+    const mobileSkincare = document.getElementById('mobileSkincareMenu');
+    if (desktopSkincare && mobileSkincare) {
+        mobileSkincare.innerHTML = desktopSkincare.innerHTML;
+    }
+    
+    // Sync Haircare categories
+    const desktopHaircare = document.getElementById('haircareMenu');
+    const mobileHaircare = document.getElementById('mobileHaircareMenu');
+    if (desktopHaircare && mobileHaircare) {
+        mobileHaircare.innerHTML = desktopHaircare.innerHTML;
+    }
+    
+    // Sync Departments
+    const desktopDepartments = document.getElementById('departmentsMenu');
+    const mobileDepartments = document.getElementById('mobileDepartmentsMenu');
+    if (desktopDepartments && mobileDepartments) {
+        mobileDepartments.innerHTML = desktopDepartments.innerHTML;
     }
 }
 
