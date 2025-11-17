@@ -89,6 +89,39 @@
         font-size: 18px;
         margin-left: 10px;
     }
+    
+    /* Mobile menu button - ensure it's clickable */
+    .js-mobile-menu {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 10001;
+        position: relative;
+        background: transparent !important;
+        border: none !important;
+        padding: 8px !important;
+    }
+    
+    .js-mobile-menu:active,
+    .js-mobile-menu:focus {
+        outline: 2px solid rgba(255, 255, 255, 0.5);
+        outline-offset: 2px;
+    }
+    
+    /* Mobile menu panel - ensure it works */
+    .mobile-menu-panel {
+        display: block !important;
+        visibility: visible !important;
+    }
+    
+    .mobile-menu-panel:not(.active) {
+        left: -100% !important;
+    }
+    
+    .mobile-menu-panel.active {
+        left: 0 !important;
+    }
 }
 
 /* ============ Hero Slider Mobile Fixes ============ */

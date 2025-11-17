@@ -1288,11 +1288,16 @@ function initialiseGlobalDelegates() {
             return false;
         }
 
-        // Handle mobile menu toggle
+        // Handle mobile menu toggle - use the existing panel
         const mobileMenuTrigger = event.target.closest('.js-mobile-menu');
         if (mobileMenuTrigger) {
             event.preventDefault();
-            toggleMobileMenu();
+            event.stopPropagation();
+            const panel = document.getElementById('mobileMenuPanel');
+            if (panel) {
+                panel.classList.toggle('active');
+                document.body.classList.toggle('mobile-menu-open');
+            }
             return false;
         }
 
@@ -1381,36 +1386,12 @@ function initialiseGlobalDelegates() {
 }
 
 function toggleMobileMenu() {
-    // Create mobile menu if it doesn't exist
-    let mobileMenu = document.getElementById('mobile-menu-panel');
-    if (!mobileMenu) {
-        mobileMenu = document.createElement('div');
-        mobileMenu.id = 'mobile-menu-panel';
-        mobileMenu.className = 'mobile-menu-panel';
-        
-        const menuContent = document.createElement('div');
-        menuContent.className = 'mobile-menu-content';
-        
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'mobile-menu-close';
-        closeBtn.innerHTML = '×';
-        closeBtn.onclick = () => toggleMobileMenu();
-        
-        const menuList = document.createElement('ul');
-        menuList.className = 'mobile-menu-list';
-        menuList.id = 'mobileMenuList';
-        
-        menuContent.appendChild(closeBtn);
-        menuContent.appendChild(menuList);
-        mobileMenu.appendChild(menuContent);
-        document.body.appendChild(mobileMenu);
-        
-        // Populate mobile menu
-        loadMobileMenu();
+    // Use the existing mobile menu panel from HTML
+    const mobileMenu = document.getElementById('mobileMenuPanel');
+    if (mobileMenu) {
+        mobileMenu.classList.toggle('active');
+        document.body.classList.toggle('mobile-menu-open');
     }
-    
-    mobileMenu.classList.toggle('active');
-    document.body.classList.toggle('mobile-menu-open');
 }
 
 function loadMobileMenu() {
