@@ -2631,11 +2631,6 @@ body.mobile-menu-open {
     align-items: center;
     justify-content: center;
     z-index: 10001;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .mobile-menu-close:hover {
@@ -2717,10 +2712,13 @@ body.mobile-menu-open {
     color: #ffffff;
     text-decoration: none;
     font-size: 14px;
-    text-transform: none;
-    font-size: 14px;
     font-weight: 400;
     text-transform: none;
+}
+
+.mobile-menu-list .menu-item .dropdown-menu li a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
 }
 
 /* ============ Product Item Styles (Matching dwatsoncosmetics.pk) ============ */
