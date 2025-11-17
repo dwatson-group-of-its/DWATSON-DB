@@ -171,12 +171,33 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const product = await Product.findById(req.params.id)
-            .populate('category', 'name _id')
+            .populate('category', 'name _id department')
             .populate('department', 'name _id')
             .populate('imageUpload');
         
         if (!product || !product.isActive) {
             return res.status(404).json({ message: 'Product not found' });
+        }
+
+        // Validate and fix department-category relationship if needed
+        if (product.category && product.department) {
+            const categoryDeptId = product.category.department?.toString() || product.category.department;
+            const productDeptId = product.department._id?.toString() || product.department.toString();
+            
+            if (categoryDeptId !== productDeptId) {
+                // Fix the mismatch - use category's department
+                console.warn(`⚠️  Product ${product._id} has department mismatch. Auto-fixing...`);
+                product.department = product.category.department;
+                await product.save();
+                // Re-populate after save
+                await product.populate('department', 'name _id');
+            }
+        } else if (!product.department && product.category?.department) {
+            // Missing department - set it from category
+            console.warn(`⚠️  Product ${product._id} missing department. Auto-fixing from category...`);
+            product.department = product.category.department;
+            await product.save();
+            await product.populate('department', 'name _id');
         }
 
         res.json(product);

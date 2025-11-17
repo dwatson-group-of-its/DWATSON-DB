@@ -71,10 +71,27 @@ function renderProduct(product) {
     const finalPrice = product.price * (1 - (product.discount || 0) / 100);
     const hasDiscount = product.discount > 0;
     const isSoldOut = product.stockQuantity === 0 || product.isOutOfStock || false;
+    
+    // Safely extract category and department info
     const categoryName = product.category?.name || 'Uncategorized';
     const departmentName = product.department?.name || 'Unknown';
-    const departmentId = product.department?._id || product.department;
-    const categoryId = product.category?._id || product.category;
+    
+    // Get IDs - handle both populated and non-populated cases
+    let departmentId = null;
+    let categoryId = null;
+    
+    if (product.department) {
+        departmentId = product.department._id?.toString() || product.department.toString();
+    }
+    
+    if (product.category) {
+        categoryId = product.category._id?.toString() || product.category.toString();
+        
+        // If category has department info, use it as fallback
+        if (!departmentId && product.category.department) {
+            departmentId = product.category.department._id?.toString() || product.category.department.toString();
+        }
+    }
     
     // Hide loading, show content
     $('#productLoading').hide();
@@ -93,15 +110,21 @@ function renderProduct(product) {
     }
     $('#productBadges').html(badgesHtml);
     
-    // Breadcrumb
+    // Breadcrumb - Always show Department > Category > Product hierarchy
     let breadcrumbHtml = '<li class="breadcrumb-item"><a href="/">Home</a></li>';
+    
+    // Department should always come first (Department > Category > Product)
     if (departmentId) {
-        breadcrumbHtml += `<li class="breadcrumb-item"><a href="/department/${departmentId}">${departmentName}</a></li>`;
+        breadcrumbHtml += `<li class="breadcrumb-item"><a href="/department.html?id=${departmentId}">${departmentName}</a></li>`;
     }
+    
+    // Category comes after department
     if (categoryId) {
-        breadcrumbHtml += `<li class="breadcrumb-item"><a href="/category/${categoryId}">${categoryName}</a></li>`;
+        breadcrumbHtml += `<li class="breadcrumb-item"><a href="/category.html?id=${categoryId}">${categoryName}</a></li>`;
     }
-    breadcrumbHtml += `<li class="breadcrumb-item active">${product.name}</li>`;
+    
+    // Product name is the active item
+    breadcrumbHtml += `<li class="breadcrumb-item active" aria-current="page">${product.name}</li>`;
     $('#productBreadcrumb').html(breadcrumbHtml);
     
     // Product Name
@@ -118,9 +141,18 @@ function renderProduct(product) {
     // Product Description
     $('#productDescription').html(product.description || 'No description available.');
     
-    // Product Meta
-    $('#productCategory').html(`<a href="/category/${categoryId}">${categoryName}</a>`);
-    $('#productDepartment').html(`<a href="/department/${departmentId}">${departmentName}</a>`);
+    // Product Meta - Navigation links to department and category
+    if (categoryId) {
+        $('#productCategory').html(`<a href="/category.html?id=${categoryId}">${categoryName}</a>`);
+    } else {
+        $('#productCategory').html(`<span class="text-muted">${categoryName}</span>`);
+    }
+    
+    if (departmentId) {
+        $('#productDepartment').html(`<a href="/department.html?id=${departmentId}">${departmentName}</a>`);
+    } else {
+        $('#productDepartment').html(`<span class="text-muted">${departmentName}</span>`);
+    }
     
     const stockText = isSoldOut ? '<span class="text-danger">Out of Stock</span>' : 
                      (product.stockQuantity ? `<span class="text-success">${product.stockQuantity} available</span>` : 

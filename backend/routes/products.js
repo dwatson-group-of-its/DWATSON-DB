@@ -342,7 +342,14 @@ router.put('/:id', adminAuth, async (req, res) => {
                 return res.status(400).json({ message: 'Category does not have an associated department' });
             }
             product.category = req.body.category;
+            // Department will be auto-synced by pre-save hook, but set it here too for immediate consistency
             product.department = category.department;
+        } else if (!product.department && product.category) {
+            // If category exists but department is missing, fetch and set it
+            const category = await Category.findById(product.category);
+            if (category && category.department) {
+                product.department = category.department;
+            }
         }
 
         product.images = Array.isArray(req.body.images) ? req.body.images : product.images;

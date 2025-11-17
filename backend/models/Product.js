@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Category = require('./Category');
 
 const ProductSchema = new mongoose.Schema({
     name: {
@@ -103,5 +104,69 @@ const ProductSchema = new mongoose.Schema({
         default: Date.now
     }
 });
+
+// Pre-save hook: Auto-sync department from category
+// This ensures Department > Category > Product hierarchy is always maintained
+ProductSchema.pre('save', async function(next) {
+    // Only run if category is modified or department is not set
+    if (this.isModified('category') || !this.department) {
+        try {
+            // Populate category if it's just an ID
+            let category;
+            if (this.category && typeof this.category === 'object' && this.category.department) {
+                // Already populated
+                category = this.category;
+            } else {
+                // Need to fetch category
+                category = await Category.findById(this.category);
+            }
+            
+            if (!category) {
+                return next(new Error('Invalid category: Category not found'));
+            }
+            
+            if (!category.department) {
+                return next(new Error('Invalid category: Category does not have an associated department'));
+            }
+            
+            // Auto-set department from category's department
+            this.department = category.department;
+            console.log(`✅ Auto-synced department from category for product: ${this.name}`);
+        } catch (error) {
+            return next(error);
+        }
+    } else if (this.isModified('department') && this.category) {
+        // Validate that department matches category's department
+        try {
+            let category;
+            if (this.category && typeof this.category === 'object' && this.category.department) {
+                category = this.category;
+            } else {
+                category = await Category.findById(this.category);
+            }
+            
+            if (category && category.department) {
+                const categoryDeptId = category.department.toString();
+                const productDeptId = this.department.toString();
+                
+                if (categoryDeptId !== productDeptId) {
+                    // Auto-correct: use category's department
+                    console.warn(`⚠️  Department mismatch detected for product "${this.name}". Auto-correcting to match category's department.`);
+                    this.department = category.department;
+                }
+            }
+        } catch (error) {
+            // Log but don't fail - let validation handle it
+            console.warn('Warning: Could not validate department-category relationship:', error.message);
+        }
+    }
+    
+    next();
+});
+
+// Index for faster queries
+ProductSchema.index({ department: 1, category: 1 });
+ProductSchema.index({ category: 1 });
+ProductSchema.index({ department: 1 });
 
 module.exports = mongoose.model('Product', ProductSchema);
