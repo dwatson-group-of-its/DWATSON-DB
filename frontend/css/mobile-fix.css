@@ -269,18 +269,41 @@
 
 /* ============ Product Sections Mobile Fixes ============ */
 @media (max-width: 767px) {
-    /* Product carousel */
+    /* Product carousel - Enhanced horizontal scrolling */
     .product-carousel {
-        padding: 0 10px;
+        padding: 0;
+        overflow: visible;
+    }
+    
+    .product-carousel__wrapper {
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding: 0 15px;
+        margin: 0 -15px;
+    }
+    
+    .product-carousel__wrapper::-webkit-scrollbar {
+        display: none;
     }
     
     .product-carousel__track {
-        gap: 10px;
+        gap: 15px;
+        display: flex;
+        flex-wrap: nowrap;
+        padding: 10px 0;
     }
     
     .product-carousel__slide {
-        min-width: calc(50% - 5px) !important;
-        max-width: calc(50% - 5px) !important;
+        min-width: calc(50% - 7.5px) !important;
+        max-width: calc(50% - 7.5px) !important;
+        flex: 0 0 calc(50% - 7.5px) !important;
+        scroll-snap-align: start;
+        scroll-snap-stop: always;
     }
     
     /* Hide navigation arrows on mobile */
@@ -288,7 +311,60 @@
         display: none !important;
     }
     
-    /* Categories grid */
+    /* Product Grids - Convert to horizontal scroll */
+    #productsGrid,
+    .products-grid,
+    .row.has-product-cards,
+    .product-row-scroll {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding: 0 15px;
+        margin: 0 -15px;
+        gap: 15px;
+    }
+    
+    #productsGrid::-webkit-scrollbar,
+    .products-grid::-webkit-scrollbar,
+    .row.has-product-cards::-webkit-scrollbar,
+    .product-row-scroll::-webkit-scrollbar {
+        display: none;
+    }
+    
+    /* Product cards in grid - make them scrollable */
+    #productsGrid > [class*="col-"],
+    .products-grid > [class*="col-"],
+    .row.has-product-cards > [class*="col-"],
+    .product-row-scroll > [class*="col-"] {
+        flex: 0 0 calc(50% - 7.5px) !important;
+        max-width: calc(50% - 7.5px) !important;
+        min-width: calc(50% - 7.5px) !important;
+        scroll-snap-align: start;
+        scroll-snap-stop: always;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    
+    /* Very small screens - show one product at a time with peek */
+    @media (max-width: 480px) {
+        .product-carousel__slide,
+        #productsGrid > [class*="col-"],
+        .products-grid > [class*="col-"],
+        .row.has-product-cards > [class*="col-"],
+        .product-row-scroll > [class*="col-"] {
+            min-width: calc(85% - 10px) !important;
+            max-width: calc(85% - 10px) !important;
+            flex: 0 0 calc(85% - 10px) !important;
+        }
+    }
+    
+    /* Categories grid - keep vertical on mobile */
     .categories-grid,
     .departments-grid {
         display: grid;
@@ -520,8 +596,18 @@
     }
     
     .product-carousel__slide {
-        min-width: 85% !important;
-        max-width: 85% !important;
+        min-width: calc(85% - 10px) !important;
+        max-width: calc(85% - 10px) !important;
+        flex: 0 0 calc(85% - 10px) !important;
+    }
+    
+    #productsGrid > [class*="col-"],
+    .products-grid > [class*="col-"],
+    .row.has-product-cards > [class*="col-"],
+    .product-row-scroll > [class*="col-"] {
+        min-width: calc(85% - 10px) !important;
+        max-width: calc(85% - 10px) !important;
+        flex: 0 0 calc(85% - 10px) !important;
     }
     
     .categories-grid,
@@ -553,14 +639,23 @@
         height: auto;
     }
     
-    .row {
+    /* Product rows - special handling for horizontal scroll */
+    .row:not(.has-product-cards) {
         margin-left: -10px;
         margin-right: -10px;
     }
     
-    .row > * {
+    .row:not(.has-product-cards) > * {
         padding-left: 10px;
         padding-right: 10px;
+    }
+    
+    /* Prevent product rows from causing page scroll */
+    .row.has-product-cards,
+    .product-row-scroll {
+        margin-left: 0;
+        margin-right: 0;
+        overflow: visible;
     }
 }
 
@@ -602,6 +697,24 @@
     .container-fluid {
         padding-left: 15px;
         padding-right: 15px;
+    }
+    
+    /* Allow horizontal scroll ONLY for product containers */
+    .product-carousel__wrapper,
+    #productsGrid,
+    .products-grid,
+    .row.has-product-cards,
+    .product-row-scroll {
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+    }
+    
+    /* Prevent other elements from causing horizontal scroll */
+    main,
+    section,
+    .container,
+    .container-fluid {
+        overflow-x: hidden;
     }
 }
 
