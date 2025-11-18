@@ -245,7 +245,10 @@ router.get('/', async (req, res) => {
 // Get banner by ID (public route for homepage sections)
 router.get('/detail/:id', async (req, res) => {
     try {
-        const banner = await Banner.findById(req.params.id).populate('imageUpload');
+        const banner = await Banner.findById(req.params.id)
+            .select('title description image imageUpload link position size isActive banner_type video_type')
+            .populate('imageUpload', 'url')
+            .lean();
         if (!banner || !banner.isActive) {
             return res.status(404).json({ message: 'Banner not found' });
         }
