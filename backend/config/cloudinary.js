@@ -25,9 +25,22 @@ if (!isCloudinaryConfigured) {
     cloudinary.config({
         cloud_name: cloudName,
         api_key: apiKey,
-        api_secret: apiSecret
+        api_secret: apiSecret,
+        secure: true // Use HTTPS
     });
     console.log('✅ Cloudinary configured successfully');
+    
+    // Optional: Test credentials (async, don't block startup)
+    if (process.env.NODE_ENV === 'development') {
+        cloudinary.api.ping()
+            .then(result => {
+                console.log('✅ Cloudinary connection test successful');
+            })
+            .catch(err => {
+                console.error('⚠️  Cloudinary connection test failed:', err.message);
+                console.error('   Please verify your API credentials are correct.');
+            });
+    }
 }
 
 // Export configured cloudinary and configuration status

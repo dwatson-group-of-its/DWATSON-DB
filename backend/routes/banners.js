@@ -40,13 +40,28 @@ router.post('/upload', adminAuth, uploadBanner, async (req, res) => {
         const bannerType = isImage ? 'image' : 'video';
 
         // Upload to Cloudinary
+        // Build upload options - keep it simple to avoid signature issues
         const uploadOptions = {
             folder: 'banners',
             resource_type: resourceType,
-            overwrite: false,
-            invalidate: true
+            // Remove overwrite and invalidate if they're causing signature issues
+            // These can be added back if needed, but they might cause signature problems
+            use_filename: true,
+            unique_filename: true
         };
 
+        // If upload preset is configured, use it (unsigned upload - no signature needed)
+        if (process.env.CLOUDINARY_UPLOAD_PRESET) {
+            uploadOptions.upload_preset = process.env.CLOUDINARY_UPLOAD_PRESET;
+        }
+
+        console.log('Uploading to Cloudinary with options:', {
+            folder: uploadOptions.folder,
+            resource_type: uploadOptions.resource_type,
+            has_preset: !!uploadOptions.upload_preset
+        });
+
+        // Use standard upload method
         const result = await cloudinary.uploader.upload(req.file.path, uploadOptions);
         const secureUrl = result.secure_url;
 
@@ -74,11 +89,28 @@ router.post('/upload', adminAuth, uploadBanner, async (req, res) => {
         });
     } catch (error) {
         // Clean up temp file on error
-        deleteTempFile(req.file.path);
+        if (req.file && req.file.path) {
+            deleteTempFile(req.file.path);
+        }
         
         console.error('Banner upload error:', error);
+        console.error('Error details:', {
+            message: error.message,
+            http_code: error.http_code,
+            name: error.name
+        });
+        
+        // Provide more helpful error messages
+        let errorMessage = 'Failed to upload banner';
+        if (error.message && error.message.includes('Invalid Signature')) {
+            errorMessage = 'Cloudinary authentication error. Please check your CLOUDINARY_API_SECRET in environment variables.';
+        } else if (error.message) {
+            errorMessage = `Failed to upload banner: ${error.message}`;
+        }
+        
         res.status(500).json({ 
-            message: `Failed to upload banner: ${error.message}` 
+            message: errorMessage,
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 });
