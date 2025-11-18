@@ -8,6 +8,31 @@ const { uploadBanner, deleteTempFile } = require('../middleware/bannerUpload');
 const { cloudinary, isConfigured } = require('../config/cloudinary');
 const { prepareSignedUploadParams } = require('../utils/cloudinarySignature');
 
+// Helper to detect video type from URL
+function detectVideoType(url) {
+    if (!url) return null;
+    if (url.includes('youtube.com/watch') || url.includes('youtu.be/') || url.includes('youtube.com/embed')) {
+        return 'youtube';
+    }
+    if (url.includes('vimeo.com/')) {
+        return 'vimeo';
+    }
+    if (url.match(/\.(mp4|webm|ogg|mov|avi|wmv|m4v|flv)$/i)) {
+        return 'direct';
+    }
+    if (url.includes('/video/upload') || url.includes('resource_type=video')) {
+        return 'file'; // Cloudinary video
+    }
+    return null;
+}
+
+// Helper to extract YouTube video ID
+function extractYouTubeId(url) {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+}
+
 // Upload banner file (image or video) to Cloudinary
 router.post('/upload', adminAuth, uploadBanner, async (req, res) => {
     if (!req.file) {
@@ -122,12 +147,16 @@ router.post('/upload', adminAuth, uploadBanner, async (req, res) => {
         // Delete temporary file
         deleteTempFile(req.file.path);
 
+        // Detect video type if it's a video
+        const videoType = bannerType === 'video' ? detectVideoType(secureUrl) : null;
+        
         // Save to MongoDB
         const banner = new Banner({
             title: req.body.title || 'Untitled Banner',
             description: req.body.description || '',
             image: secureUrl,
             banner_type: bannerType,
+            video_type: videoType,
             link: req.body.link || '#',
             position: req.body.position || 'middle',
             size: req.body.size || 'medium',
@@ -139,7 +168,8 @@ router.post('/upload', adminAuth, uploadBanner, async (req, res) => {
         // Return JSON response
         res.status(201).json({
             url: secureUrl,
-            type: bannerType
+            type: bannerType,
+            video_type: videoType
         });
     } catch (error) {
         // Clean up temp file on error
@@ -244,10 +274,17 @@ router.get('/:position', async (req, res) => {
 
 // Create a new banner (admin only)
 router.post('/', adminAuth, async (req, res) => {
+    // Detect if image URL is a YouTube/Vimeo video
+    const imageUrl = req.body.image || '';
+    const detectedVideoType = detectVideoType(imageUrl);
+    const bannerType = detectedVideoType ? 'video' : (req.body.banner_type || 'image');
+    
     const banner = new Banner({
         title: req.body.title,
         description: req.body.description,
-        image: req.body.image,
+        image: imageUrl,
+        banner_type: bannerType,
+        video_type: detectedVideoType,
         link: req.body.link,
         position: req.body.position || 'middle',
         size: req.body.size || 'medium',
@@ -256,6 +293,16 @@ router.post('/', adminAuth, async (req, res) => {
 
     try {
         await assignImageFields(banner, req.body);
+        
+        // Re-detect video type after image fields are assigned (in case URL changed)
+        if (banner.image) {
+            const finalVideoType = detectVideoType(banner.image);
+            if (finalVideoType) {
+                banner.banner_type = 'video';
+                banner.video_type = finalVideoType;
+            }
+        }
+        
         const newBanner = await banner.save();
         const populatedBanner = await Banner.findById(newBanner._id).populate('imageUpload');
         res.status(201).json(populatedBanner);
@@ -281,6 +328,20 @@ router.put('/:id', adminAuth, async (req, res) => {
         banner.isActive = req.body.isActive !== undefined ? req.body.isActive : banner.isActive;
 
         await assignImageFields(banner, req.body);
+        
+        // Detect video type from image URL
+        if (banner.image) {
+            const detectedVideoType = detectVideoType(banner.image);
+            if (detectedVideoType) {
+                banner.banner_type = 'video';
+                banner.video_type = detectedVideoType;
+            } else if (req.body.banner_type) {
+                banner.banner_type = req.body.banner_type;
+                banner.video_type = null;
+            }
+        } else if (req.body.banner_type) {
+            banner.banner_type = req.body.banner_type;
+        }
 
         await banner.save();
         const populatedBanner = await Banner.findById(banner._id).populate('imageUpload');

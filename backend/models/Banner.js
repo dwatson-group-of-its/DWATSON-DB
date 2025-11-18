@@ -22,6 +22,12 @@ const BannerSchema = new mongoose.Schema({
         enum: ['image', 'video'],
         default: 'image'
     },
+    // Video type: 'youtube', 'vimeo', 'direct', 'file' (for video banners)
+    video_type: {
+        type: String,
+        enum: ['youtube', 'vimeo', 'direct', 'file'],
+        default: null
+    },
     imageUpload: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Media'

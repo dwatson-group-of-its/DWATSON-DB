@@ -1083,6 +1083,69 @@ function renderBannerHTML(banner, section) {
     const bannerDescription = (banner.description && String(banner.description).trim()) || '';
     const hasTitle = bannerTitle.length > 0;
     
+    // Check if banner is a YouTube/Vimeo video
+    const isVideo = banner.banner_type === 'video';
+    const videoType = banner.video_type || (isVideo ? detectVideoTypeFromUrl(imageUrl) : null);
+    const isYouTube = videoType === 'youtube';
+    const isVimeo = videoType === 'vimeo';
+    
+    let mediaContent = '';
+    
+    if (isYouTube) {
+        const youtubeId = extractYouTubeId(imageUrl);
+        if (youtubeId) {
+            const embedUrl = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&controls=1`;
+            mediaContent = `
+                <div class="banner-video-wrapper" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; background: #000;">
+                    <iframe src="${htmlEscape(embedUrl)}" 
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen
+                            loading="lazy">
+                    </iframe>
+                </div>
+            `;
+        } else {
+            // Fallback to image if YouTube ID extraction fails
+            mediaContent = `<img src="${htmlEscape(imageUrl)}" alt="${htmlEscape(banner.imageAlt || banner.title || 'Banner')}" class="banner-full-width__image" loading="lazy">`;
+        }
+    } else if (isVimeo) {
+        const vimeoId = extractVimeoId(imageUrl);
+        if (vimeoId) {
+            const embedUrl = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=1&loop=1&controls=1`;
+            mediaContent = `
+                <div class="banner-video-wrapper" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; background: #000;">
+                    <iframe src="${htmlEscape(embedUrl)}" 
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
+                            frameborder="0" 
+                            allow="autoplay; fullscreen; picture-in-picture" 
+                            allowfullscreen
+                            loading="lazy">
+                    </iframe>
+                </div>
+            `;
+        } else {
+            mediaContent = `<img src="${htmlEscape(imageUrl)}" alt="${htmlEscape(banner.imageAlt || banner.title || 'Banner')}" class="banner-full-width__image" loading="lazy">`;
+        }
+    } else if (isVideo && (imageUrl.includes('/video/upload') || imageUrl.match(/\.(mp4|webm|ogg|mov|avi|wmv|m4v|flv)$/i))) {
+        // Direct video file (Cloudinary or direct URL)
+        mediaContent = `
+            <video src="${htmlEscape(imageUrl)}" 
+                   controls 
+                   autoplay 
+                   muted 
+                   loop 
+                   style="width: 100%; height: auto; display: block;"
+                   class="banner-full-width__video"
+                   loading="lazy">
+            </video>
+        `;
+    } else {
+        // Regular image
+        mediaContent = `<img src="${htmlEscape(imageUrl)}" alt="${htmlEscape(banner.imageAlt || banner.title || 'Banner')}" class="banner-full-width__image" loading="lazy">`;
+    }
+    
     const sectionHtml = `
         <section class="banner-full-width homepage-section" data-section-type="bannerFullWidth" data-section-id="${section._id}">
             ${hasTitle ? `
@@ -1094,12 +1157,9 @@ function renderBannerHTML(banner, section) {
                 </div>
             ` : ''}
             <div class="container-fluid px-0">
-                <a href="${htmlEscape(banner.link || '#')}" class="banner-full-width__link">
-                    <img src="${htmlEscape(imageUrl)}" 
-                         alt="${htmlEscape(banner.imageAlt || banner.title || 'Banner')}" 
-                         class="banner-full-width__image"
-                         loading="lazy">
-                </a>
+                ${banner.link && banner.link !== '#' ? `<a href="${htmlEscape(banner.link)}" class="banner-full-width__link">` : ''}
+                    ${mediaContent}
+                ${banner.link && banner.link !== '#' ? `</a>` : ''}
             </div>
         </section>
     `;
@@ -1107,6 +1167,37 @@ function renderBannerHTML(banner, section) {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = sectionHtml;
     return tempDiv.firstElementChild;
+}
+
+// Helper to detect video type from URL
+function detectVideoTypeFromUrl(url) {
+    if (!url) return null;
+    if (url.includes('youtube.com/watch') || url.includes('youtu.be/') || url.includes('youtube.com/embed')) {
+        return 'youtube';
+    }
+    if (url.includes('vimeo.com/')) {
+        return 'vimeo';
+    }
+    if (url.match(/\.(mp4|webm|ogg|mov|avi|wmv|m4v|flv)$/i)) {
+        return 'direct';
+    }
+    if (url.includes('/video/upload') || url.includes('resource_type=video')) {
+        return 'file';
+    }
+    return null;
+}
+
+// Helper to extract YouTube video ID
+function extractYouTubeId(url) {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+}
+
+// Helper to extract Vimeo video ID
+function extractVimeoId(url) {
+    const match = url.match(/vimeo.com\/(\d+)/);
+    return match ? match[1] : null;
 }
 
 // Helper: Get section banner (for banners before sections)
@@ -2020,6 +2111,68 @@ function renderBannerByPosition(banner, position) {
     const description = banner.description || '';
     const size = banner.size || 'medium';
     
+    // Check if banner is a YouTube/Vimeo video
+    const isVideo = banner.banner_type === 'video';
+    const videoType = banner.video_type || (isVideo ? detectVideoTypeFromUrl(imageUrl) : null);
+    const isYouTube = videoType === 'youtube';
+    const isVimeo = videoType === 'vimeo';
+    
+    let mediaContent = '';
+    
+    if (isYouTube) {
+        const youtubeId = extractYouTubeId(imageUrl);
+        if (youtubeId) {
+            const embedUrl = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&controls=1`;
+            mediaContent = `
+                <div class="banner-video-wrapper" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; background: #000;">
+                    <iframe src="${htmlEscape(embedUrl)}" 
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen
+                            loading="lazy">
+                    </iframe>
+                </div>
+            `;
+        } else {
+            mediaContent = `<img src="${htmlEscape(imageUrl)}" alt="${htmlEscape(banner.imageAlt || title || 'Banner')}" class="banner-promo__image" loading="lazy">`;
+        }
+    } else if (isVimeo) {
+        const vimeoId = extractVimeoId(imageUrl);
+        if (vimeoId) {
+            const embedUrl = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=1&loop=1&controls=1`;
+            mediaContent = `
+                <div class="banner-video-wrapper" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; background: #000;">
+                    <iframe src="${htmlEscape(embedUrl)}" 
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
+                            frameborder="0" 
+                            allow="autoplay; fullscreen; picture-in-picture" 
+                            allowfullscreen
+                            loading="lazy">
+                    </iframe>
+                </div>
+            `;
+        } else {
+            mediaContent = `<img src="${htmlEscape(imageUrl)}" alt="${htmlEscape(banner.imageAlt || title || 'Banner')}" class="banner-promo__image" loading="lazy">`;
+        }
+    } else if (isVideo && (imageUrl.includes('/video/upload') || imageUrl.match(/\.(mp4|webm|ogg|mov|avi|wmv|m4v|flv)$/i))) {
+        // Direct video file
+        mediaContent = `
+            <video src="${htmlEscape(imageUrl)}" 
+                   controls 
+                   autoplay 
+                   muted 
+                   loop 
+                   style="width: 100%; height: auto; display: block;"
+                   class="banner-promo__video"
+                   loading="lazy">
+            </video>
+        `;
+    } else {
+        // Regular image
+        mediaContent = `<img src="${htmlEscape(imageUrl)}" alt="${htmlEscape(banner.imageAlt || title || 'Banner')}" class="banner-promo__image" loading="lazy">`;
+    }
+    
     const bannerSection = document.createElement('section');
     bannerSection.className = `banner-section banner-section--${position} banner-section--${size} homepage-section`;
     bannerSection.setAttribute('data-banner-id', banner._id);
@@ -2038,14 +2191,11 @@ function renderBannerByPosition(banner, position) {
                         ${description ? `<p class="banner-promo__description">${htmlEscape(description)}</p>` : ''}
                     </div>
                 ` : ''}
-                <a href="${htmlEscape(link)}" class="banner-promo__link">
+                ${link && link !== '#' ? `<a href="${htmlEscape(link)}" class="banner-promo__link">` : ''}
                     <div class="banner-promo__media banner-promo__media--${size}">
-                        <img src="${htmlEscape(imageUrl)}" 
-                             alt="${htmlEscape(banner.imageAlt || title || 'Banner')}" 
-                             class="banner-promo__image"
-                             loading="lazy">
+                        ${mediaContent}
                     </div>
-                </a>
+                ${link && link !== '#' ? `</a>` : ''}
             </div>
         </div>
     `;

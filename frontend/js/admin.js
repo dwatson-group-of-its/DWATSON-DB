@@ -4092,6 +4092,99 @@ function resolveItemImage(item) {
     return null;
 }
 
+// Helper to detect video type from URL
+function detectVideoTypeFromUrl(url) {
+    if (!url) return null;
+    if (url.includes('youtube.com/watch') || url.includes('youtu.be/') || url.includes('youtube.com/embed')) {
+        return 'youtube';
+    }
+    if (url.includes('vimeo.com/')) {
+        return 'vimeo';
+    }
+    if (url.match(/\.(mp4|webm|ogg|mov|avi|wmv|m4v|flv)$/i)) {
+        return 'direct';
+    }
+    if (url.includes('/video/upload') || url.includes('resource_type=video')) {
+        return 'file';
+    }
+    return null;
+}
+
+// Helper to extract YouTube video ID
+function extractYouTubeId(url) {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+}
+
+// Helper to extract Vimeo video ID
+function extractVimeoId(url) {
+    const match = url.match(/vimeo.com\/(\d+)/);
+    return match ? match[1] : null;
+}
+
+// Show YouTube/Vimeo embed preview
+function showVideoEmbedPreview(selector, url, videoType) {
+    const $preview = $(selector);
+    if (!$preview.length) {
+        console.warn('Preview element not found:', selector);
+        return;
+    }
+    
+    let embedHtml = '';
+    
+    if (videoType === 'youtube') {
+        const youtubeId = extractYouTubeId(url);
+        if (youtubeId) {
+            const embedUrl = `https://www.youtube.com/embed/${youtubeId}`;
+            embedHtml = `
+                <div class="video-preview-wrapper" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; background: #000; border-radius: 4px;">
+                    <iframe src="${embedUrl}" 
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                    </iframe>
+                </div>
+            `;
+        } else {
+            embedHtml = '<div class="alert alert-warning">Invalid YouTube URL. Please check the URL format.</div>';
+        }
+    } else if (videoType === 'vimeo') {
+        const vimeoId = extractVimeoId(url);
+        if (vimeoId) {
+            const embedUrl = `https://player.vimeo.com/video/${vimeoId}`;
+            embedHtml = `
+                <div class="video-preview-wrapper" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; background: #000; border-radius: 4px;">
+                    <iframe src="${embedUrl}" 
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
+                            frameborder="0" 
+                            allow="autoplay; fullscreen; picture-in-picture" 
+                            allowfullscreen>
+                    </iframe>
+                </div>
+            `;
+        } else {
+            embedHtml = '<div class="alert alert-warning">Invalid Vimeo URL. Please check the URL format.</div>';
+        }
+    }
+    
+    if (embedHtml) {
+        // Clear preview first
+        if ($preview.is('img')) {
+            const $parent = $preview.parent();
+            if ($parent.hasClass('image-preview') || $parent.hasClass('image-preview--wide')) {
+                $preview.replaceWith($('<div>').html(embedHtml));
+            } else {
+                $preview.replaceWith($('<div>').html(embedHtml));
+            }
+        } else {
+            $preview.empty().html(embedHtml);
+        }
+        console.log('Set YouTube/Vimeo embed preview');
+    }
+}
+
 function setImagePreview(selector, url) {
     const $preview = $(selector);
     if (!$preview.length) {
@@ -4168,7 +4261,13 @@ function initImageField({ urlInput, fileInput, preview }) {
     $urlInput.on('input', function () {
         const value = $(this).val();
         if (value) {
-            setImagePreview(preview, value);
+            // Check if it's a YouTube/Vimeo URL and show embed preview
+            const videoType = detectVideoTypeFromUrl(value);
+            if (videoType === 'youtube' || videoType === 'vimeo') {
+                showVideoEmbedPreview(preview, value, videoType);
+            } else {
+                setImagePreview(preview, value);
+            }
         } else if (!$fileInput[0]?.files?.length) {
             setImagePreview(preview, null);
         }
