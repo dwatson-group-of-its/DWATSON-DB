@@ -2132,6 +2132,8 @@ async function saveSlider() {
         linkValue = '/';
     }
 
+    const videoUrlValue = ($('#sliderVideoUrl').val() || '').trim();
+
     const payload = {
         isActive: $('#sliderActive').is(':checked')
     };
