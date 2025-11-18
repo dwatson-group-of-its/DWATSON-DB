@@ -6,11 +6,17 @@ const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
 const apiKey = process.env.CLOUDINARY_API_KEY;
 const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
-// Verify Cloudinary configuration
+// Verify Cloudinary configuration - check for actual values, not placeholders
 const isCloudinaryConfigured = cloudName && apiKey && apiSecret && 
+    cloudName.trim() !== '' &&
+    apiKey.trim() !== '' &&
+    apiSecret.trim() !== '' &&
     cloudName !== 'your_cloudinary_cloud_name' && 
     apiKey !== 'your_cloudinary_api_key' && 
-    apiSecret !== 'your_cloudinary_api_secret';
+    apiSecret !== 'your_cloudinary_api_secret' &&
+    !cloudName.includes('your_') &&
+    !apiKey.includes('your_') &&
+    !apiSecret.includes('your_');
 
 if (!isCloudinaryConfigured) {
     console.warn('⚠️  Cloudinary credentials not configured or using placeholder values.');

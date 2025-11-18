@@ -6,6 +6,7 @@ const auth = require('../middleware/auth');
 const adminAuth = require('../middleware/adminAuth');
 const { uploadBanner, deleteTempFile } = require('../middleware/bannerUpload');
 const { cloudinary, isConfigured } = require('../config/cloudinary');
+const { prepareSignedUploadParams } = require('../utils/cloudinarySignature');
 
 // Upload banner file (image or video) to Cloudinary
 router.post('/upload', adminAuth, uploadBanner, async (req, res) => {
@@ -39,30 +40,73 @@ router.post('/upload', adminAuth, uploadBanner, async (req, res) => {
         const resourceType = isImage ? 'image' : 'video';
         const bannerType = isImage ? 'image' : 'video';
 
-        // Upload to Cloudinary
-        // Build upload options - keep it simple to avoid signature issues
-        const uploadOptions = {
+        // Get Cloudinary credentials
+        const apiKey = process.env.CLOUDINARY_API_KEY;
+        const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+        if (!apiKey || !apiSecret) {
+            deleteTempFile(req.file.path);
+            return res.status(500).json({ 
+                message: 'Cloudinary API credentials are missing. Please check your environment variables.' 
+            });
+        }
+
+        // Build base upload options
+        const baseOptions = {
             folder: 'banners',
             resource_type: resourceType,
-            // Remove overwrite and invalidate if they're causing signature issues
-            // These can be added back if needed, but they might cause signature problems
             use_filename: true,
             unique_filename: true
         };
 
-        // If upload preset is configured, use it (unsigned upload - no signature needed)
+        // If upload preset is configured, use unsigned upload (no signature needed)
         if (process.env.CLOUDINARY_UPLOAD_PRESET) {
-            uploadOptions.upload_preset = process.env.CLOUDINARY_UPLOAD_PRESET;
+            baseOptions.upload_preset = process.env.CLOUDINARY_UPLOAD_PRESET;
+            console.log('Using unsigned upload with preset:', process.env.CLOUDINARY_UPLOAD_PRESET);
+            
+            // Use standard upload method with preset (no signature needed)
+            const result = await cloudinary.uploader.upload(req.file.path, baseOptions);
+            const secureUrl = result.secure_url;
+
+            // Delete temporary file
+            deleteTempFile(req.file.path);
+
+            // Save to MongoDB
+            const banner = new Banner({
+                title: req.body.title || 'Untitled Banner',
+                description: req.body.description || '',
+                image: secureUrl,
+                banner_type: bannerType,
+                link: req.body.link || '#',
+                position: req.body.position || 'middle',
+                size: req.body.size || 'medium',
+                isActive: req.body.isActive !== undefined ? req.body.isActive : true
+            });
+
+            await banner.save();
+
+            // Return JSON response
+            return res.status(201).json({
+                url: secureUrl,
+                type: bannerType
+            });
         }
 
-        console.log('Uploading to Cloudinary with options:', {
-            folder: uploadOptions.folder,
-            resource_type: uploadOptions.resource_type,
-            has_preset: !!uploadOptions.upload_preset
+        // For signed uploads, generate signature manually
+        console.log('Using signed upload - generating signature...');
+        
+        // Prepare signed parameters
+        const signedParams = prepareSignedUploadParams(baseOptions, apiKey, apiSecret);
+        
+        console.log('Uploading to Cloudinary with signed params:', {
+            folder: signedParams.folder,
+            resource_type: signedParams.resource_type,
+            timestamp: signedParams.timestamp,
+            has_signature: !!signedParams.signature
         });
 
-        // Use standard upload method
-        const result = await cloudinary.uploader.upload(req.file.path, uploadOptions);
+        // Use standard upload method with signed parameters
+        const result = await cloudinary.uploader.upload(req.file.path, signedParams);
         const secureUrl = result.secure_url;
 
         // Delete temporary file
