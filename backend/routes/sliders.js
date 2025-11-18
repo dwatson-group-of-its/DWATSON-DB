@@ -5,6 +5,24 @@ const Media = require('../models/Media');
 const { updateHeroSectionWithActiveSliders } = require('../services/dashboardSync');
 const adminAuth = require('../middleware/adminAuth');
 
+// Helper to detect video type from URL
+function detectVideoType(url) {
+    if (!url) return null;
+    if (url.includes('youtube.com/watch') || url.includes('youtu.be/') || url.includes('youtube.com/embed')) {
+        return 'youtube';
+    }
+    if (url.includes('vimeo.com/')) {
+        return 'vimeo';
+    }
+    if (url.match(/\.(mp4|webm|ogg|mov|avi|wmv|m4v|flv)$/i)) {
+        return 'direct';
+    }
+    if (url.includes('/video/upload') || url.includes('resource_type=video')) {
+        return 'file'; // Cloudinary video
+    }
+    return null;
+}
+
 async function assignImageFields(target, body) {
     const providedUrl = body.image;
     if (providedUrl !== undefined) {
@@ -32,8 +50,11 @@ async function assignImageFields(target, body) {
 router.get('/', async (req, res) => {
     try {
         const sliders = await Slider.find({ isActive: true })
+            .select('title description image imageUpload imageMobile imageMobileUpload imageAlt videoUrl videoType buttonText buttonLink link order isActive createdAt')
             .sort({ order: 1, createdAt: 1 })
-            .populate('imageUpload');
+            .populate('imageUpload', 'url')
+            .populate('imageMobileUpload', 'url')
+            .lean();
         res.json(sliders);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -55,10 +76,16 @@ router.get('/:id', adminAuth, async (req, res) => {
 
 // Create a new slider (admin only)
 router.post('/', adminAuth, async (req, res) => {
+    // Detect video type if videoUrl is provided
+    const videoUrl = req.body.videoUrl ? req.body.videoUrl.trim() : null;
+    const detectedVideoType = videoUrl ? detectVideoType(videoUrl) : null;
+    
     const slider = new Slider({
         title: req.body.title,
         description: req.body.description,
         image: req.body.image,
+        videoUrl: videoUrl,
+        videoType: detectedVideoType || req.body.videoType || null,
         link: req.body.link,
         order: req.body.order || 0,
         isActive: req.body.isActive !== undefined ? req.body.isActive : true
@@ -66,6 +93,15 @@ router.post('/', adminAuth, async (req, res) => {
 
     try {
         await assignImageFields(slider, req.body);
+        
+        // Re-detect video type after image fields are assigned (in case URL changed)
+        if (slider.videoUrl) {
+            const finalVideoType = detectVideoType(slider.videoUrl);
+            if (finalVideoType) {
+                slider.videoType = finalVideoType;
+            }
+        }
+        
         const newSlider = await slider.save();
         const populatedSlider = await Slider.findById(newSlider._id).populate('imageUpload');
 
@@ -93,6 +129,22 @@ router.put('/:id', adminAuth, async (req, res) => {
         slider.link = req.body.link || slider.link;
         slider.order = req.body.order !== undefined ? req.body.order : slider.order;
         slider.isActive = req.body.isActive !== undefined ? req.body.isActive : slider.isActive;
+
+        // Handle video URL
+        if (req.body.videoUrl !== undefined) {
+            const videoUrl = req.body.videoUrl ? req.body.videoUrl.trim() : null;
+            slider.videoUrl = videoUrl;
+            
+            // Detect video type from URL
+            if (videoUrl) {
+                const detectedVideoType = detectVideoType(videoUrl);
+                slider.videoType = detectedVideoType;
+            } else {
+                slider.videoType = null;
+            }
+        } else if (req.body.videoType !== undefined) {
+            slider.videoType = req.body.videoType || null;
+        }
 
         await assignImageFields(slider, req.body);
 

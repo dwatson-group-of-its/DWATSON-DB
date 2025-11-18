@@ -29,6 +29,17 @@ const SliderSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Media'
     },
+    // Optional YouTube video URL (if provided, shows video instead of image)
+    videoUrl: {
+        type: String,
+        trim: true
+    },
+    // Video type: 'youtube', 'vimeo', 'direct', 'file'
+    videoType: {
+        type: String,
+        enum: ['youtube', 'vimeo', 'direct', 'file'],
+        default: null
+    },
     buttonText: {
         type: String,
         trim: true

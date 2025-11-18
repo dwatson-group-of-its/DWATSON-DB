@@ -478,6 +478,47 @@ $('#add-brand-btn').click(function() {
     initImageField({ urlInput: '#categoryImage', fileInput: '#categoryImageFile', preview: '#categoryImagePreview' });
     initImageField({ urlInput: '#productImage', fileInput: '#productImageFile', preview: '#productImagePreview' });
     initImageField({ urlInput: '#sliderImage', fileInput: '#sliderImageFile', preview: '#sliderImagePreview' });
+    
+    // Initialize video URL field for slider (with preview)
+    $('#sliderVideoUrl').on('input paste', function() {
+        setTimeout(() => {
+            const value = $(this).val().trim();
+            if (value) {
+                const videoType = detectVideoTypeFromUrl(value);
+                if (videoType === 'youtube' || videoType === 'vimeo') {
+                    showVideoEmbedPreview('#sliderImagePreview', value, videoType);
+                } else if (videoType) {
+                    // Direct video file - show video preview
+                    const $preview = $('#sliderImagePreview');
+                    if ($preview.is('img')) {
+                        const $video = $('<video>').attr({
+                            src: value,
+                            controls: true,
+                            preload: 'metadata',
+                            style: 'max-width: 100%; max-height: 100%; object-fit: contain; display: block; width: 100%;'
+                        });
+                        $preview.replaceWith($video);
+                    } else {
+                        $preview.empty().html(`<video src="${value}" controls preload="metadata" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;" alt="Video preview"></video>`);
+                    }
+                } else {
+                    // Not a video URL, show image preview if image URL is set
+                    const imageUrl = $('#sliderImage').val().trim();
+                    if (imageUrl) {
+                        setImagePreview('#sliderImagePreview', imageUrl);
+                    }
+                }
+            } else {
+                // No video URL, show image preview if available
+                const imageUrl = $('#sliderImage').val().trim();
+                if (imageUrl) {
+                    setImagePreview('#sliderImagePreview', imageUrl);
+                } else {
+                    setImagePreview('#sliderImagePreview', null);
+                }
+            }
+        }, 100);
+    });
     initImageField({ urlInput: '#bannerImage', fileInput: '#bannerImageFile', preview: '#bannerImagePreview' });
 
     setImagePreview('#departmentImagePreview', null);
@@ -1725,6 +1766,7 @@ function resetSliderForm() {
     $('#sliderId').val('');
     $('#sliderImageFile').val('');
     $('#sliderImageFileId').val('');
+    $('#sliderVideoUrl').val('');
     setImagePreview('#sliderImagePreview', null);
 }
 
@@ -2098,6 +2140,13 @@ async function saveSlider() {
     if (descriptionValue !== undefined) payload.description = descriptionValue;
     if (linkValue !== undefined) payload.link = linkValue;
     if (orderValue !== undefined) payload.order = orderValue;
+    
+    // Add video URL if provided
+    if (videoUrlValue) {
+        payload.videoUrl = videoUrlValue;
+    } else {
+        payload.videoUrl = ''; // Clear video URL if empty
+    }
 
     if (uploadedMedia) {
         payload.image = uploadedMedia.url;
@@ -2538,10 +2587,19 @@ async function editSlider(id) {
         $('#sliderDescription').val(slider.description || '');
         $('#sliderImage').val(slider.image || '');
         $('#sliderImageFileId').val(slider.imageUpload ? slider.imageUpload._id : '');
+        $('#sliderVideoUrl').val(slider.videoUrl || '');
         $('#sliderLink').val(slider.link || '');
         $('#sliderOrder').val(slider.order || 0);
         $('#sliderActive').prop('checked', slider.isActive);
-        setImagePreview('#sliderImagePreview', resolveItemImage(slider));
+        
+        // Check if slider has a video URL and show preview
+        const videoUrl = slider.videoUrl || '';
+        const videoType = slider.videoType || detectVideoTypeFromUrl(videoUrl);
+        if (videoType === 'youtube' || videoType === 'vimeo') {
+            showVideoEmbedPreview('#sliderImagePreview', videoUrl, videoType);
+        } else {
+            setImagePreview('#sliderImagePreview', resolveItemImage(slider));
+        }
 
         $('#sliderModalTitle').text('Edit Slider');
         $('#sliderModal').modal('show');

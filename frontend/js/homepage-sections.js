@@ -352,12 +352,80 @@ async function renderHeroSlider(section, index) {
                         ${sliders.map((slider, idx) => {
                             const imageUrl = slider.imageUpload?.url || slider.image || getGlobalFallbackImage();
                             const mobileImageUrl = slider.imageMobileUpload?.url || slider.imageMobile || imageUrl;
-                            return `
-                                <div class="hero-carousel__slide ${idx === 0 ? 'active' : ''}" data-slide-index="${idx}">
+                            
+                            // Check if slider has a video URL
+                            const hasVideo = slider.videoUrl && slider.videoType;
+                            const videoType = slider.videoType || (slider.videoUrl ? detectVideoTypeFromUrl(slider.videoUrl) : null);
+                            const isYouTube = videoType === 'youtube';
+                            const isVimeo = videoType === 'vimeo';
+                            
+                            let mediaContent = '';
+                            
+                            if (hasVideo && isYouTube) {
+                                const youtubeId = extractYouTubeId(slider.videoUrl);
+                                if (youtubeId) {
+                                    const embedUrl = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&controls=0&rel=0&modestbranding=1&playsinline=1`;
+                                    mediaContent = `
+                                        <div class="hero-slide-video-wrapper" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">
+                                            <iframe src="${htmlEscape(embedUrl)}" 
+                                                    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); min-width: 100%; min-height: 100%; width: 100vw; height: 56.25vw; border: none;" 
+                                                    frameborder="0" 
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                                    allowfullscreen>
+                                            </iframe>
+                                        </div>
+                                    `;
+                                } else {
+                                    // Fallback to image if YouTube ID extraction fails
+                                    mediaContent = `
+                                        <picture>
+                                            <source media="(max-width: 767px)" srcset="${htmlEscape(mobileImageUrl)}">
+                                            <img src="${htmlEscape(imageUrl)}" alt="${htmlEscape(slider.imageAlt || slider.title)}" loading="${idx === 0 ? 'eager' : 'lazy'}">
+                                        </picture>
+                                    `;
+                                }
+                            } else if (hasVideo && isVimeo) {
+                                const vimeoId = extractVimeoId(slider.videoUrl);
+                                if (vimeoId) {
+                                    const embedUrl = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=1&loop=1&background=1`;
+                                    mediaContent = `
+                                        <div class="hero-slide-video-wrapper" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">
+                                            <iframe src="${htmlEscape(embedUrl)}" 
+                                                    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); min-width: 100%; min-height: 100%; width: 100vw; height: 56.25vw; border: none;" 
+                                                    frameborder="0" 
+                                                    allow="autoplay; fullscreen; picture-in-picture" 
+                                                    allowfullscreen>
+                                            </iframe>
+                                        </div>
+                                    `;
+                                } else {
+                                    mediaContent = `
+                                        <picture>
+                                            <source media="(max-width: 767px)" srcset="${htmlEscape(mobileImageUrl)}">
+                                            <img src="${htmlEscape(imageUrl)}" alt="${htmlEscape(slider.imageAlt || slider.title)}" loading="${idx === 0 ? 'eager' : 'lazy'}">
+                                        </picture>
+                                    `;
+                                }
+                            } else if (hasVideo && (slider.videoUrl.includes('/video/upload') || slider.videoUrl.match(/\.(mp4|webm|ogg|mov|avi|wmv|m4v|flv)$/i))) {
+                                // Direct video file
+                                mediaContent = `
+                                    <video autoplay muted loop playsinline style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;">
+                                        <source src="${htmlEscape(slider.videoUrl)}" type="video/mp4">
+                                    </video>
+                                `;
+                            } else {
+                                // Regular image
+                                mediaContent = `
                                     <picture>
                                         <source media="(max-width: 767px)" srcset="${htmlEscape(mobileImageUrl)}">
                                         <img src="${htmlEscape(imageUrl)}" alt="${htmlEscape(slider.imageAlt || slider.title)}" loading="${idx === 0 ? 'eager' : 'lazy'}">
                                     </picture>
+                                `;
+                            }
+                            
+                            return `
+                                <div class="hero-carousel__slide ${idx === 0 ? 'active' : ''}" data-slide-index="${idx}">
+                                    ${mediaContent}
                                     <div class="hero-carousel__content">
                                         ${slider.title ? `<h1 class="hero-slide-title">${htmlEscape(slider.title)}</h1>` : ''}
                                         ${slider.description ? `<p class="hero-slide-description">${htmlEscape(slider.description)}</p>` : ''}
