@@ -775,7 +775,7 @@ a:hover {
 /* ============ Category Grid Styles ============ */
 .category-featured,
 .category-grid {
-    padding: 60px 0;
+    padding: 30px 0;
 }
 
 .cat-grid-item {
@@ -835,7 +835,7 @@ a:hover {
 
 /* Category Circles */
 .category-circles {
-    padding: 60px 0;
+    padding: 30px 0;
 }
 
 .category-circles__grid {
@@ -1124,7 +1124,7 @@ a:hover {
 
 /* ============ Product Carousel Styles ============ */
 .product-carousel {
-    padding: 60px 0;
+    padding: 30px 0;
 }
 
 .product-carousel__wrapper {
@@ -1337,7 +1337,7 @@ a:hover {
 
 /* ============ Product Tabs Styles ============ */
 .product-tabs {
-    padding: 60px 0;
+    padding: 30px 0;
 }
 
 .product-tabs__wrapper {
@@ -1346,7 +1346,7 @@ a:hover {
 
 .product-tabs__nav {
     border-bottom: 2px solid #e5e5e5;
-    margin-bottom: 40px;
+    margin-bottom: 25px;
 }
 
 .product-tabs__nav .nav-link {
@@ -1368,19 +1368,19 @@ a:hover {
 }
 
 .tab-content {
-    margin-top: 30px;
+    margin-top: 20px;
 }
 
 /* ============ Banner Styles ============ */
 .banner-full-width {
     padding: 0;
-    margin: 40px 0;
+    margin: 20px 0;
 }
 
 /* Banner Title/Header Styles - Beautiful, Attractive Font */
 .banner-full-width__header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     padding: 0 20px;
 }
 
@@ -1599,7 +1599,7 @@ a:hover {
 /* ============ Newsletter & Social Styles ============ */
 .newsletter-social {
     background-color: #f8f8f8;
-    padding: 60px 0;
+    padding: 30px 0;
 }
 
 .newsletter-social h3 {
@@ -1667,7 +1667,7 @@ a:hover {
 
 /* ============ Brand Marquee Styles (Matching dwatsoncosmetics.pk) ============ */
 .brand-marquee {
-    padding: 60px 0;
+    padding: 30px 0;
     background-color: #f5f5f5;
     border-top: 1px solid #e5e5e5;
     border-bottom: 1px solid #e5e5e5;
@@ -1697,7 +1697,7 @@ a:hover {
 
 @media (max-width: 767px) {
     .brand-marquee {
-        padding: 40px 0;
+        padding: 25px 0;
     }
     
     .brand-marquee__inner {
@@ -1905,7 +1905,7 @@ a:hover {
 
 /* ============ Collection Links Styles ============ */
 .collection-links {
-    padding: 40px 0;
+    padding: 25px 0;
 }
 
 .collection-links__grid {
@@ -1936,7 +1936,7 @@ a:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 50px;
+    margin-bottom: 25px;
 }
 
 .section-header h2 {
@@ -1969,7 +1969,7 @@ a:hover {
 
 /* ============ Custom HTML Section ============ */
 .custom-html {
-    padding: 40px 0;
+    padding: 25px 0;
 }
 
 .homepage-section {
