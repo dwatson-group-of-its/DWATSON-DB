@@ -2302,7 +2302,24 @@ async function saveBanner() {
             if (uploadResult && uploadResult.url) {
                 // Update form with returned URL for preview
                 $('#bannerImage').val(uploadResult.url);
+                
+                // Check if it's a video based on the type returned
+                const isVideo = uploadResult.type === 'video' || uploadResult.url.includes('/video/upload');
+                console.log('Banner upload result:', { url: uploadResult.url, type: uploadResult.type, isVideo });
+                
+                // Set preview - ensure it handles videos correctly
                 setImagePreview('#bannerImagePreview', uploadResult.url);
+                
+                // Force a small delay to ensure DOM is updated
+                setTimeout(() => {
+                    const $preview = $('#bannerImagePreview');
+                    if (isVideo && !$preview.find('video').length && !$preview.is('video')) {
+                        // If video preview didn't render, force it
+                        console.log('Forcing video preview render');
+                        $preview.empty();
+                        $preview.html(`<video src="${uploadResult.url}" controls preload="metadata" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;" alt="Video preview"></video>`);
+                    }
+                }, 100);
                 
                 // Banner is already saved by the upload endpoint
                 $('#bannerModal').modal('hide');
@@ -4077,14 +4094,24 @@ function resolveItemImage(item) {
 
 function setImagePreview(selector, url) {
     const $preview = $(selector);
+    if (!$preview.length) {
+        console.warn('Preview element not found:', selector);
+        return;
+    }
+    
     const safeUrl = url || IMAGE_PLACEHOLDER;
     
     // Check if URL is a video (by extension or Cloudinary video URL)
+    // Cloudinary video URLs: https://res.cloudinary.com/cloud_name/video/upload/...
     const isVideo = url && (
-        url.match(/\.(mp4|webm|ogg|mov|avi|wmv)$/i) || 
-        url.includes('video/upload') || 
-        url.includes('resource_type=video')
+        url.match(/\.(mp4|webm|ogg|mov|avi|wmv|m4v|flv)$/i) || 
+        url.includes('/video/upload/') || 
+        url.includes('/video/upload') ||
+        url.includes('resource_type=video') ||
+        url.match(/\/v\d+\/.*\.(mp4|webm|ogg|mov|avi|wmv|m4v|flv)/i) // Cloudinary format
     );
+    
+    console.log('Setting preview:', { selector, url, isVideo, elementType: $preview[0]?.tagName });
     
     // Check if it's an img element or a div
     if ($preview.is('img')) {
@@ -4093,19 +4120,25 @@ function setImagePreview(selector, url) {
             const $video = $('<video>').attr({
                 src: safeUrl,
                 controls: true,
-                style: 'max-width: 100%; max-height: 100%; object-fit: contain;'
+                preload: 'metadata',
+                style: 'max-width: 100%; max-height: 100%; object-fit: contain; display: block;'
             });
             $preview.replaceWith($video);
+            console.log('Replaced img with video element');
         } else {
             $preview.attr('src', safeUrl);
         }
     } else {
-        // For div elements, set as video or image
+        // For div elements, clear first and set as video or image
+        $preview.empty();
         if (url) {
             if (isVideo) {
-                $preview.html(`<video src="${safeUrl}" controls style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="Video preview"></video>`);
+                const videoHtml = `<video src="${safeUrl}" controls preload="metadata" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;" alt="Video preview"></video>`;
+                $preview.html(videoHtml);
+                console.log('Set video preview in div');
             } else {
-                $preview.html(`<img src="${safeUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="Preview">`);
+                const imgHtml = `<img src="${safeUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;" alt="Preview">`;
+                $preview.html(imgHtml);
             }
         } else {
             $preview.html('<span class="text-muted">No image/video selected</span>');
