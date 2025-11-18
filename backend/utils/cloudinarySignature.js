@@ -63,26 +63,18 @@ function prepareSignedUploadParams(options, apiKey, apiSecret) {
     // Build parameters object for signing
     // Note: Only include parameters that should be signed
     // Exclude: signature, file, resource_type (handled separately by SDK)
+    // IMPORTANT: Cloudinary expects boolean values as lowercase string "true", not "1"
     const paramsForSigning = {
         folder: options.folder || '',
-        timestamp: timestamp,
-        unique_filename: options.unique_filename ? '1' : undefined,
-        use_filename: options.use_filename ? '1' : undefined
+        timestamp: timestamp
     };
     
-    // Remove undefined values
-    Object.keys(paramsForSigning).forEach(key => {
-        if (paramsForSigning[key] === undefined || paramsForSigning[key] === null) {
-            delete paramsForSigning[key];
-        }
-    });
-    
-    // Convert boolean values to strings for signing
-    if (paramsForSigning.unique_filename !== undefined) {
-        paramsForSigning.unique_filename = String(paramsForSigning.unique_filename);
+    // Add boolean parameters as lowercase string "true" (Cloudinary's expected format)
+    if (options.unique_filename) {
+        paramsForSigning.unique_filename = 'true';
     }
-    if (paramsForSigning.use_filename !== undefined) {
-        paramsForSigning.use_filename = String(paramsForSigning.use_filename);
+    if (options.use_filename) {
+        paramsForSigning.use_filename = 'true';
     }
     
     // Generate signature from parameters
@@ -96,6 +88,14 @@ function prepareSignedUploadParams(options, apiKey, apiSecret) {
         api_key: apiKey,
         signature: signature
     };
+    
+    // Convert boolean values to lowercase string "true" for Cloudinary
+    if (uploadParams.unique_filename === true) {
+        uploadParams.unique_filename = 'true';
+    }
+    if (uploadParams.use_filename === true) {
+        uploadParams.use_filename = 'true';
+    }
     
     // Remove undefined values from final params
     Object.keys(uploadParams).forEach(key => {
