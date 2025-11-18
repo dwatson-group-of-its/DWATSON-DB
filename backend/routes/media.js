@@ -99,8 +99,8 @@ router.post('/', adminAuth, (req, res, next) => {
             userId: req.user?.id
         });
 
-        // For images: Upload to Cloudinary instead of storing in database
-        if (isImage) {
+        // For images and videos: Upload to Cloudinary instead of storing in database
+        if (isImage || isVideo) {
             // Check if Cloudinary is configured
             if (!isCloudinaryConfigured) {
                 return res.status(500).json({ 
@@ -109,8 +109,9 @@ router.post('/', adminAuth, (req, res, next) => {
             }
 
             try {
-                const folder = req.body?.folder || 'media';
-                console.log('Uploading image to Cloudinary...');
+                const folder = req.body?.folder || (isVideo ? 'videos' : 'media');
+                const resourceType = isVideo ? 'video' : 'image';
+                console.log(`Uploading ${resourceType} to Cloudinary...`);
                 
                 // Upload buffer directly to Cloudinary
                 const cloudinaryResult = await uploadBufferToCloudinary(
@@ -118,12 +119,12 @@ router.post('/', adminAuth, (req, res, next) => {
                     req.file.originalname,
                     {
                         folder: folder,
-                        public_id: `media_${Date.now()}`,
-                        resource_type: 'image'
+                        public_id: `${resourceType}_${Date.now()}`,
+                        resource_type: resourceType
                     }
                 );
 
-                console.log('✅ Image uploaded to Cloudinary:', cloudinaryResult.url);
+                console.log(`✅ ${resourceType} uploaded to Cloudinary:`, cloudinaryResult.url);
 
                 // Save only metadata to database (no binary data)
                 const mediaItem = new Media({
@@ -137,9 +138,10 @@ router.post('/', adminAuth, (req, res, next) => {
                         folder: folder,
                         cloudinaryPublicId: cloudinaryResult.publicId,
                         cloudinaryAssetId: cloudinaryResult.assetId,
-                        width: cloudinaryResult.width,
-                        height: cloudinaryResult.height,
-                        format: cloudinaryResult.format
+                        resourceType: resourceType,
+                        ...(cloudinaryResult.width && { width: cloudinaryResult.width }),
+                        ...(cloudinaryResult.height && { height: cloudinaryResult.height }),
+                        ...(cloudinaryResult.format && { format: cloudinaryResult.format })
                     },
                     uploadedBy: req.user ? req.user.id : undefined
                     // Note: No 'data' field - not storing binary in database
@@ -162,21 +164,13 @@ router.post('/', adminAuth, (req, res, next) => {
 
             } catch (cloudinaryError) {
                 console.error('Cloudinary upload error:', cloudinaryError);
-                // Fallback: If Cloudinary fails, you can choose to:
-                // 1. Return error (current behavior)
-                // 2. Fall back to database storage (commented out)
                 return res.status(500).json({ 
-                    message: 'Failed to upload image to Cloudinary: ' + cloudinaryError.message 
+                    message: `Failed to upload ${resourceType} to Cloudinary: ${cloudinaryError.message}` 
                 });
-
-                // FALLBACK OPTION (uncomment if you want database fallback):
-                // console.warn('Cloudinary failed, falling back to database storage');
-                // // Continue with database storage below...
             }
         }
 
-        // For videos or other files: Store in database (videos are too large for Cloudinary free tier)
-        // Or implement video upload to Cloudinary if needed
+        // For other file types: Store in database (fallback)
         const mediaItem = new Media({
             originalName: req.file.originalname,
             filename: req.file.originalname,
