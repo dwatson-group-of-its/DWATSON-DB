@@ -2563,7 +2563,15 @@ async function editBanner(id) {
         $('#bannerPosition').val(banner.position || 'middle');
         $('#bannerSize').val(banner.size || 'medium');
         $('#bannerActive').prop('checked', banner.isActive);
-        setImagePreview('#bannerImagePreview', resolveItemImage(banner));
+        
+        // Check if banner is a YouTube/Vimeo video and show embed preview
+        const imageUrl = resolveItemImage(banner) || banner.image || '';
+        const videoType = banner.video_type || detectVideoTypeFromUrl(imageUrl);
+        if (videoType === 'youtube' || videoType === 'vimeo') {
+            showVideoEmbedPreview('#bannerImagePreview', imageUrl, videoType);
+        } else {
+            setImagePreview('#bannerImagePreview', imageUrl);
+        }
 
         $('#bannerModalTitle').text('Edit Banner');
         $('#bannerModal').modal('show');
@@ -4170,18 +4178,26 @@ function showVideoEmbedPreview(selector, url, videoType) {
     }
     
     if (embedHtml) {
-        // Clear preview first
+        // Clear preview first - handle both img and div cases
         if ($preview.is('img')) {
+            // If img is inside a parent container (image-preview), replace the img with the embed div
             const $parent = $preview.parent();
             if ($parent.hasClass('image-preview') || $parent.hasClass('image-preview--wide')) {
-                $preview.replaceWith($('<div>').html(embedHtml));
+                // Replace img with div containing embed inside the parent
+                const $newDiv = $('<div>').html(embedHtml);
+                $preview.replaceWith($newDiv);
             } else {
-                $preview.replaceWith($('<div>').html(embedHtml));
+                // Direct replacement
+                const $newDiv = $('<div>').html(embedHtml);
+                $preview.replaceWith($newDiv);
             }
         } else {
+            // Clear and set content for div/container
             $preview.empty().html(embedHtml);
         }
-        console.log('Set YouTube/Vimeo embed preview');
+        console.log('✅ Set YouTube/Vimeo embed preview for:', url, 'Type:', videoType);
+    } else {
+        console.warn('⚠️ No embed HTML generated for:', url, 'Video Type:', videoType);
     }
 }
 
