@@ -102,11 +102,21 @@ router.post('/upload', adminAuth, uploadBanner, async (req, res) => {
             folder: signedParams.folder,
             resource_type: signedParams.resource_type,
             timestamp: signedParams.timestamp,
-            has_signature: !!signedParams.signature
+            api_key: signedParams.api_key ? '***' : undefined,
+            signature: signedParams.signature ? signedParams.signature.substring(0, 8) + '...' : undefined
         });
 
+        // IMPORTANT: When using manual signature, we need to temporarily remove api_secret from config
+        // to prevent SDK from auto-generating signature, OR use the upload_stream method
+        // The SDK will use our manual signature if we provide it
+        
         // Use standard upload method with signed parameters
-        const result = await cloudinary.uploader.upload(req.file.path, signedParams);
+        // The SDK should use our provided signature instead of generating its own
+        const result = await cloudinary.uploader.upload(req.file.path, {
+            ...signedParams,
+            // Explicitly set resource_type (required for videos)
+            resource_type: resourceType
+        });
         const secureUrl = result.secure_url;
 
         // Delete temporary file

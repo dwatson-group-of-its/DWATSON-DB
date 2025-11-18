@@ -44,36 +44,67 @@ function generateTimestamp() {
 
 /**
  * Prepare upload parameters with signature
+ * Cloudinary signature requirements:
+ * 1. Sort all parameters alphabetically (excluding signature itself)
+ * 2. Format as "key=value" pairs
+ * 3. Join with "&"
+ * 4. Append API_SECRET
+ * 5. SHA-1 hash
+ * 
  * @param {Object} options - Upload options (folder, resource_type, etc.)
  * @param {string} apiKey - Cloudinary API key
  * @param {string} apiSecret - Cloudinary API secret
  * @returns {Object} - Parameters with timestamp, api_key, and signature
  */
 function prepareSignedUploadParams(options, apiKey, apiSecret) {
-    // Generate timestamp
+    // Generate timestamp (Unix timestamp in seconds)
     const timestamp = generateTimestamp();
     
-    // Build parameters object (exclude signature-related params)
-    const params = {
-        ...options,
+    // Build parameters object for signing
+    // Note: Only include parameters that should be signed
+    // Exclude: signature, file, resource_type (handled separately by SDK)
+    const paramsForSigning = {
+        folder: options.folder || '',
         timestamp: timestamp,
-        api_key: apiKey
+        unique_filename: options.unique_filename ? '1' : undefined,
+        use_filename: options.use_filename ? '1' : undefined
     };
     
-    // Remove any undefined values
-    Object.keys(params).forEach(key => {
-        if (params[key] === undefined || params[key] === null) {
-            delete params[key];
+    // Remove undefined values
+    Object.keys(paramsForSigning).forEach(key => {
+        if (paramsForSigning[key] === undefined || paramsForSigning[key] === null) {
+            delete paramsForSigning[key];
         }
     });
     
-    // Generate signature
-    const signature = generateCloudinarySignature(params, apiSecret);
+    // Convert boolean values to strings for signing
+    if (paramsForSigning.unique_filename !== undefined) {
+        paramsForSigning.unique_filename = String(paramsForSigning.unique_filename);
+    }
+    if (paramsForSigning.use_filename !== undefined) {
+        paramsForSigning.use_filename = String(paramsForSigning.use_filename);
+    }
     
-    // Add signature to params
-    params.signature = signature;
+    // Generate signature from parameters
+    const signature = generateCloudinarySignature(paramsForSigning, apiSecret);
     
-    return params;
+    // Build final upload parameters
+    // Include all original options plus signature-related params
+    const uploadParams = {
+        ...options,
+        timestamp: timestamp,
+        api_key: apiKey,
+        signature: signature
+    };
+    
+    // Remove undefined values from final params
+    Object.keys(uploadParams).forEach(key => {
+        if (uploadParams[key] === undefined || uploadParams[key] === null) {
+            delete uploadParams[key];
+        }
+    });
+    
+    return uploadParams;
 }
 
 module.exports = {
