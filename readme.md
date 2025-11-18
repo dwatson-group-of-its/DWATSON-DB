@@ -133,4 +133,26 @@ Log in with the admin email/password from `.env`.
 
 ---
 
-**Built and designed by Bilal Shah. All rights reserved by D.Watson.**
+## Credits
+
+**Built and Designed by:**
+- **Mr. Wasi**
+- **Bilal Shah**
+
+All rights reserved by D.Watson Pharmacy.
+
+---
+
+## Project Information
+
+This e-commerce platform was built with modern web technologies to provide a seamless shopping experience for D.Watson Pharmacy customers. The platform features a responsive design, comprehensive admin dashboard, and robust product management system.
+
+### Key Highlights
+
+- **Full-stack e-commerce solution** with Node.js backend and custom frontend
+- **Cloudinary integration** for image and video uploads
+- **YouTube/Vimeo video support** for banners and sliders
+- **Mobile-responsive design** with horizontal scrolling product sections
+- **Product hierarchy management** (Department > Category > Product)
+- **Real-time cart management** with guest and authenticated user support
+- **Comprehensive admin dashboard** for managing all aspects of the store
