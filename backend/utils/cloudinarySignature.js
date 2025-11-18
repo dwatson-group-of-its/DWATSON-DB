@@ -69,6 +69,11 @@ function prepareSignedUploadParams(options, apiKey, apiSecret) {
         timestamp: timestamp
     };
     
+    // Add public_id if provided (needs to be in signature)
+    if (options.public_id) {
+        paramsForSigning.public_id = options.public_id;
+    }
+    
     // Add boolean parameters as lowercase string "true" (Cloudinary's expected format)
     if (options.unique_filename) {
         paramsForSigning.unique_filename = 'true';

@@ -1,4 +1,5 @@
 const { cloudinary, isConfigured } = require('../config/cloudinary');
+const { prepareSignedUploadParams } = require('../utils/cloudinarySignature');
 const fs = require('fs');
 const path = require('path');
 
@@ -23,16 +24,31 @@ const uploadToCloudinary = async (filePath, options = {}) => {
         // Check if Cloudinary is configured
         checkCloudinaryConfig();
 
-        const defaultOptions = {
-            folder: 'products', // Default folder in Cloudinary
-            resource_type: 'auto', // Auto-detect image/video
-            overwrite: false,
-            invalidate: true, // Invalidate CDN cache
+        const apiKey = process.env.CLOUDINARY_API_KEY;
+        const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+        const baseOptions = {
+            folder: options.folder || 'products',
+            resource_type: options.resource_type || 'auto',
             ...options
         };
 
+        // Remove problematic options that can cause signature issues
+        delete baseOptions.overwrite;
+        delete baseOptions.invalidate;
+
+        // If upload preset is configured, use unsigned upload
+        if (process.env.CLOUDINARY_UPLOAD_PRESET) {
+            baseOptions.upload_preset = process.env.CLOUDINARY_UPLOAD_PRESET;
+            console.log('Using unsigned upload with preset for file upload');
+        } else if (apiKey && apiSecret) {
+            // Use signed upload with manual signature
+            const signedParams = prepareSignedUploadParams(baseOptions, apiKey, apiSecret);
+            Object.assign(baseOptions, signedParams);
+        }
+
         // Upload to Cloudinary
-        const result = await cloudinary.uploader.upload(filePath, defaultOptions);
+        const result = await cloudinary.uploader.upload(filePath, baseOptions);
 
         // Return the secure URL and public ID
         return {
@@ -89,14 +105,28 @@ const uploadBufferToCloudinary = async (buffer, filename, options = {}) => {
             return;
         }
 
-        const defaultOptions = {
-            folder: 'products',
-            resource_type: 'auto',
+        const apiKey = process.env.CLOUDINARY_API_KEY;
+        const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+        const baseOptions = {
+            folder: options.folder || 'products',
+            resource_type: options.resource_type || 'auto',
             ...options
         };
 
+        // If upload preset is configured, use unsigned upload
+        if (process.env.CLOUDINARY_UPLOAD_PRESET) {
+            baseOptions.upload_preset = process.env.CLOUDINARY_UPLOAD_PRESET;
+            console.log('Using unsigned upload with preset for buffer upload');
+        } else if (apiKey && apiSecret) {
+            // Use signed upload with manual signature
+            // Note: public_id needs to be included in signature if provided
+            const signedParams = prepareSignedUploadParams(baseOptions, apiKey, apiSecret);
+            Object.assign(baseOptions, signedParams);
+        }
+
         const uploadStream = cloudinary.uploader.upload_stream(
-            defaultOptions,
+            baseOptions,
             (error, result) => {
                 if (error) {
                     reject(new Error(`Failed to upload image to Cloudinary: ${error.message}`));
