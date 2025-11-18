@@ -4117,14 +4117,29 @@ function setImagePreview(selector, url) {
     if ($preview.is('img')) {
         if (isVideo) {
             // Convert img to video element
-            const $video = $('<video>').attr({
-                src: safeUrl,
-                controls: true,
-                preload: 'metadata',
-                style: 'max-width: 100%; max-height: 100%; object-fit: contain; display: block;'
-            });
-            $preview.replaceWith($video);
-            console.log('Replaced img with video element');
+            // If img is inside a parent container, replace within that context
+            const $parent = $preview.parent();
+            if ($parent.hasClass('image-preview') || $parent.hasClass('image-preview--wide')) {
+                // Replace img with video inside the parent container
+                const $video = $('<video>').attr({
+                    src: safeUrl,
+                    controls: true,
+                    preload: 'metadata',
+                    style: 'max-width: 100%; max-height: 100%; object-fit: contain; display: block; width: 100%;'
+                });
+                $preview.replaceWith($video);
+                console.log('Replaced img with video element inside parent container');
+            } else {
+                // Direct replacement
+                const $video = $('<video>').attr({
+                    src: safeUrl,
+                    controls: true,
+                    preload: 'metadata',
+                    style: 'max-width: 100%; max-height: 100%; object-fit: contain; display: block;'
+                });
+                $preview.replaceWith($video);
+                console.log('Replaced img with video element');
+            }
         } else {
             $preview.attr('src', safeUrl);
         }
