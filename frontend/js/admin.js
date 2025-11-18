@@ -4274,19 +4274,24 @@ function initImageField({ urlInput, fileInput, preview }) {
     const $urlInput = $(urlInput);
     const $fileInput = $(fileInput);
 
-    $urlInput.on('input', function () {
-        const value = $(this).val();
-        if (value) {
-            // Check if it's a YouTube/Vimeo URL and show embed preview
-            const videoType = detectVideoTypeFromUrl(value);
-            if (videoType === 'youtube' || videoType === 'vimeo') {
-                showVideoEmbedPreview(preview, value, videoType);
-            } else {
-                setImagePreview(preview, value);
+    $urlInput.on('input paste', function () {
+        // Use setTimeout to ensure pasted value is captured
+        setTimeout(() => {
+            const value = $(this).val().trim();
+            console.log('URL input changed:', value);
+            if (value) {
+                // Check if it's a YouTube/Vimeo URL and show embed preview
+                const videoType = detectVideoTypeFromUrl(value);
+                console.log('Detected video type:', videoType, 'for URL:', value);
+                if (videoType === 'youtube' || videoType === 'vimeo') {
+                    showVideoEmbedPreview(preview, value, videoType);
+                } else {
+                    setImagePreview(preview, value);
+                }
+            } else if (!$fileInput[0]?.files?.length) {
+                setImagePreview(preview, null);
             }
-        } else if (!$fileInput[0]?.files?.length) {
-            setImagePreview(preview, null);
-        }
+        }, 100);
     });
 
     $fileInput.on('change', function () {
